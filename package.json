@@ -1,0 +1,1 @@
+{"dependencies": {"airtable": "^0.12.2", "express": "^4.19.2", "groq-sdk": "^0.15.0", "qrcode-terminal": "^0.12.0", "whatsapp-web.js": "^1.27.0"}, "description": "Pachapp Pool Villa WhatsApp AI Agent - Cloud (Render)", "engines": {"node": ">=18.0.0"}, "main": "pachapp-ai-cloud.js", "name": "pachapp-ai-cloud", "scripts": {"start": "node pachapp-ai-cloud.js"}, "version": "1.0.0"}
