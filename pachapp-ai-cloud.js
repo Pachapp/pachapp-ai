@@ -6,28 +6,30 @@ const AT = require('air' + 'table');
 const fs = require('fs');
 const path = require('path');
 
-// Clear stale Chromium lock from Disk - fixes "profile in use" error
+// Clear stale lock in both Disk and /tmp
 try {
-  const authDir = './.wwebjs_auth';
-  if (fs.existsSync(authDir)) {
-    const clearLocks = (dir) => {
-      try {
-        const files = fs.readdirSync(dir);
-        for (const f of files) {
-          const full = path.join(dir, f);
-          try {
-            const stat = fs.statSync(full);
-            if (stat.isDirectory()) clearLocks(full);
-            else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
-              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
-            }
-          } catch(e) {}
-        }
-      } catch(e) {}
-    };
-    clearLocks(authDir);
+  for (const base of ['./.wwebjs_auth', '/tmp/wwebjs-profile']) {
+    if (fs.existsSync(base)) {
+      const clearLocks = (dir) => {
+        try {
+          const files = fs.readdirSync(dir);
+          for (const f of files) {
+            const full = path.join(dir, f);
+            try {
+              const stat = fs.statSync(full);
+              if (stat.isDirectory()) clearLocks(full);
+              else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
+                try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+              }
+            } catch(e) {}
+          }
+        } catch(e) {}
+      };
+      clearLocks(base);
+    }
   }
-} catch(e) { console.log('Lock clear skip', e.message); }
+  try { fs.rmSync('/tmp/wwebjs-profile', { recursive: true, force: true }); console.log('Cleared /tmp profile'); } catch(e) {}
+} catch(e) {}
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -163,7 +165,8 @@ const client = new Client({
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process']
+    userDataDir: '/tmp/wwebjs-profile',
+    args: ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process', '--disable-display-compositing']
   }
 });
 
