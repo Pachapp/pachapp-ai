@@ -12,7 +12,8 @@
     "groq-sdk": "^0.15.0",
     "airtable": "^0.12.2",
     "qrcode-terminal": "^0.12.0",
-    "express": "^4.19.2"
+    "qrcode": "^1.5.4",
+    "【entity-express¦canonical_name=express】": "^4.19.2"
   },
   "engines": {
     "node": ">=18.0.0"
