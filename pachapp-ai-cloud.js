@@ -6,30 +6,29 @@ const AT = require('air' + 'table');
 const fs = require('fs');
 const path = require('path');
 
-// Clear stale lock in both Disk and /tmp
+// Clear stale Chromium lock - NO userDataDir, so LocalAuth stays compatible
 try {
-  for (const base of ['./.wwebjs_auth', '/tmp/wwebjs-profile']) {
-    if (fs.existsSync(base)) {
-      const clearLocks = (dir) => {
-        try {
-          const files = fs.readdirSync(dir);
-          for (const f of files) {
-            const full = path.join(dir, f);
-            try {
-              const stat = fs.statSync(full);
-              if (stat.isDirectory()) clearLocks(full);
-              else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
-                try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
-              }
-            } catch(e) {}
-          }
-        } catch(e) {}
-      };
-      clearLocks(base);
-    }
+  const authDir = './.wwebjs_auth';
+  if (fs.existsSync(authDir)) {
+    const clearLocks = (dir) => {
+      try {
+        const files = fs.readdirSync(dir);
+        for (const f of files) {
+          const full = path.join(dir, f);
+          try {
+            const stat = fs.statSync(full);
+            if (stat.isDirectory()) clearLocks(full);
+            else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK' || f === 'SingletonLock.lock') {
+              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+            }
+          } catch(e) {}
+        }
+      } catch(e) {}
+    };
+    clearLocks(authDir);
+    console.log('Lock check done');
   }
-  try { fs.rmSync('/tmp/wwebjs-profile', { recursive: true, force: true }); console.log('Cleared /tmp profile'); } catch(e) {}
-} catch(e) {}
+} catch(e) { console.log('Lock clear skip', e.message); }
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -165,8 +164,7 @@ const client = new Client({
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    userDataDir: '/tmp/wwebjs-profile',
-    args: ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process', '--disable-display-compositing']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process']
   }
 });
 
