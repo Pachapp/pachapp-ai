@@ -1,88 +1,380 @@
+// Pachapp Pool Villa - WhatsApp AI Agent - CLOUD BUILD (Render + Docker)
+// One brain, four doors - WhatsApp, Website, Instagram, Facebook
+// Villa: Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala | www.pachapp.green
+// Booking: +91 8943666911 | Bot: 0529100668 | Test: 00971 0503672246
+
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const Groq = require('groq-sdk');
-const Airtable = require('airtable');
 const express = require('express');
-const app = express();
+const Airtable = require('airtable');
+
+// ---------- CONFIG ----------
 const PORT = process.env.PORT || 10000;
-app.get('/', (req, res) => res.send('Pachapp AI is running'));
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
-app.listen(PORT, () => console.log('Health server on ' + PORT));
-const GROQ_API_KEY = process.env.GROQ_API_KEY || 'YOUR_GROQ_KEY';
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY || '';
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || '';
-const OWNER_NUMBER = '919843666911';
-const TEST_NUMBER = '971503672246';
-const TEST_ONLY = false;
-const groq = new Groq({ apiKey: GROQ_API_KEY });
-let base = null;
-if (AIRTABLE_API_KEY && AIRTABLE_BASE_ID) {
-  try { base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID); } catch(e){ console.log('Airtable error ' + e.message); }
+const OWNER_NUMBER = '918943666911'; // +91 8943666911
+const VILLA_NAME = 'Pachapp Pool Villa';
+const VILLA_ADDRESS = 'Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, India';
+const WEBSITE = 'www.pachapp.green';
+const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
+const NEARBY_LINK = 'https://pachapp.green/here-around/';
+const OWNER_NAME = 'Uday Hue';
+
+// Pricing
+const PRICING = {
+  fullWeekday: 6400,
+  fullWeekend: 8000,
+  fullFestival: 9600,
+  separate1: 1600,
+  separate2: 3200,
+  separate3: 4800,
+  extraAdultFull: 800,
+  extraAdultSepNoBF: 700,
+  extraAdultSepWithBF: 800,
+  breakfastSep: 100,
+};
+
+// Festival / Holiday dates - 2026-2027 (YYYY-MM-DD)
+const FESTIVALS = new Set([
+  '2026-01-01','2026-01-02','2026-01-03',
+  '2026-03-03','2026-03-04','2026-03-26','2026-03-27',
+  '2026-04-14','2026-04-15','2026-05-01',
+  '2026-08-15','2026-08-28','2026-08-29','2026-08-30','2026-08-31',
+  '2026-09-01','2026-09-02',
+  '2026-10-02','2026-10-20','2026-10-21',
+  '2026-11-08','2026-11-09',
+  '2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31',
+  '2027-01-01','2027-01-02','2027-01-03',
+]);
+
+function isFestival(d) {
+  const key = d.toISOString().slice(0,10);
+  return FESTIVALS.has(key);
 }
-const VILLA = { address: 'Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, India', maps: 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16', website: 'www.pachapp.green' };
-function getAdvance(total, rooms){ if(rooms===1) return 1600; if(total > 10000) return Math.round(total * 0.20); return 2000; }
-async function addBooking(obj){
-  if(!base) return {skipped:true};
-  try{
-    const existing = await base('Booking').select({ filterByFormula: "AND({Date} = '" + obj.date + "', {Phone} = '" + obj.phone + "')" }).firstPage();
-    if(existing.length>0){ return {duplicate:true}; }
-    const rec = await base('Booking').create([{ fields: { Name:obj.name, Phone:obj.phone, Date:obj.date, Guests:obj.guests, Price:obj.price, Advance:obj.advance, Balance:obj.balance, Status:'Confirmed', Type:obj.type||'WhatsApp' } }]);
-    return {duplicate:false, id:rec[0].id};
-  }catch(e){ return {error:e.message}; }
+function isWeekend(d) {
+  const day = d.getDay(); // 0 Sun, 6 Sat
+  return day === 0 || day === 6;
 }
-function detectLang(text){
-  if(/[\u0D00-\u0D7F]/.test(text)) return 'malayalam';
-  if(/[\u0900-\u097F]/.test(text)) return 'hindi';
-  if(/[\u0B80-\u0BFF]/.test(text)) return 'tamil';
-  if(/[\u0C00-\u0C7F]/.test(text)) return 'telugu';
-  if(/[\u0C80-\u0CFF]/.test(text)) return 'kannada';
-  return 'english';
+function getDateType(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return 'weekday';
+  if (isFestival(d)) return 'festival';
+  if (isWeekend(d)) return 'weekend';
+  return 'weekday';
 }
-const SYSTEM_SHORT = "You are Pachapp AI for Group Agents. SHORT, CRISPY. NEVER give price without date. Ask: Which date? How many? Full Property: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600 for 4 rooms, PRIVATE, Breakfast FREE. Includes 8 Adults + 8 Kids Below 6. Extra Adult Rs.800. Kids FREE. Weekday Separate ONLY, NOT Private: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Each Room Includes 2 Adults + 2 Kids. Extra Adult Rs.700 without breakfast / Rs.800 with breakfast. Breakfast: FREE for Weekend/Holiday/Festival/Full Property. NOT FREE for Weekday Separate: Rs.100 only per head. Advance: 1 Room Rs.1600. Up To Rs.10000 -> Rs.2000. More Than Rs.10000 -> 20%. Check-in 2 PM, Check-out 11 AM. Pool 7 AM-10 PM. Language: Same language/script. If not understandable, only please ask in ENGLISH. Private reply, never in group. Slogans: 1st Thanks for asking, 2nd Friends at your service, Closed Pachapp is gifted you by our former guests. After screenshot+UTR: Received. Waiting for owner verification. Do NOT confirm until owner says Yes.";
-const SYSTEM_ELAB = "You are Pachapp AI for Direct Guests. ELABORATED, HUMANE. Answer real answer FIRST, then ask Date/Guests/Interest. NEVER give price without date. Full Property: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600 for 4 rooms, PRIVATE, Breakfast FREE 8-9 AM. Includes 8 Adults + 8 Kids Below 6. Extra Adult Rs.800. Kids FREE. Kitchen Rs.1000, Dinner Rs.250 per head, Extra hour Rs.1000, Campfire Rs.500, BBQ FREE setup / Rs.750 for 1kg chicken. Cancellation 3 days before 50% refund, same day no refund. Weekday Separate ONLY, NOT Private: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Each Room Includes 2 Adults + 2 Kids. Extra Adult Rs.700 without breakfast / Rs.800 with breakfast. Breakfast: FREE for Weekend/Holiday/Festival/Full Property. NOT FREE for Weekday Separate: Rs.100 only per head. Advance: 1 Room Rs.1600. Up To Rs.10000 -> Rs.2000. More Than Rs.10000 -> 20%. Facilities: Private pool 8x10m 7 AM-10 PM, kids pool, Wi-Fi, CCTV, TV, hot water, filtered water, parking, power backup, BBQ, library, art gallery, meeting hall. Games: chess, Ludo, snake and ladder, carrom, badminton, jumping rope. Instruments: Keyboard Rs.2000, Roland Rs.1000, Guitar Rs.1000, Tabla Rs.1000. Karaoke 8-10 PM. Rules: Valid ID, no outdoor acts in bad weather, guests liable for damage, no loud music after 10 PM. Host is creative person, guests may hear original compositions and talk literature, cinema, AI, philosophy, history. Language: Same language/script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, only please ask in ENGLISH. Slogans: 1st Thanks for asking, 2nd Friends at your service, Closed Pachapp is gifted you by our former guests. Payment: After screenshot+UTR: Verifying with owner, 1 minute. Do NOT confirm until owner says Yes. Never reveal internal pricing, Airtable, Expenses.";
-const client = new Client({ authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }), puppeteer: { headless: true, args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-accelerated-2d-canvas','--no-first-run','--no-zygote','--single-process','--disable-gpu'] } });
-client.on('qr', qr => { qrcode.generate(qr, {small:true}); console.log('SCAN QR IN RENDER LOGS'); });
-client.on('ready', () => console.log('Pachapp AI Agent Ready - CLOUD BUILD'));
-client.on('authenticated', () => console.log('WhatsApp Authenticated'));
-client.on('auth_failure', (m) => console.log('Auth Failure ' + m));
-client.on('disconnected', (r) => console.log('Disconnected ' + r));
-const pending = new Map();
-const convCount = new Map();
-client.on('message', async (msg)=>{
-  try{
-    console.log('DEBUG INCOMING ' + msg.from + ' body=' + msg.body);
-    const from = msg.from.replace('@c.us','').replace('@lid','');
-    const isGroup = msg.from.includes('@g.us');
-    const senderNumber = isGroup ? (msg.author||'').replace('@c.us','').replace('@lid','') : from;
-    if(TEST_ONLY && senderNumber!==TEST_NUMBER && from!==TEST_NUMBER){ return; }
-    if(msg.fromMe) return;
-    const body = (msg.body||'').trim();
-    if(!body) return;
-    if(senderNumber===OWNER_NUMBER && (body.toLowerCase()==='yes' || body.toLowerCase().includes('verified'))){
-      for(const [guest, data] of pending){
-        const adv = getAdvance(data.price, data.rooms);
-        await addBooking({name:data.name, phone:guest, date:data.date, guests:data.guests, price:data.price, advance:adv, balance:data.price-adv, type:data.type});
-        const confirmMsg = 'Confirmed! Thank you ' + data.name + '.\n\nBooking: ' + data.name + ', ' + data.guests + ' People, ' + data.date + ', Rs.' + data.price + ', Advance Rs.' + adv + ' received, Balance Rs.' + (data.price-adv) + '\nCheck-In 2 PM, Check-Out 11 AM\nAddress: ' + VILLA.address + '\nMaps: ' + VILLA.maps + '\nWebsite: ' + VILLA.website + '\n\nPachapp is gifted you by our former guests';
-        await client.sendMessage(guest+'@c.us', confirmMsg);
-        pending.delete(guest);
-        break;
+function parseDate(text) {
+  if (!text) return null;
+  text = text.toLowerCase().trim();
+  // 2 dec, 2nd dec, dec 2, 02-12-2026, 02/12/2026, 2-12, 2026-12-02
+  const months = { jan:0, january:0, feb:1, february:1, mar:2, march:2, apr:3, april:3, may:4, jun:5, june:5, jul:6, july:6, aug:7, august:7, sep:8, sept:8, september:8, oct:9, october:9, nov:10, november:10, dec:11, december:11 };
+  let m;
+  // YYYY-MM-DD
+  m = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  // DD-MM-YYYY or DD/MM/YYYY
+  m = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    let y = parseInt(m[3]); if (y < 100) y += 2000;
+    return new Date(y, parseInt(m[2])-1, parseInt(m[1]));
+  }
+  // DD-MM or DD/MM
+  m = text.match(/(\d{1,2})[\/\-](\d{1,2})\b/);
+  if (m) {
+    const now = new Date();
+    let y = now.getFullYear();
+    let d = new Date(y, parseInt(m[2])-1, parseInt(m[1]));
+    if (d < now) d = new Date(y+1, parseInt(m[2])-1, parseInt(m[1]));
+    return d;
+  }
+  // 2 dec / 2nd dec / dec 2
+  m = text.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)/);
+  if (m && months[m[2]] !== undefined) {
+    const now = new Date();
+    let y = now.getFullYear();
+    let d = new Date(y, months[m[2]], parseInt(m[1]));
+    if (d < now) d = new Date(y+1, months[m[2]], parseInt(m[1]));
+    return d;
+  }
+  m = text.match(/([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/);
+  if (m && months[m[1]] !== undefined) {
+    const now = new Date();
+    let y = now.getFullYear();
+    let d = new Date(y, months[m[1]], parseInt(m[2]));
+    if (d < now) d = new Date(y+1, months[m[1]], parseInt(m[2]));
+    return d;
+  }
+  if (text.includes('tomorrow')) { const d = new Date(); d.setDate(d.getDate()+1); return d; }
+  if (text.includes('today')) return new Date();
+  return null;
+}
+function calcAdvance(total) {
+  if (total <= 1600) return 1600;
+  if (total <= 10000) return 2000;
+  return Math.round(total * 0.20);
+}
+function formatPrice(n) { return 'Rs.' + n.toLocaleString('en-IN'); }
+
+// ---------- AIRTABLE (Master, Manual Only - AI writes, never shows to guests) ----------
+let airtableBase = null;
+if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
+  try {
+    airtableBase = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+    console.log('Airtable connected');
+  } catch(e) { console.log('Airtable init failed', e.message); }
+}
+async function saveToAirtable(booking) {
+  if (!airtableBase) return false;
+  try {
+    // Skip duplicate by date+phone+name
+    const existing = await airtableBase('Booking').select({
+      filterByFormula: `AND({Date}='${booking.date}', {Phone}='${booking.phone}', {Name}='${booking.name}')`
+    }).firstPage();
+    if (existing && existing.length > 0) { console.log('Duplicate skipped'); return true; }
+    await airtableBase('Booking').create([{ fields: {
+      Name: booking.name || 'Guest',
+      Phone: booking.phone || '',
+      Date: booking.date || '',
+      Guests: booking.guests || '',
+      Rooms: booking.rooms || 'Full Villa',
+      Total: booking.total || 0,
+      Advance: booking.advance || 0,
+      Status: booking.status || 'Pending Owner Verification',
+      UTR: booking.utr || '',
+      Source: 'WhatsApp AI'
+    }}]);
+    console.log('Saved to Airtable');
+    return true;
+  } catch(e) { console.log('Airtable save failed', e.message); return false; }
+}
+
+// ---------- GROQ AI ----------
+let groq = null;
+try {
+  const { Groq } = require('groq-sdk');
+  if (process.env.GROQ_API_KEY) groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+} catch(e) { console.log('Groq not loaded', e.message); }
+
+const SYSTEM_PROMPT = `
+You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot.
+Villa: ${VILLA_NAME}, ${VILLA_ADDRESS}, Website ${WEBSITE}, Maps ${MAPS_LINK}, Nearby ${NEARBY_LINK}
+Owners: Uday Hue, Reshma Uday, Sarwaswa Uday. Host is a creative person with international credentials, original compositions. Talk literature, cinema, AI, philosophy, history when guest shows interest. Inspire about Wayanad.
+
+CRITICAL RULES:
+1. Answer REAL answer FIRST, then ask: which day? how many guests? what is exact interest in Wayanad?
+2. NEVER give price without date. Always ask date first if no date given. NEVER say "let me check Indian Calendar", "personal/group", "routine", "internal pricing" or any internal talk.
+3. Reply in guest's language, in original script - Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only "Please ask in ENGLISH".
+4. For WhatsApp GROUP AGENTS: short crispy 1-2 line replies only. Stories/amenities in 1 line. Close in 3-4 messages. NEVER send private reply in group. NEVER send long paragraphs in group.
+5. For DIRECT guests: elaborated humane mode, with photos/videos between answers, inspire about Wayanad, host creativity.
+
+PRICING - FULL VILLA (PRIVATE, Whole Villa):
+- Weekday: Rs.6400, Weekend: Rs.8000, Festival/Holiday: Rs.9600
+- Includes: 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE for full property (weekday, weekend, holiday, festival)
+- Extra adult: Rs.800 per adult. Kids below 6 FREE.
+
+PRICING - WEEKDAY SEPARATE ROOMS (SHARED, NOT PRIVATE, Weekday Only):
+- 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800
+- Each room includes 2 adults + 2 kids below 6
+- Extra adult: Rs.700 without breakfast / Rs.800 with breakfast
+- Breakfast NOT FREE for separate: 8 items breakfast Rs.100 only per head. MUST ask separately with/without breakfast.
+- Weekend/Festival: Whole Villa ONLY, no separate rooms.
+
+ADVANCE:
+- 1 Room: Rs.1600 advance. Total up to Rs.10000: Rs.2000 minimum advance. Total over Rs.10000: 20% advance.
+- Balance before check-in, UPI/cash.
+- Payment: Guest sends screenshot + UTR, owner verifies, AI confirms ONLY after owner says Yes. Never confirm before owner Yes.
+
+BOOKING SYSTEM:
+- Airtable is master, manual only. Staff informs owner on spot for manual bookings, owner updates Airtable immediately. Staff also sends daily form at 11:30 AM. Skip duplicate by date+phone+name.
+- Guests never see Airtable, only confirmation message + QR.
+- No 【entity-Airbnb¦canonical_name=Airbnb】 calendar automation - risky, never do it.
+
+OTHER:
+- Booking number: +91 8943666911
+- Photos/videos between answers for direct guests. Don't send photos in group unless asked.
+- Close booking in 3-4 messages for agents, elaborated for direct guests.
+`;
+
+async function askAI(userMsg, isGroup, chatHistory) {
+  if (!groq) return null;
+  try {
+    const modeNote = isGroup
+      ? 'MODE: WhatsApp GROUP AGENT - Reply in 1-2 lines only, crispy, close in 3-4 messages. No long text. No private details in group.'
+      : 'MODE: DIRECT GUEST - Elaborated humane, warm, inspiring about Wayanad, host creativity. Answer first, then ask date/guests/interest.';
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote },
+        ...(chatHistory || []).slice(-8),
+        { role: 'user', content: userMsg }
+      ],
+      temperature: 0.7,
+      max_tokens: isGroup ? 120 : 600,
+    });
+    return completion.choices[0]?.message?.content || null;
+  } catch(e) { console.log('Groq error', e.message); return null; }
+}
+
+// Fallback rule-based reply (if Groq fails)
+function fallbackReply(text, isGroup) {
+  const lower = text.toLowerCase();
+  const hasDate = parseDate(text);
+  const hasGuests = lower.match(/(\d+)\s*(people|adults|person|guest)/);
+
+  if (lower.includes('pool') || lower.includes('swim')) {
+    if (isGroup) return 'Yes, private pool, 4 rooms, full villa private. Which date? How many guests?';
+    return `Yes! Private pool just for you - no sharing. 🏊\n\nPachapp has a beautiful private pool with Wayanad hills view. Morning coffee by pool is magical.\n\nWhich date are you thinking? How many guests? What do you love in Wayanad - nature, food, music, peace?`;
+  }
+  if (lower.includes('story') || lower.includes('about') || lower.includes('pachapp')) {
+    if (isGroup) return 'Pachapp - Lucky Hill, Meppadi, Wayanad. 4 rooms, private pool, host is artist. Which date?';
+    return `Pachapp is not a hotel, it's a home with a story. 🌿\n\nOn Lucky Hill, Meppadi, Wayanad - built with love by Uday, Reshma & Sarwaswa. Host is a creative person, original music, literature, cinema, philosophy.\n\nCome for pool, hills, and real Wayanad feeling.\n\nWhich date? How many guests?`;
+  }
+  if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('charge') || hasGuests) {
+    if (!hasDate) {
+      if (isGroup) return 'Price depends on date - weekday / weekend / festival different. Which date? How many guests?';
+      return `Price depends on date, so I can give exact price. 😊\n\nFull Private Villa: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600 (Breakfast FREE, 8 adults + 8 kids below 6 included)\nWeekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800\n\nWhich date are you planning? How many guests?`;
+    }
+    const type = getDateType(text);
+    let price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
+    if (isGroup) return `${type} - Full Private Villa ${formatPrice(price)}, Breakfast FREE, 8+8 included. Confirm?`;
+    return `For ${text} - ${type} - Full Private Villa ${formatPrice(price)} ✨\n\nPrivate whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults + 8 kids below 6. Extra adult Rs.800.\n\nAdvance ${formatPrice(calcAdvance(price))}, balance before check-in.\n\nShall I hold this date for you? How many guests exactly?`;
+  }
+  if (isGroup) return 'Pachapp Pool Villa, Meppadi, Wayanad - Private villa, pool, 4 rooms. Which date? How many guests?';
+  return `Welcome to Pachapp Pool Villa! 🌿🏊\n\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\n\nWhich date are you thinking? How many guests? What brings you to Wayanad - nature, family time, music, peace?`;
+}
+
+// ---------- HEALTH SERVER ----------
+const app = express();
+app.get('/', (req, res) => res.send('Pachapp AI Agent - Running ✅'));
+app.get('/health', (req, res) => res.json({ status: 'ok', villa: VILLA_NAME }));
+app.listen(PORT, () => console.log(`Health server on ${PORT}`));
+
+// ---------- WHATSAPP CLIENT - DOCKER + CHROMIUM FIX ----------
+const client = new Client({
+  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
+  puppeteer: {
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-accelerated-2d-canvas','--no-first-run','--no-zygote','--single-process','--disable-gpu']
+  }
+});
+
+const chatHistories = new Map(); // chatId -> [{role, content}]
+const pendingBookings = new Map(); // phone -> booking
+
+client.on('qr', (qr) => {
+  console.log('QR RECEIVED - Scan with bot number 0529100668');
+  qrcode.generate(qr, { small: true });
+});
+
+client.on('ready', () => {
+  console.log('Pachapp AI Agent Ready - CLOUD BUILD');
+  console.log('Villa:', VILLA_NAME);
+});
+
+client.on('auth_failure', (msg) => console.log('Auth failure', msg));
+client.on('disconnected', (reason) => console.log('Disconnected', reason));
+
+client.on('message', async (msg) => {
+  try {
+    if (msg.from === 'status@broadcast') return;
+    const chat = await msg.getChat();
+    const isGroup = chat.isGroup;
+    const contact = await msg.getContact();
+    const senderNumber = contact.number || msg.from.replace('@c.us','');
+    const senderName = contact.pushname || contact.name || 'Guest';
+    const text = msg.body || '';
+    const lower = text.toLowerCase();
+
+    console.log(`[${isGroup ? 'GROUP' : 'DIRECT'}] ${senderName} (${senderNumber}): ${text.slice(0,120)}`);
+
+    // --- OWNER VERIFICATION: Owner says Yes/No for pending payment ---
+    if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
+      // Find latest pending booking
+      let targetPhone = null, targetBooking = null;
+      for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
+      if (targetBooking) {
+        if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
+          targetBooking.status = 'Confirmed';
+          await saveToAirtable(targetBooking);
+          try {
+            await client.sendMessage(targetBooking.chatId, `✅ Booking CONFIRMED - Pachapp Pool Villa! 🎉\n\nDate: ${targetBooking.date}\nGuests: ${targetBooking.guests}\nTotal: ${formatPrice(targetBooking.total)}\nAdvance: ${formatPrice(targetBooking.advance)} received\nBalance before check-in.\n\nMaps: ${MAPS_LINK}\nNearby: ${NEARBY_LINK}\n\nWelcome to Pachapp! 🌿 See you in Wayanad.`);
+          } catch(e) { console.log('Confirm send failed', e.message); }
+          await msg.reply(`Confirmed to guest ${targetBooking.name}. Airtable updated.`);
+          pendingBookings.delete(targetPhone);
+        } else {
+          await msg.reply('Not confirmed. Guest will be told payment not verified.');
+        }
+        return;
       }
+    }
+
+    // --- PAYMENT: Screenshot + UTR ---
+    const hasMedia = msg.hasMedia;
+    const hasUTR = lower.match(/utr|transaction|ref.*\d{6,}|txn/i) || lower.match(/\b\d{10,18}\b/);
+    if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
+      const utrMatch = text.match(/\b\d{10,18}\b/);
+      const utr = utrMatch ? utrMatch[0] : 'Screenshot received';
+      const pending = {
+        name: senderName,
+        phone: senderNumber,
+        chatId: msg.from,
+        date: pendingBookings.get(senderNumber)?.date || 'To confirm',
+        guests: pendingBookings.get(senderNumber)?.guests || '',
+        total: pendingBookings.get(senderNumber)?.total || 0,
+        advance: pendingBookings.get(senderNumber)?.advance || 0,
+        utr: utr,
+        status: 'Pending Owner Verification'
+      };
+      pendingBookings.set(senderNumber, pending);
+      // Forward to owner for verification
+      try {
+        await client.sendMessage(OWNER_NUMBER + '@c.us', `🔔 PAYMENT VERIFICATION NEEDED\nGuest: ${senderName} (${senderNumber})\nDate: ${pending.date}\nUTR: ${utr}\nAdvance: ${formatPrice(pending.advance)}\n\nReply YES to confirm, NO to reject.`);
+        if (hasMedia) {
+          try { const media = await msg.downloadMedia(); await client.sendMessage(OWNER_NUMBER + '@c.us', media, { caption: `Payment screenshot from ${senderName} - UTR ${utr}` }); } catch(e) {}
+        }
+      } catch(e) { console.log('Owner forward failed', e.message); }
+      await msg.reply(`Payment screenshot + UTR ${utr} received. ✅\n\nOwner will verify and I will confirm your booking in a moment. Please wait.`);
       return;
     }
-    if(isGroup){ const reply = await getAIReply(body, true, senderNumber); await client.sendMessage(senderNumber+'@c.us', reply); return; }
-    const reply = await getAIReply(body, false, senderNumber);
+
+    // --- CHAT HISTORY ---
+    if (!chatHistories.has(msg.from)) chatHistories.set(msg.from, []);
+    const history = chatHistories.get(msg.from);
+    history.push({ role: 'user', content: text });
+
+    // --- AI REPLY ---
+    let reply = await askAI(text, isGroup, history);
+    if (!reply) reply = fallbackReply(text, isGroup);
+
+    // If AI gave price without date check - fallback already handles, but keep AI
+    history.push({ role: 'assistant', content: reply });
+    if (history.length > 16) chatHistories.set(msg.from, history.slice(-16));
+
+    // Track booking intent for Airtable
+    const parsedDate = parseDate(text);
+    if (parsedDate) {
+      const type = getDateType(text);
+      const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
+      pendingBookings.set(senderNumber, {
+        name: senderName,
+        phone: senderNumber,
+        chatId: msg.from,
+        date: parsedDate.toISOString().slice(0,10),
+        guests: text,
+        total: price,
+        advance: calcAdvance(price),
+        status: 'Enquiry'
+      });
+    }
+
     await msg.reply(reply);
-    if(msg.hasMedia || body.toLowerCase().includes('utr')){ await client.sendMessage(OWNER_NUMBER+'@c.us', 'Payment Verification Needed:\nGuest: ' + senderNumber + '\nMessage: ' + body + '\nPlease verify. Reply Yes or No.'); }
-  }catch(e){ console.error(e); }
+
+    // For direct guests, if they ask for photos, send info (photos handled via website link to avoid media failure on cloud)
+    if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
+      await client.sendMessage(msg.from, `Photos & videos here: ${WEBSITE} 📸\nMaps: ${MAPS_LINK}`);
+    }
+
+  } catch(e) {
+    console.log('Message handler error', e.message);
+  }
 });
-async function getAIReply(userText, isAgentMode, sender){
-  const count = (convCount.get(sender)||0)+1;
-  convCount.set(sender, count);
-  const lang = detectLang(userText);
-  const system = isAgentMode ? SYSTEM_SHORT : SYSTEM_ELAB;
-  try{
-    const res = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: [{ role:'system', content: system + '\nLanguage: ' + lang + '.' }, { role:'user', content: userText }], temperature: 0.7, max_tokens: isAgentMode ? 150 : 600 });
-    return res.choices[0].message.content;
-  }catch(e){ console.log('Groq error ' + e.message); if(isAgentMode) return 'Hi, Thanks for asking. Which date? How many?'; return 'Hi, welcome to Pachapp! Thanks for asking. Which date? How many? What is your interest in Wayanad?'; }
-}
+
 client.initialize();
