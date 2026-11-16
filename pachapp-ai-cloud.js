@@ -10,6 +10,7 @@ const VILLA_NAME = 'Pachapp Pool Villa';
 const WEBSITE = 'www.pachapp.green';
 const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
 const NEARBY_LINK = 'https://pachapp.green/here-around/';
+const BOT_PHONE = '971529100668';
 
 const PRICING = { fullWeekday: 6400, fullWeekend: 8000, fullFestival: 9600, separate1: 1600, separate2: 3200, separate3: 4800, extraAdultFull: 800, extraAdultSepNoBF: 700, extraAdultSepWithBF: 800, breakfastSep: 100 };
 
@@ -97,6 +98,7 @@ function fallbackReply(text, isGroup) {
 }
 
 let lastQR = null;
+let lastPairCode = null;
 let isReady = false;
 
 const server = http.createServer(async (req, res) => {
@@ -105,14 +107,25 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady }));
     return;
   }
-  if (req.url === '/qr') {
+  if (req.url === '/qr' || req.url === '/pair') {
     if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>'); return; }
-    if (!lastQR) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Waiting for QR... Refresh in 10 seconds.</h2><script>setTimeout(()=>location.reload(),5000)</script>'); return; }
-    try {
-      const qrImage = await QRC.toDataURL(lastQR, { width: 450, margin: 2 });
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp QR</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif"><h2>Pachapp Pool Villa - Scan QR</h2><p>Use bot phone <b>0529100668</b> - WA - Linked Devices - Link a Device</p><img src="' + qrImage + '" style="width:420px;height:420px;border:2px solid #000"/><p>QR refreshes every 20 sec - If expired, refresh this page</p><p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),20000)</script></body></html>');
-    } catch(e) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('QR error, refresh'); }
+    let pairHtml = '';
+    if (lastPairCode) {
+      pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code - Use this, no QR scan needed</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
+    } else {
+      pairHtml = '<p>Pairing code loading... Wait 30 sec, refresh page.</p>';
+    }
+    let qrHtml = '';
+    if (lastQR) {
+      try {
+        const qrImage = await QRC.toDataURL(lastQR, { width: 350, margin: 2 });
+        qrHtml = '<p>Or scan QR below:</p><img src="' + qrImage + '" style="width:320px;height:320px;border:2px solid #000"/>';
+      } catch(e) {}
+    } else {
+      qrHtml = '<p>QR loading... Refresh in 10 sec.</p>';
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp Pair</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif;max-width:600px"><h2>Pachapp Pool Villa - Link Bot</h2>' + pairHtml + qrHtml + '<p><a href="/qr">Refresh</a></p><p>QR refreshes - Pairing Code is easier, use code above</p></div><script>setTimeout(()=>location.reload(),60000)</script></body></html>');
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -139,9 +152,15 @@ client.on('qr', (qr) => {
   qrterm.generate(qr, { small: true });
 });
 
+client.on('code', (code) => {
+  lastPairCode = code;
+  console.log('Pairing code: ' + code);
+});
+
 client.on('ready', () => {
   isReady = true;
   lastQR = null;
+  lastPairCode = null;
   console.log('Pachapp AI Agent Ready - CLOUD BUILD');
 });
 
@@ -208,3 +227,12 @@ client.on('message', async (msg) => {
 });
 
 client.initialize();
+setTimeout(async () => {
+  if (!isReady) {
+    try {
+      const code = await client.requestPairingCode(BOT_PHONE);
+      lastPairCode = code;
+      console.log('Pairing code: ' + code);
+    } catch(e) { console.log('Pairing code error', e.message); }
+  }
+}, 8000);
