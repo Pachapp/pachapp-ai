@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
-const 【entity-express¦canonical_name=express】 = require('【entity-express¦canonical_name=express】');
+const http = require('http');
 const Airtable = require('airtable');
 
 const PORT = process.env.PORT || 10000;
@@ -98,18 +98,27 @@ function fallbackReply(text, isGroup) {
 
 let lastQR = null;
 let isReady = false;
-const app = express();
-app.get('/', (req, res) => res.send('Pachapp AI Agent - Running - Open /qr to scan'));
-app.get('/health', (req, res) => res.json({ status: 'ok', villa: VILLA_NAME, ready: isReady }));
-app.get('/qr', async (req, res) => {
-  if (isReady) return res.send('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>');
-  if (!lastQR) return res.send('<h2 style="text-align:center;font-family:sans-serif">Waiting for QR... Refresh in 10 seconds.</h2><script>setTimeout(()=>location.reload(),5000)</script>');
-  try {
-    const qrImage = await QRCode.toDataURL(lastQR, { width: 450, margin: 2 });
-    res.send('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp QR</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif"><h2>Pachapp Pool Villa - Scan QR</h2><p>Use bot phone <b>0529100668</b> - WhatsApp - Linked Devices - Link a Device</p><img src="' + qrImage + '" style="width:420px;height:420px;border:2px solid #000"/><p>QR refreshes every 20 sec - If expired, refresh this page</p><p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),20000)</script></body></html>');
-  } catch(e) { res.send('QR error, refresh'); }
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady }));
+    return;
+  }
+  if (req.url === '/qr') {
+    if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>'); return; }
+    if (!lastQR) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Waiting for QR... Refresh in 10 seconds.</h2><script>setTimeout(()=>location.reload(),5000)</script>'); return; }
+    try {
+      const qrImage = await QRCode.toDataURL(lastQR, { width: 450, margin: 2 });
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp QR</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif"><h2>Pachapp Pool Villa - Scan QR</h2><p>Use bot phone <b>0529100668</b> - 【entity-WhatsApp¦canonical_name=WhatsApp】 - Linked Devices - Link a Device</p><img src="' + qrImage + '" style="width:420px;height:420px;border:2px solid #000"/><p>QR refreshes every 20 sec - If expired, refresh this page</p><p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),20000)</script></body></html>');
+    } catch(e) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('QR error, refresh'); }
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Pachapp AI Agent - Running - Open /qr to scan');
 });
-app.listen(PORT, () => console.log('Health server on ' + PORT));
+server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
