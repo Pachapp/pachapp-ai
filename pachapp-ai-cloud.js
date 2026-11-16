@@ -66,9 +66,9 @@ async function askAI(userMsg, isGroup, history) {
   if (!groq) return null;
   try {
     const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.';
-    const c = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
+    const c = await groq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
     return c.choices[0]?.message?.content || null;
-  } catch(e) { return null; }
+  } catch(e) { console.log('Groq error', e.message); return null; }
 }
 
 function fallbackReply(text, isGroup) {
