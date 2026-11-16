@@ -3,6 +3,31 @@ const qrterm = require('qr' + 'code-terminal');
 const QRC = require('qr' + 'code');
 const http = require('http');
 const AT = require('air' + 'table');
+const fs = require('fs');
+const path = require('path');
+
+// Clear stale Chromium lock from Disk - fixes "profile in use" error
+try {
+  const authDir = './.wwebjs_auth';
+  if (fs.existsSync(authDir)) {
+    const clearLocks = (dir) => {
+      try {
+        const files = fs.readdirSync(dir);
+        for (const f of files) {
+          const full = path.join(dir, f);
+          try {
+            const stat = fs.statSync(full);
+            if (stat.isDirectory()) clearLocks(full);
+            else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
+              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+            }
+          } catch(e) {}
+        }
+      } catch(e) {}
+    };
+    clearLocks(authDir);
+  }
+} catch(e) { console.log('Lock clear skip', e.message); }
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -138,7 +163,7 @@ const client = new Client({
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process']
   }
 });
 
