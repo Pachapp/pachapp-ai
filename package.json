@@ -1,7 +1,7 @@
 {
   "name": "pachapp-ai-cloud",
   "version": "1.0.0",
-  "description": "Pachapp Pool Villa WhatsApp AI Agent - Cloud",
+  "description": "Pachapp Pool Villa WA AI Agent - Cloud",
   "main": "pachapp-ai-cloud.js",
   "scripts": {
     "start": "node pachapp-ai-cloud.js"
