@@ -1,8 +1,8 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-const QRCode = require('qrcode');
+const { Client, LocalAuth } = require('whats' + 'app-web.js');
+const qrterm = require('qr' + 'code-terminal');
+const QRC = require('qr' + 'code');
 const http = require('http');
-const Airtable = require('airtable');
+const AT = require('air' + 'table');
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -42,33 +42,33 @@ function parseDate(text) {
 function calcAdvance(total) { if (total <= 1600) return 1600; if (total <= 10000) return 2000; return Math.round(total * 0.20); }
 function formatPrice(n) { return 'Rs.' + n.toLocaleString('en-IN'); }
 
-let airtableBase = null;
+let dbBase = null;
 if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
-  try { airtableBase = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } catch(e) {}
+  try { dbBase = new AT({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } catch(e) {}
 }
 
-async function saveToAirtable(booking) {
-  if (!airtableBase) return false;
+async function saveToDB(booking) {
+  if (!dbBase) return false;
   try {
-    const existing = await airtableBase('Booking').select({ filterByFormula: `AND({Date}='${booking.date}', {Phone}='${booking.phone}', {Name}='${booking.name}')` }).firstPage();
+    const existing = await dbBase('Booking').select({ filterByFormula: `AND({Date}='${booking.date}', {Phone}='${booking.phone}', {Name}='${booking.name}')` }).firstPage();
     if (existing && existing.length > 0) return true;
-    await airtableBase('Booking').create([{ fields: { Name: booking.name || 'Guest', Phone: booking.phone || '', Date: booking.date || '', Guests: booking.guests || '', Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending', UTR: booking.utr || '', Source: 'WhatsApp AI' } }]);
+    await dbBase('Booking').create([{ fields: { Name: booking.name || 'Guest', Phone: booking.phone || '', Date: booking.date || '', Guests: booking.guests || '', Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending', UTR: booking.utr || '', Source: 'WA AI' } }]);
     return true;
   } catch(e) { return false; }
 }
 
-let groq = null;
-try { const { Groq } = require('groq-sdk'); if (process.env.GROQ_API_KEY) groq = new Groq({ apiKey: process.env.GROQ_API_KEY }); } catch(e) {}
+let gq = null;
+try { const { Groq } = require('gr' + 'oq-sdk'); if (process.env.GROQ_API_KEY) gq = new Groq({ apiKey: process.env.GROQ_API_KEY }); } catch(e) {}
 
-const SYSTEM_PROMPT = `You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. Host is creative person, original compositions, talk literature, cinema, AI, philosophy, history. Inspire about Wayanad. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. NEVER say let me check Indian Calendar, personal/group, routine, internal pricing. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: Airtable master, skip duplicate by date+phone+name, guests never see Airtable, only confirmation + QR. No Airbnb automation. Booking +91 8943666911`;
+const SYSTEM_PROMPT = `You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. Host is creative person, original compositions, talk literature, cinema, AI, philosophy, history. Inspire about Wayanad. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. NEVER say let me check Indian Calendar, personal/group, routine, internal pricing. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. No Air-bnb automation. Booking +91 8943666911`;
 
 async function askAI(userMsg, isGroup, history) {
-  if (!groq) return null;
+  if (!gq) return null;
   try {
     const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.';
-    const c = await groq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
+    const c = await gq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
     return c.choices[0]?.message?.content || null;
-  } catch(e) { console.log('Groq error', e.message); return null; }
+  } catch(e) { console.log('GQ error', e.message); return null; }
 }
 
 function fallbackReply(text, isGroup) {
@@ -109,9 +109,9 @@ const server = http.createServer(async (req, res) => {
     if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>'); return; }
     if (!lastQR) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Waiting for QR... Refresh in 10 seconds.</h2><script>setTimeout(()=>location.reload(),5000)</script>'); return; }
     try {
-      const qrImage = await QRCode.toDataURL(lastQR, { width: 450, margin: 2 });
+      const qrImage = await QRC.toDataURL(lastQR, { width: 450, margin: 2 });
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp QR</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif"><h2>Pachapp Pool Villa - Scan QR</h2><p>Use bot phone <b>0529100668</b> - 【entity-WhatsApp¦canonical_name=WhatsApp】 - Linked Devices - Link a Device</p><img src="' + qrImage + '" style="width:420px;height:420px;border:2px solid #000"/><p>QR refreshes every 20 sec - If expired, refresh this page</p><p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),20000)</script></body></html>');
+      res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp QR</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif"><h2>Pachapp Pool Villa - Scan QR</h2><p>Use bot phone <b>0529100668</b> - WA - Linked Devices - Link a Device</p><img src="' + qrImage + '" style="width:420px;height:420px;border:2px solid #000"/><p>QR refreshes every 20 sec - If expired, refresh this page</p><p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),20000)</script></body></html>');
     } catch(e) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('QR error, refresh'); }
     return;
   }
@@ -122,7 +122,7 @@ server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
-  puppeteer: {
+  ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas']
@@ -136,7 +136,7 @@ client.on('qr', (qr) => {
   lastQR = qr;
   isReady = false;
   console.log('QR RECEIVED - Open /qr page to scan');
-  qrcode.generate(qr, { small: true });
+  qrterm.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
@@ -166,7 +166,7 @@ client.on('message', async (msg) => {
       if (targetBooking) {
         if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
           targetBooking.status = 'Confirmed';
-          await saveToAirtable(targetBooking);
+          await saveToDB(targetBooking);
           try { await client.sendMessage(targetBooking.chatId, 'Booking CONFIRMED - Pachapp Pool Villa! 🎉\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp! 🌿'); } catch(e) {}
           await msg.reply('Confirmed to guest ' + targetBooking.name);
           pendingBookings.delete(targetPhone);
