@@ -113,7 +113,7 @@ const server = http.createServer(async (req, res) => {
     if (lastPairCode) {
       pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code - Use this, no QR scan needed</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
     } else {
-      pairHtml = '<p>Pairing code loading... Wait 30 sec, refresh page.</p>';
+      pairHtml = '<p>Pairing code loading... Wait 30 sec, refresh page. If still loading, use QR below.</p>';
     }
     let qrHtml = '';
     if (lastQR) {
@@ -145,11 +145,22 @@ const client = new Client({
 const chatHistories = new Map();
 const pendingBookings = new Map();
 
+async function tryPairCode() {
+  if (isReady || lastPairCode) return;
+  try {
+    const code = await client.requestPairingCode(BOT_PHONE);
+    lastPairCode = code;
+    console.log('Pairing code: ' + code);
+  } catch(e) { console.log('Pairing code error', e.message); }
+}
+
 client.on('qr', (qr) => {
   lastQR = qr;
   isReady = false;
   console.log('QR RECEIVED - Open /qr page to scan');
   qrterm.generate(qr, { small: true });
+  setTimeout(tryPairCode, 5000);
+  setTimeout(tryPairCode, 20000);
 });
 
 client.on('code', (code) => {
@@ -227,12 +238,3 @@ client.on('message', async (msg) => {
 });
 
 client.initialize();
-setTimeout(async () => {
-  if (!isReady) {
-    try {
-      const code = await client.requestPairingCode(BOT_PHONE);
-      lastPairCode = code;
-      console.log('Pairing code: ' + code);
-    } catch(e) { console.log('Pairing code error', e.message); }
-  }
-}, 8000);
