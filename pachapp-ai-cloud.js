@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/' + '【entity-baileys¦canonical_name=Baileys】');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/' + 'REPLACE_THIS');
 const P = require('pino');
 const QRC = require('qrcode');
 const http = require('http');
@@ -14,7 +14,7 @@ const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
 const NEARBY_LINK = 'https://pachapp.green/here-around/';
 
 let AUTH_DIR = './baileys_auth';
-if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth/【entity-baileys¦canonical_name=Baileys】';
+if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth/baileys';
 if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
 console.log('Baileys auth dir: ' + AUTH_DIR + ' - NO Chrome, NO lock');
 
@@ -169,7 +169,7 @@ async function startSock() {
       isReady = true;
       lastQR = null;
       lastPairCode = null;
-      console.log('Pachapp AI Agent Ready - 【entity-BAILEYS¦canonical_name=Baileys】 - BOT IS LIVE - No Chrome');
+      console.log('Pachapp AI Agent Ready - BAILEYS - BOT IS LIVE - No Chrome');
     }
   });
 
