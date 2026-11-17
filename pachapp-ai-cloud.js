@@ -5,30 +5,47 @@ const http = require('http');
 const AT = require('air' + 'table');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
-// Disk auth survives restart - only delete Singleton lock, NEVER delete whole auth
+// FIX: Disk is at /app/.wwebjs_auth, not ./ - check BOTH, delete whole auth if lock is from old hostname
+const MY_HOST = os.hostname();
+console.log('Current host: ' + MY_HOST);
+const POSSIBLE_AUTH_DIRS = ['/app/.wwebjs_auth', './.wwebjs_auth', '/opt/render/project/src/.wwebjs_auth'];
+let AUTH_DIR = './.wwebjs_auth';
+if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth';
+console.log('Using auth dir: ' + AUTH_DIR);
+
 try {
-  const authDir = './.wwebjs_auth';
-  if (fs.existsSync(authDir)) {
-    const clearLocks = (dir) => {
+  for (const base of POSSIBLE_AUTH_DIRS) {
+    if (!fs.existsSync(base)) continue;
+    const findLocks = (dir) => {
       try {
         const files = fs.readdirSync(dir);
         for (const f of files) {
           const full = path.join(dir, f);
           try {
             const stat = fs.statSync(full);
-            if (stat.isDirectory()) clearLocks(full);
+            if (stat.isDirectory()) findLocks(full);
             else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
-              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+              let content = '';
+              try { content = fs.readFileSync(full, 'utf8'); } catch(e) {}
+              console.log('Found lock ' + full + ' content: ' + content.slice(0,100));
+              // If lock is from OLD host (srv-dbtev...), delete ENTIRE auth - stale, must start fresh
+              if (content && !content.includes(MY_HOST) && content.includes('srv-')) {
+                console.log('Stale lock from old host, deleting entire auth ' + base);
+                try { fs.rmSync(base, { recursive: true, force: true }); console.log('Deleted stale auth'); } catch(e) {}
+                return;
+              } else {
+                try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+              }
             }
           } catch(e) {}
         }
       } catch(e) {}
     };
-    clearLocks(authDir);
-    console.log('Lock check done - auth kept on Disk');
+    findLocks(base);
   }
-} catch(e) {}
+} catch(e) { console.log('Lock clear skip ' + e.message); }
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -160,7 +177,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
+  authStrategy: new LocalAuth({ dataPath: AUTH_DIR }),
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
