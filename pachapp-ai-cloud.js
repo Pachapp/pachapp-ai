@@ -4,31 +4,13 @@ const QRC = require('qr' + 'code');
 const http = require('http');
 const AT = require('air' + 'table');
 const fs = require('fs');
-const path = require('path');
 
-// Clear stale Chromium lock - NO userDataDir, so LocalAuth stays compatible
 try {
-  const authDir = './.wwebjs_auth';
-  if (fs.existsSync(authDir)) {
-    const clearLocks = (dir) => {
-      try {
-        const files = fs.readdirSync(dir);
-        for (const f of files) {
-          const full = path.join(dir, f);
-          try {
-            const stat = fs.statSync(full);
-            if (stat.isDirectory()) clearLocks(full);
-            else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK' || f === 'SingletonLock.lock') {
-              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
-            }
-          } catch(e) {}
-        }
-      } catch(e) {}
-    };
-    clearLocks(authDir);
-    console.log('Lock check done');
+  const tmpAuth = '/tmp/.wwebjs_auth';
+  if (fs.existsSync(tmpAuth)) {
+    try { fs.rmSync(tmpAuth, { recursive: true, force: true }); console.log('Cleared /tmp auth - fresh start'); } catch(e) {}
   }
-} catch(e) { console.log('Lock clear skip', e.message); }
+} catch(e) {}
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -139,19 +121,19 @@ const server = http.createServer(async (req, res) => {
     if (lastPairCode) {
       pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code - Use this, no QR scan needed</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
     } else {
-      pairHtml = '<p>Pairing code loading... Wait 30 sec, refresh page. If still loading, use QR below.</p>';
+      pairHtml = '<p style="color:#666">Pairing code not available right now - use QR below, it always works. Pairing code error is normal, ignore it.</p>';
     }
     let qrHtml = '';
     if (lastQR) {
       try {
         const qrImage = await QRC.toDataURL(lastQR, { width: 350, margin: 2 });
-        qrHtml = '<p>Or scan QR below:</p><img src="' + qrImage + '" style="width:320px;height:320px;border:2px solid #000"/>';
+        qrHtml = '<p><b>SCAN THIS QR - This is the main way:</b></p><img src="' + qrImage + '" style="width:320px;height:320px;border:2px solid #000"/>';
       } catch(e) {}
     } else {
       qrHtml = '<p>QR loading... Refresh in 10 sec.</p>';
     }
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp Pair</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif;max-width:600px"><h2>Pachapp Pool Villa - Link Bot</h2>' + pairHtml + qrHtml + '<p><a href="/qr">Refresh</a></p><p>QR refreshes - Pairing Code is easier, use code above</p></div><script>setTimeout(()=>location.reload(),60000)</script></body></html>');
+    res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp Pair</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif;max-width:600px"><h2>Pachapp Pool Villa - Link Bot</h2>' + pairHtml + qrHtml + '<p><a href="/qr">Refresh QR</a></p><p>QR refreshes every 60 sec - scan quickly</p></div><script>setTimeout(()=>location.reload(),60000)</script></body></html>');
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -160,11 +142,11 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
+  authStrategy: new LocalAuth({ dataPath: '/tmp/.wwebjs_auth' }),
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer', '--disable-extensions', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-features=site-per-process', '--no-first-run', '--disable-accelerated-2d-canvas', '--no-zygote', '--single-process']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote', '--single-process', '--disable-extensions']
   }
 });
 
@@ -173,11 +155,20 @@ const pendingBookings = new Map();
 
 async function tryPairCode() {
   if (isReady || lastPairCode) return;
-  try {
-    const code = await client.requestPairingCode(BOT_PHONE);
-    lastPairCode = code;
-    console.log('Pairing code: ' + code);
-  } catch(e) { console.log('Pairing code error', e.message); }
+  for (let i = 1; i <= 3; i++) {
+    try {
+      console.log('Trying pairing code attempt ' + i);
+      const code = await client.requestPairingCode(BOT_PHONE);
+      lastPairCode = code;
+      console.log('Pairing code: ' + code);
+      return;
+    } catch(e) {
+      console.log('Pairing code try ' + i + ' failed: ' + (e.message || e));
+      if (i < 3) await new Promise(r => setTimeout(r, 10000));
+    }
+  }
+  console.log('Pairing code failed after 3 tries - use QR scan instead, QR always works');
+  lastPairCode = null;
 }
 
 client.on('qr', (qr) => {
@@ -185,8 +176,7 @@ client.on('qr', (qr) => {
   isReady = false;
   console.log('QR RECEIVED - Open /qr page to scan');
   qrterm.generate(qr, { small: true });
-  setTimeout(tryPairCode, 5000);
-  setTimeout(tryPairCode, 20000);
+  setTimeout(tryPairCode, 15000);
 });
 
 client.on('code', (code) => {
