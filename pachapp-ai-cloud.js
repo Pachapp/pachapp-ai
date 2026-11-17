@@ -1,10 +1,8 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/【entity-baileys¦canonical_name=Baileys】');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/' + '【entity-baileys¦canonical_name=Baileys】');
 const P = require('pino');
 const QRC = require('qrcode');
-const qrterm = require('qrcode-terminal');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
@@ -15,9 +13,8 @@ const WEBSITE = 'www.pachapp.green';
 const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
 const NEARBY_LINK = 'https://pachapp.green/here-around/';
 
-// Baileys auth - new folder inside same Disk, old Chrome lock ignored
 let AUTH_DIR = './baileys_auth';
-if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth/baileys';
+if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth/【entity-baileys¦canonical_name=Baileys】';
 if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
 console.log('Baileys auth dir: ' + AUTH_DIR + ' - NO Chrome, NO lock');
 
@@ -151,8 +148,6 @@ async function startSock() {
       lastQR = qr;
       isReady = false;
       console.log('BAILEYS QR RECEIVED - Open /qr to scan');
-      try { qrterm.generate(qr, { small: true }); } catch(e) {}
-      // Try pairing code once after 8 sec - if QR not scanned, user can use code
       setTimeout(async () => {
         if (!isReady && !lastPairCode) {
           try { const code = await sock.requestPairingCode(BOT_PHONE); lastPairCode = code; console.log('Baileys Pairing code: ' + code); } catch(e) { console.log('Pairing code not yet: ' + e.message); }
@@ -174,7 +169,7 @@ async function startSock() {
       isReady = true;
       lastQR = null;
       lastPairCode = null;
-      console.log('Pachapp AI Agent Ready - BAILEYS - BOT IS LIVE - No Chrome');
+      console.log('Pachapp AI Agent Ready - 【entity-BAILEYS¦canonical_name=Baileys】 - BOT IS LIVE - No Chrome');
     }
   });
 
@@ -194,14 +189,13 @@ async function handleMessage(msg) {
     if (key.fromMe) return;
     const text = getText(msg.message);
     if (!text) return;
-    console.log('【entity-BAILEYS¦canonical_name=Baileys】 MESSAGE from ' + from + ' : ' + text.slice(0, 200));
+    console.log('BAILEYS MESSAGE from ' + from + ' : ' + text.slice(0, 200));
     try { await sock.readMessages([key]); console.log('Marked seen - blue tick'); } catch(e) {}
     const isGroup = from.endsWith('@g.us');
     let senderNumber = from.replace('@s.whatsapp.net', '').replace('@g.us', '');
     let senderName = msg.pushName || 'Guest';
     if (isGroup && key.participant) senderNumber = key.participant.replace('@s.whatsapp.net', '');
     const lower = text.toLowerCase();
-    // Owner YES/NO confirm
     if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
       let targetPhone = null, targetBooking = null;
       for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
