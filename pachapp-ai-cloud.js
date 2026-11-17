@@ -4,11 +4,29 @@ const QRC = require('qr' + 'code');
 const http = require('http');
 const AT = require('air' + 'table');
 const fs = require('fs');
+const path = require('path');
 
+// Disk auth survives restart - only delete Singleton lock, NEVER delete whole auth
 try {
-  const tmpAuth = '/tmp/.wwebjs_auth';
-  if (fs.existsSync(tmpAuth)) {
-    try { fs.rmSync(tmpAuth, { recursive: true, force: true }); console.log('Cleared /tmp auth - fresh start'); } catch(e) {}
+  const authDir = './.wwebjs_auth';
+  if (fs.existsSync(authDir)) {
+    const clearLocks = (dir) => {
+      try {
+        const files = fs.readdirSync(dir);
+        for (const f of files) {
+          const full = path.join(dir, f);
+          try {
+            const stat = fs.statSync(full);
+            if (stat.isDirectory()) clearLocks(full);
+            else if (f === 'SingletonLock' || f === 'SingletonSocket' || f === 'SingletonCookie' || f === 'LOCK') {
+              try { fs.unlinkSync(full); console.log('Cleared lock ' + full); } catch(e) {}
+            }
+          } catch(e) {}
+        }
+      } catch(e) {}
+    };
+    clearLocks(authDir);
+    console.log('Lock check done - auth kept on Disk');
   }
 } catch(e) {}
 
@@ -119,7 +137,7 @@ const server = http.createServer(async (req, res) => {
     if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>'); return; }
     let pairHtml = '';
     if (lastPairCode) {
-      pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
+      pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code</b><br>On BOT phone 0529100668: WA Business - Linked Devices - Link with phone number - Enter this code</p></div>';
     } else {
       pairHtml = '<p style="color:#666">Pairing code not available - use QR below, it always works.</p>';
     }
@@ -142,7 +160,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: '/tmp/.wwebjs_auth' }),
+  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
   ['pup' + 'peteer']: {
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
@@ -187,7 +205,7 @@ client.on('ready', () => {
   isReady = true;
   lastQR = null;
   lastPairCode = null;
-  console.log('Pachapp AI Agent Ready - CLOUD BUILD - BOT IS LIVE');
+  console.log('Pachapp AI Agent Ready - CLOUD BUILD - BOT IS LIVE - Disk auth kept');
 });
 
 client.on('auth_failure', (msg) => console.log('Auth failure ' + msg));
@@ -200,26 +218,15 @@ async function handleMessage(msg) {
   console.log('RAW MESSAGE RECEIVED from ' + from + ' : ' + body.slice(0, 200));
   if (from === 'status@broadcast') return;
   if (msg.fromMe) { console.log('Skipped own message'); return; }
-
-  try { await msg.getChat().then(async (c) => { try { await c.sendSeen(); console.log('Marked seen - blue tick now'); } catch(e) {} }); } catch(e) {}
-
+  try { const c = await msg.getChat(); try { await c.sendSeen(); console.log('Marked seen - blue tick now'); } catch(e) {} } catch(e) {}
   let isGroup = false;
   let senderNumber = from.replace('@c.us', '').replace('@g.us', '');
   let senderName = 'Guest';
-  try {
-    const chat = await msg.getChat();
-    isGroup = chat.isGroup || false;
-  } catch(e) { console.log('getChat fallback, isGroup=false'); }
-  try {
-    const contact = await msg.getContact();
-    if (contact) { senderNumber = contact.number || senderNumber; senderName = contact.pushname || contact.name || senderName; }
-  } catch(e) { console.log('getContact fallback'); }
-
+  try { const chat = await msg.getChat(); isGroup = chat.isGroup || false; } catch(e) {}
+  try { const contact = await msg.getContact(); if (contact) { senderNumber = contact.number || senderNumber; senderName = contact.pushname || contact.name || senderName; } } catch(e) {}
   console.log('Processing from ' + senderName + ' (' + senderNumber + ') group=' + isGroup);
-
   const text = body;
   const lower = text.toLowerCase();
-
   if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
     let targetPhone = null, targetBooking = null;
     for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
@@ -234,7 +241,6 @@ async function handleMessage(msg) {
       return;
     }
   }
-
   const hasMedia = msg.hasMedia;
   const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/);
   if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
@@ -246,7 +252,6 @@ async function handleMessage(msg) {
     try { await msg.reply('Payment screenshot + UTR ' + utr + ' received. ✅\n\nOwner will verify and I will confirm your booking in a moment.'); } catch(e) { try { await client.sendMessage(from, 'Payment screenshot + UTR ' + utr + ' received. ✅'); } catch(e2) {} }
     return;
   }
-
   if (!chatHistories.has(from)) chatHistories.set(from, []);
   const history = chatHistories.get(from);
   history.push({ role: 'user', content: text });
@@ -261,22 +266,12 @@ async function handleMessage(msg) {
     const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
     pendingBookings.set(senderNumber, { name: senderName, phone: senderNumber, chatId: from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: price, advance: calcAdvance(price), status: 'Enquiry' });
   }
-  try {
-    await msg.reply(reply);
-    console.log('Replied OK to ' + senderNumber);
-  } catch(e) {
-    console.log('msg.reply failed, trying sendMessage: ' + e.message);
-    try { await client.sendMessage(from, reply); console.log('sendMessage OK'); } catch(e2) { console.log('sendMessage also failed: ' + e2.message); }
-  }
+  try { await msg.reply(reply); console.log('Replied OK to ' + senderNumber); } catch(e) { console.log('msg.reply failed, trying sendMessage: ' + e.message); try { await client.sendMessage(from, reply); console.log('sendMessage OK'); } catch(e2) { console.log('sendMessage also failed: ' + e2.message); } }
   if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
     try { await client.sendMessage(from, 'Photos & videos here: ' + WEBSITE + ' 📸\nMaps: ' + MAPS_LINK); } catch(e) {}
   }
 }
 
 client.on('message', handleMessage);
-client.on('message_create', async (msg) => {
-  if (msg.fromMe) return;
-  console.log('message_create event: ' + msg.from);
-});
-
+client.on('message_create', async (msg) => { if (msg.fromMe) return; console.log('message_create event: ' + msg.from); });
 client.initialize();
