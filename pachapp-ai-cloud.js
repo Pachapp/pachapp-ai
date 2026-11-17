@@ -77,7 +77,7 @@ async function askAI(userMsg, isGroup, history) {
     const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.';
     const c = await gq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
     return c.choices[0]?.message?.content || null;
-  } catch(e) { console.log('GQ error', e.message); return null; }
+  } catch(e) { console.log('GQ error ' + e.message); return null; }
 }
 
 function fallbackReply(text, isGroup) {
@@ -119,21 +119,21 @@ const server = http.createServer(async (req, res) => {
     if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready.</h2>'); return; }
     let pairHtml = '';
     if (lastPairCode) {
-      pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code - Use this, no QR scan needed</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
+      pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code</b><br>On BOT phone 0529100668: WA - Linked Devices - Link with phone number - Enter this code</p></div>';
     } else {
-      pairHtml = '<p style="color:#666">Pairing code not available right now - use QR below, it always works. Pairing code error is normal, ignore it.</p>';
+      pairHtml = '<p style="color:#666">Pairing code not available - use QR below, it always works.</p>';
     }
     let qrHtml = '';
     if (lastQR) {
       try {
         const qrImage = await QRC.toDataURL(lastQR, { width: 350, margin: 2 });
-        qrHtml = '<p><b>SCAN THIS QR - This is the main way:</b></p><img src="' + qrImage + '" style="width:320px;height:320px;border:2px solid #000"/>';
+        qrHtml = '<p><b>SCAN THIS QR:</b></p><img src="' + qrImage + '" style="width:320px;height:320px;border:2px solid #000"/>';
       } catch(e) {}
     } else {
       qrHtml = '<p>QR loading... Refresh in 10 sec.</p>';
     }
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp Pair</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif;max-width:600px"><h2>Pachapp Pool Villa - Link Bot</h2>' + pairHtml + qrHtml + '<p><a href="/qr">Refresh QR</a></p><p>QR refreshes every 60 sec - scan quickly</p></div><script>setTimeout(()=>location.reload(),60000)</script></body></html>');
+    res.end('<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pachapp Pair</title></head><body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fff"><div style="text-align:center;font-family:sans-serif;max-width:600px"><h2>Pachapp Pool Villa - Link Bot</h2>' + pairHtml + qrHtml + '<p><a href="/qr">Refresh QR</a></p></div><script>setTimeout(()=>location.reload(),60000)</script></body></html>');
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -157,7 +157,6 @@ async function tryPairCode() {
   if (isReady || lastPairCode) return;
   for (let i = 1; i <= 3; i++) {
     try {
-      console.log('Trying pairing code attempt ' + i);
       const code = await client.requestPairingCode(BOT_PHONE);
       lastPairCode = code;
       console.log('Pairing code: ' + code);
@@ -167,7 +166,7 @@ async function tryPairCode() {
       if (i < 3) await new Promise(r => setTimeout(r, 10000));
     }
   }
-  console.log('Pairing code failed after 3 tries - use QR scan instead, QR always works');
+  console.log('Pairing code failed - use QR scan instead');
   lastPairCode = null;
 }
 
@@ -188,69 +187,96 @@ client.on('ready', () => {
   isReady = true;
   lastQR = null;
   lastPairCode = null;
-  console.log('Pachapp AI Agent Ready - CLOUD BUILD');
+  console.log('Pachapp AI Agent Ready - CLOUD BUILD - BOT IS LIVE');
 });
 
-client.on('auth_failure', (msg) => console.log('Auth failure', msg));
-client.on('disconnected', (reason) => { isReady = false; console.log('Disconnected', reason); });
+client.on('auth_failure', (msg) => console.log('Auth failure ' + msg));
+client.on('disconnected', (reason) => { isReady = false; console.log('Disconnected ' + reason); });
+client.on('authenticated', () => console.log('Authenticated OK'));
 
-client.on('message', async (msg) => {
+async function handleMessage(msg) {
+  const from = msg.from || '';
+  const body = msg.body || '';
+  console.log('RAW MESSAGE RECEIVED from ' + from + ' : ' + body.slice(0, 200));
+  if (from === 'status@broadcast') return;
+  if (msg.fromMe) { console.log('Skipped own message'); return; }
+
+  try { await msg.getChat().then(async (c) => { try { await c.sendSeen(); console.log('Marked seen - blue tick now'); } catch(e) {} }); } catch(e) {}
+
+  let isGroup = false;
+  let senderNumber = from.replace('@c.us', '').replace('@g.us', '');
+  let senderName = 'Guest';
   try {
-    if (msg.from === 'status@broadcast') return;
     const chat = await msg.getChat();
-    const isGroup = chat.isGroup;
+    isGroup = chat.isGroup || false;
+  } catch(e) { console.log('getChat fallback, isGroup=false'); }
+  try {
     const contact = await msg.getContact();
-    const senderNumber = contact.number || msg.from.replace('@c.us', '');
-    const senderName = contact.pushname || contact.name || 'Guest';
-    const text = msg.body || '';
-    const lower = text.toLowerCase();
-    console.log('Message from ' + senderName + ': ' + text.slice(0, 100));
+    if (contact) { senderNumber = contact.number || senderNumber; senderName = contact.pushname || contact.name || senderName; }
+  } catch(e) { console.log('getContact fallback'); }
 
-    if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
-      let targetPhone = null, targetBooking = null;
-      for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
-      if (targetBooking) {
-        if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
-          targetBooking.status = 'Confirmed';
-          await saveToDB(targetBooking);
-          try { await client.sendMessage(targetBooking.chatId, 'Booking CONFIRMED - Pachapp Pool Villa! 🎉\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp! 🌿'); } catch(e) {}
-          await msg.reply('Confirmed to guest ' + targetBooking.name);
-          pendingBookings.delete(targetPhone);
-        } else { await msg.reply('Not confirmed.'); }
-        return;
-      }
-    }
+  console.log('Processing from ' + senderName + ' (' + senderNumber + ') group=' + isGroup);
 
-    const hasMedia = msg.hasMedia;
-    const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/);
-    if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
-      const utrMatch = text.match(/\b\d{10,18}\b/);
-      const utr = utrMatch ? utrMatch[0] : 'Screenshot received';
-      const pending = { name: senderName, phone: senderNumber, chatId: msg.from, date: pendingBookings.get(senderNumber)?.date || 'To confirm', guests: pendingBookings.get(senderNumber)?.guests || '', total: pendingBookings.get(senderNumber)?.total || 0, advance: pendingBookings.get(senderNumber)?.advance || 0, utr: utr, status: 'Pending' };
-      pendingBookings.set(senderNumber, pending);
-      try { await client.sendMessage(OWNER_NUMBER + '@c.us', 'PAYMENT VERIFICATION NEEDED\nGuest: ' + senderName + ' (' + senderNumber + ')\nDate: ' + pending.date + '\nUTR: ' + utr + '\nAdvance: ' + formatPrice(pending.advance) + '\n\nReply YES to confirm, NO to reject.'); if (hasMedia) { try { const media = await msg.downloadMedia(); await client.sendMessage(OWNER_NUMBER + '@c.us', media, { caption: 'Payment screenshot from ' + senderName + ' - UTR ' + utr }); } catch(e) {} } } catch(e) {}
-      await msg.reply('Payment screenshot + UTR ' + utr + ' received. ✅\n\nOwner will verify and I will confirm your booking in a moment.');
+  const text = body;
+  const lower = text.toLowerCase();
+
+  if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
+    let targetPhone = null, targetBooking = null;
+    for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
+    if (targetBooking) {
+      if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
+        targetBooking.status = 'Confirmed';
+        await saveToDB(targetBooking);
+        try { await client.sendMessage(targetBooking.chatId, 'Booking CONFIRMED - Pachapp Pool Villa! 🎉\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp! 🌿'); } catch(e) {}
+        try { await msg.reply('Confirmed to guest ' + targetBooking.name); } catch(e) {}
+        pendingBookings.delete(targetPhone);
+      } else { try { await msg.reply('Not confirmed.'); } catch(e) {} }
       return;
     }
+  }
 
-    if (!chatHistories.has(msg.from)) chatHistories.set(msg.from, []);
-    const history = chatHistories.get(msg.from);
-    history.push({ role: 'user', content: text });
-    let reply = await askAI(text, isGroup, history);
-    if (!reply) reply = fallbackReply(text, isGroup);
-    history.push({ role: 'assistant', content: reply });
-    if (history.length > 16) chatHistories.set(msg.from, history.slice(-16));
-    const parsedDate = parseDate(text);
-    if (parsedDate) {
-      const type = getDateType(text);
-      const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
-      pendingBookings.set(senderNumber, { name: senderName, phone: senderNumber, chatId: msg.from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: price, advance: calcAdvance(price), status: 'Enquiry' });
-    }
+  const hasMedia = msg.hasMedia;
+  const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/);
+  if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
+    const utrMatch = text.match(/\b\d{10,18}\b/);
+    const utr = utrMatch ? utrMatch[0] : 'Screenshot received';
+    const pending = { name: senderName, phone: senderNumber, chatId: from, date: pendingBookings.get(senderNumber)?.date || 'To confirm', guests: pendingBookings.get(senderNumber)?.guests || '', total: pendingBookings.get(senderNumber)?.total || 0, advance: pendingBookings.get(senderNumber)?.advance || 0, utr: utr, status: 'Pending' };
+    pendingBookings.set(senderNumber, pending);
+    try { await client.sendMessage(OWNER_NUMBER + '@c.us', 'PAYMENT VERIFICATION NEEDED\nGuest: ' + senderName + ' (' + senderNumber + ')\nDate: ' + pending.date + '\nUTR: ' + utr + '\nAdvance: ' + formatPrice(pending.advance) + '\n\nReply YES to confirm, NO to reject.'); if (hasMedia) { try { const media = await msg.downloadMedia(); await client.sendMessage(OWNER_NUMBER + '@c.us', media, { caption: 'Payment screenshot from ' + senderName + ' - UTR ' + utr }); } catch(e) {} } } catch(e) {}
+    try { await msg.reply('Payment screenshot + UTR ' + utr + ' received. ✅\n\nOwner will verify and I will confirm your booking in a moment.'); } catch(e) { try { await client.sendMessage(from, 'Payment screenshot + UTR ' + utr + ' received. ✅'); } catch(e2) {} }
+    return;
+  }
+
+  if (!chatHistories.has(from)) chatHistories.set(from, []);
+  const history = chatHistories.get(from);
+  history.push({ role: 'user', content: text });
+  let reply = await askAI(text, isGroup, history);
+  if (!reply) { console.log('AI null, using fallback'); reply = fallbackReply(text, isGroup); }
+  else { console.log('AI replied: ' + reply.slice(0, 80)); }
+  history.push({ role: 'assistant', content: reply });
+  if (history.length > 16) chatHistories.set(from, history.slice(-16));
+  const parsedDate = parseDate(text);
+  if (parsedDate) {
+    const type = getDateType(text);
+    const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
+    pendingBookings.set(senderNumber, { name: senderName, phone: senderNumber, chatId: from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: price, advance: calcAdvance(price), status: 'Enquiry' });
+  }
+  try {
     await msg.reply(reply);
-    if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
-      await client.sendMessage(msg.from, 'Photos & videos here: ' + WEBSITE + ' 📸\nMaps: ' + MAPS_LINK);
-    }
-  } catch(e) { console.log('Message error', e.message); }
+    console.log('Replied OK to ' + senderNumber);
+  } catch(e) {
+    console.log('msg.reply failed, trying sendMessage: ' + e.message);
+    try { await client.sendMessage(from, reply); console.log('sendMessage OK'); } catch(e2) { console.log('sendMessage also failed: ' + e2.message); }
+  }
+  if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
+    try { await client.sendMessage(from, 'Photos & videos here: ' + WEBSITE + ' 📸\nMaps: ' + MAPS_LINK); } catch(e) {}
+  }
+}
+
+client.on('message', handleMessage);
+client.on('message_create', async (msg) => {
+  if (msg.fromMe) return;
+  console.log('message_create event: ' + msg.from);
 });
 
 client.initialize();
