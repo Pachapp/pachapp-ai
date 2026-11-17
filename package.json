@@ -6,7 +6,7 @@
     "start": "node pachapp-ai-cloud.js"
   },
   "dependencies": {
-    "@whiskeysockets/【entity-baileys¦canonical_name=Baileys】": "6.7.18",
+    "@whiskeysockets/baileys": "6.7.18",
     "qrcode": "1.5.4",
     "groq-sdk": "0.9.0",
     "airtable": "0.12.2",
