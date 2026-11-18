@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/' + 'REPLACE_THIS');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/' + 'ba' + 'ileys');
 const P = require('pino');
 const QRC = require('qrcode');
 const http = require('http');
@@ -6,7 +6,7 @@ const fs = require('fs');
 
 const PORT = process.env.PORT || 10000;
 const OWNER_NUMBER = '918943666911';
-const OWNER_JID = '918943666911@s.【entity-whatsapp¦canonical_name=WhatsApp】.net';
+const OWNER_JID = '918943666911@s.whatsapp.net';
 const BOT_PHONE = '971529100668';
 const VILLA_NAME = 'Pachapp Pool Villa';
 const WEBSITE = 'www.pachapp.green';
@@ -98,9 +98,9 @@ let isReady = false;
 let sock = null;
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady, method: ' Baileys' })); return; }
+  if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady, method: ' 【entity-Baileys¦canonical_name=Baileys】' })); return; }
   if (req.url === '/qr' || req.url === '/pair') {
-    if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready - Baileys.</h2>'); return; }
+    if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready - 【entity-Baileys¦canonical_name=Baileys】.</h2>'); return; }
     let pairHtml = '';
     if (lastPairCode) { pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code</b><br>On BOT phone 0529100668: WA Business - Linked Devices - Link with phone number - Enter this code</p></div>'; }
     else { pairHtml = '<p style="color:#666">Pairing code loading... Use QR below, or refresh in 20 sec.</p>'; }
@@ -147,7 +147,7 @@ async function startSock() {
     if (qr) {
       lastQR = qr;
       isReady = false;
-      console.log('BAILEYS QR RECEIVED - Open /qr to scan');
+      console.log('【entity-BAILEYS¦canonical_name=Baileys】 QR RECEIVED - Open /qr to scan');
       setTimeout(async () => {
         if (!isReady && !lastPairCode) {
           try { const code = await sock.requestPairingCode(BOT_PHONE); lastPairCode = code; console.log(' Baileys Pairing code: ' + code); } catch(e) { console.log('Pairing code not yet: ' + e.message); }
@@ -169,7 +169,7 @@ async function startSock() {
       isReady = true;
       lastQR = null;
       lastPairCode = null;
-      console.log('Pachapp AI Agent Ready - BAILEYS - BOT IS LIVE - No Chrome');
+      console.log('Pachapp AI Agent Ready - 【entity-BAILEYS¦canonical_name=Baileys】 - BOT IS LIVE - No Chrome');
     }
   });
 
