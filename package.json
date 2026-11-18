@@ -1,11 +1,8 @@
 {
-  "name": "pachapp-ai-cloud",
+  "name": "pachapp-ai",
   "version": "1.0.0",
   "main": "pachapp-ai-cloud.js",
   "scripts": { "start": "node pachapp-ai-cloud.js" },
-  "dependencies": {
-    "airtable": "^0.12.2",
-    "groq-sdk": "^0.27.0"
-  },
-  "engines": { "node": ">=18" }
+  "dependencies": { "groq-sdk": "0.9.0", "airtable": "0.12.2" },
+  "engines": { "node": "20.x" }
 }
