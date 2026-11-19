@@ -35,6 +35,16 @@ const ACTIVITIES_PHOTOS_LINK = D1 + '1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh';
 const QR_CODE_LINK = D1 + '1P2pAgfc36HWsRNKAdswEVW7k8D1cxvCz';
 const PRICING = { fullWeekday: 6400, fullWeekend: 8000, fullFestival: 9600, separate1Weekday: 1600, separate2Weekday: 3200, separate3Weekday: 4800 };
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+const GREETINGS = [
+  'Hi, I am ' + P1 + ' - how can I help you on this beautiful day?',
+  'Hi sir, we are waiting to serve you at ' + P1 + '. What are you planning?',
+  'Hello, friends at your service - this is ' + P1 + ' Pool Villa, ' + M1 + '. How can I help?',
+  'Hey, welcome to ' + P1 + '! Beautiful day in ' + W1 + '. Tell me, when are you planning to come?',
+  'Hi there! ' + P1 + ' here, at your service. What can I do for you today?',
+  'Good day! This is ' + P1 + ' Pool Villa, ' + L1 + '. We are ready to serve you - which date are you looking at?',
+  'Hello! ' + P1 + ' family here - happy to help. What are you dreaming of - pool, rooms, music?',
+  'Hi, welcome to ' + P1 + '! We are waiting to serve you. How many guests, and which date?'
+];
 function isWeekend(d){ const day=d.getDay(); return day===0||day===6; }
 function parseDate(text){
   if(!text) return null; text=text.toLowerCase().trim();
@@ -79,19 +89,29 @@ async function saveToDB(booking){
 }
 let gq=null;
 try{ const {Groq}=require(GQ1 + '-sdk'); if(G_KEY) gq=new Groq({apiKey:G_KEY}); }catch(e){}
-const SYS = "You are " + P1 + " host, warm, human, logical, precise. Villa in " + M1 + ", " + W1 + ", " + K1 + ", at " + L1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions. Never promise guaranteed. PRECISE DATA ONLY: Full Villa Weekday 6400, Weekend 8000, Festival 9600. Separate WEEKDAY ONLY: 1 Room 1600, 2 Rooms 3200, 3 Rooms 4800. For separate weekend/festival, say owner will confirm. Full Villa: 4 rooms, 8 adults + kids, breakfast free with Full Villa. For separate breakfast, say owner will confirm. NEVER invent: advance amount, check-in/out time, festival dates, parking, wifi, distance numbers, kid age limit. If not sure, say owner will confirm. RULES: 1) NEVER repeat same welcome twice. 2) ALWAYS answer ACTUAL question, even with typos like roooms, where is located. 3) If multiple questions, answer ALL in ONE reply. 4) Remember history, do NOT ask date again if already given. 5) Photos only when asked, QR only when deal near close and guest asks QR. 6) Vary wording, sound like a real host, not a template. Reply in guest language.";
+const SYS = "You are " + P1 + " host, warm, professional, human, logical, precise. Villa in " + M1 + ", " + W1 + ", " + K1 + ", at " + L1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions. Never promise guaranteed. FIRST MESSAGE: Greet professionally with a warm variant like Hi I am " + P1 + " how can I help on this beautiful day, or Hi sir we are waiting to serve you, or Friends at your service. Vary greeting every time, never repeat same welcome. For later messages, NEVER greet again with welcome, just continue conversation. PRECISE DATA ONLY: Full Villa Weekday 6400, Weekend 8000, Festival 9600. Separate WEEKDAY ONLY: 1 Room 1600, 2 Rooms 3200, 3 Rooms 4800. For separate weekend/festival, say owner will confirm. Full Villa: 4 rooms, 8 adults + kids, breakfast free with Full Villa. For separate breakfast, say owner will confirm. NEVER invent: advance amount, check-in/out time, festival dates, parking, wifi, distance numbers, kid age limit. If not sure, say owner will confirm. RULES: 1) ALWAYS answer ACTUAL question, even with typos like roooms, where is located. 2) If multiple questions, answer ALL in ONE reply. 3) Remember history, do NOT ask date again if already given. 4) Photos only when asked, QR only when deal near close and guest asks QR. 5) Vary wording, sound like a real host, not a template. Reply in guest language.";
 async function askAI(userMsg, history){
   if(!gq) return null;
-  try{
-    const c = await gq.chat.completions.create({ model:'lla' + 'ma-3.1-8b-instant', messages:[{role:'system', content: SYS}, ...(history||[]).slice(-10), {role:'user', content:userMsg}], temperature:0.75, max_tokens:800 });
-    return c.choices[0]?.message?.content || null;
-  }catch(e){ console.log('AI chat error '+e.message); return null; }
+  const MODELS = ['lla' + 'ma-3.3-70b-versatile', 'open' + 'ai/gpt-oss-20b', 'lla' + 'ma-3.1-8b-instant'];
+  for(const model of MODELS){
+    try{
+      const c = await gq.chat.completions.create({ model, messages:[{role:'system', content: SYS}, ...(history||[]).slice(-10), {role:'user', content:userMsg}], temperature:0.75, max_tokens:800 });
+      const out = c.choices[0]?.message?.content || null;
+      if(out) return out;
+    }catch(e){
+      console.log('AI model '+model+' failed: '+e.message);
+      continue;
+    }
+  }
+  console.log('All AI models failed, using logical fallback');
+  return null;
 }
 function logicalFallback(text, history){
   const lower=(text||'').toLowerCase();
   const answers=[];
   const histLen = history ? history.length : 0;
   const roomsRe = /ro+m/;
+  const isFirst = histLen <= 2;
   if((lower.includes('are you')||lower.includes('are u')||lower.includes('who are')) && (lower.includes('ai')||lower.includes('robot')||lower.includes('human')||lower.includes('bot')||lower.includes('real'))){
     answers.push(pick([
       'Yes, I am the AI helper for ' + P1 + ' - I reply fast here, and ' + U1 + ' himself checks and confirms your booking. Ask me anything, I will answer simply.',
@@ -178,13 +198,14 @@ function logicalFallback(text, history){
   if(wantsQRForPayment(text)){
     answers.push('Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?');
   }
-  const onlyGreeting = (lower.trim()==='hi'||lower.trim()==='hello'||lower.trim()==='hey'||lower.trim()==='hii'||lower.trim()==='helloo');
+  const onlyGreeting = (lower.trim()==='hi'||lower.trim()==='hello'||lower.trim()==='hey'||lower.trim()==='hii'||lower.trim()==='helloo'||lower.trim()==='hi sir'||lower.trim()==='hello sir');
   if(onlyGreeting && answers.length===0){
-    if(histLen>2) answers.push('Hey, I am here. You were asking - go ahead, ask your next question, I am listening.');
-    else answers.push('Hey! This is ' + P1 + ', ' + M1 + '. Which date, how many guests?');
+    if(isFirst) answers.push(pick(GREETINGS) + ' Which date, how many guests?');
+    else answers.push('Hey, I am here. You were asking - go ahead, ask your next question, I am listening.');
   }
   if(answers.length===0){
-    answers.push('I want to answer that correctly - did you mean price, rooms, location, or date? Tell me in one line, like "how many rooms" or "where is located", and I will answer that one directly. Or tell me your date + guests, I will give you everything together.');
+    if(isFirst) answers.push(pick(GREETINGS) + '\n\nTell me your date + guests, I will give you everything together - price, pool, rooms, music.');
+    else answers.push('I want to answer that correctly - did you mean price, rooms, location, or date? Tell me in one line, like "how many rooms" or "where is located", and I will answer that one directly. Or tell me your date + guests, I will give you everything together.');
   }
   return answers.join('\n\n');
 }
@@ -247,9 +268,20 @@ async function processCombined(from, senderName, combinedText){
     }
     if(!chatHistories.has(from)) chatHistories.set(from, []);
     const history=chatHistories.get(from);
+    const isFirstMessage = history.length===0;
     history.push({ role:'user', content: combinedText });
     let reply = await askAI(combinedText, history);
     if(!reply){ reply=logicalFallback(combinedText, history); }
+    if(isFirstMessage){
+      const trimmed = reply.trim().toLowerCase();
+      const alreadyGreeting = trimmed.startsWith('hi')||trimmed.startsWith('hello')||trimmed.startsWith('hey')||trimmed.startsWith('good day')||trimmed.startsWith('welcome');
+      const onlyGreetingMsg = (lower.trim()==='hi'||lower.trim()==='hello'||lower.trim()==='hey'||lower.trim()==='hii'||lower.trim()==='helloo');
+      if(onlyGreetingMsg){
+        if(!alreadyGreeting) reply = pick(GREETINGS) + ' Which date, how many guests?';
+      } else {
+        if(!alreadyGreeting) reply = pick(GREETINGS) + '\n\n' + reply;
+      }
+    }
     if(wantsPhotos(combinedText) && !reply.includes('drive.'+G1+'.com')){
       if(lower.includes('pool')) reply += '\n\nPool photos - Drive: '+POOL_PHOTOS_LINK;
       else if(/ro+m/.test(lower)) reply += '\n\nRoom photos - Drive: '+ROOM_PHOTOS_LINK;
