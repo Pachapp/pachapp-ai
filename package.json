@@ -1,18 +1,1 @@
-
-{
-  "name": "pachapp-ai",
-  "version": "1.0.0",
-  "description": "Pachapp Pool Villa AI - WhatsApp Cloud API + Voice + Drive Photos",
-  "main": "pachapp-ai-cloud.js",
-  "scripts": {
-    "start": "node pachapp-ai-cloud.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "groq-sdk": "^0.5.0",
-    "airtable": "^0.12.2"
-  },
-  "engines": {
-    "node": "20.x"
-  }
-}
+{"dependencies":{"airtable":"0.12.2","express":"4.21.2","groq-sdk":"0.9.0"},"engines":{"node":"20.x"},"main":"pachapp-ai-cloud.js","name":"pachapp-ai","scripts":{"start":"node pachapp-ai-cloud.js"},"version":"1.0.0"}
