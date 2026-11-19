@@ -33,9 +33,8 @@ const ROOM_PHOTOS_LINK = D1 + '10tN84VxjXvNYiuzOx5sT2XHl46su3mgO';
 const OUTDOOR_PHOTOS_LINK = D1 + '1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh';
 const ACTIVITIES_PHOTOS_LINK = D1 + '1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh';
 const QR_CODE_LINK = D1 + '1P2pAgfc36HWsRNKAdswEVW7k8D1cxvCz';
-const PRICING = { fullWeekday: 6400, fullWeekend: 8000, fullFestival: 9600, separate1: 1600, separate2: 3200, separate3: 4800 };
-const FESTIVALS = new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
-function isFestival(d){ return FESTIVALS.has(d.toISOString().slice(0,10)); }
+const PRICING = { fullWeekday: 6400, fullWeekend: 8000, fullFestival: 9600, separate1Weekday: 1600, separate2Weekday: 3200, separate3Weekday: 4800 };
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function isWeekend(d){ const day=d.getDay(); return day===0||day===6; }
 function parseDate(text){
   if(!text) return null; text=text.toLowerCase().trim();
@@ -52,14 +51,14 @@ function parseDate(text){
   if(text.includes('tonight')) return new Date();
   return null;
 }
-function getDateType(text){ const d=parseDate(text); if(!d) return 'weekday'; if(isFestival(d)) return 'festival'; if(isWeekend(d)) return 'weekend'; return 'weekday'; }
-function calcAdvance(total){ if(total<=1600) return 1600; if(total<=10000) return 2000; return Math.round(total*0.20); }
+function getDateType(text){ const d=parseDate(text); if(!d) return 'weekday'; if(isWeekend(d)) return 'weekend'; return 'weekday'; }
 function formatPrice(n){ return 'Rs.'+n.toLocaleString('en-IN'); }
 function wantsPhotos(text){
   const l=(text||'').toLowerCase();
   if(l.includes('photo')||l.includes('pics')||l.includes('picture')||l.includes('image')||l.includes('phot')) return true;
-  if(l.includes('show') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('villa'))) return true;
-  if(l.includes('send') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('photo'))) return true;
+  if(/ro+m/.test(l) && l.includes('show')) return true;
+  if(l.includes('show') && (l.includes('pool')||l.includes('outdoor')||l.includes('villa'))) return true;
+  if(l.includes('send') && (l.includes('pool')||l.includes('outdoor')||l.includes('photo')||/ro+m/.test(l))) return true;
   return false;
 }
 function wantsQRForPayment(text){
@@ -80,11 +79,11 @@ async function saveToDB(booking){
 }
 let gq=null;
 try{ const {Groq}=require(GQ1 + '-sdk'); if(G_KEY) gq=new Groq({apiKey:G_KEY}); }catch(e){}
-const SYS = "You are " + P1 + " host, warm, human, logical. Villa in " + M1 + ", " + W1 + ", " + K1 + ", at " + L1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions. Never promise guaranteed. RULES: 1) NEVER repeat same welcome twice. If guest already greeted, do NOT say Welcome again. 2) ALWAYS answer the ACTUAL question asked. If guest asks are you AI, say Yes I am AI helper for " + P1 + ", " + U1 + " confirms booking. If guest asks where is place, give full address + Maps link. If guest says I dont understand, apologise, speak very simply, ask language. If guest says let me ask questions, say Yes ask anything. 3) If guest sends multiple questions, answer ALL in ONE reply, in order. 4) Remember history, do NOT ask date again if already given. 5) Photos only when asked, QR only when deal near close and guest asks QR. Reply in guest language. Price: Weekday 6400, Weekend 8000, Festival 9600. Full Villa 4 rooms, 8 adults + kids, breakfast free. " + L1 + " evening, pool under stars.";
+const SYS = "You are " + P1 + " host, warm, human, logical, precise. Villa in " + M1 + ", " + W1 + ", " + K1 + ", at " + L1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions. Never promise guaranteed. PRECISE DATA ONLY: Full Villa Weekday 6400, Weekend 8000, Festival 9600. Separate WEEKDAY ONLY: 1 Room 1600, 2 Rooms 3200, 3 Rooms 4800. For separate weekend/festival, say owner will confirm. Full Villa: 4 rooms, 8 adults + kids, breakfast free with Full Villa. For separate breakfast, say owner will confirm. NEVER invent: advance amount, check-in/out time, festival dates, parking, wifi, distance numbers, kid age limit. If not sure, say owner will confirm. RULES: 1) NEVER repeat same welcome twice. 2) ALWAYS answer ACTUAL question, even with typos like roooms, where is located. 3) If multiple questions, answer ALL in ONE reply. 4) Remember history, do NOT ask date again if already given. 5) Photos only when asked, QR only when deal near close and guest asks QR. 6) Vary wording, sound like a real host, not a template. Reply in guest language.";
 async function askAI(userMsg, history){
   if(!gq) return null;
   try{
-    const c = await gq.chat.completions.create({ model:'lla' + 'ma-3.1-8b-instant', messages:[{role:'system', content: SYS}, ...(history||[]).slice(-10), {role:'user', content:userMsg}], temperature:0.7, max_tokens:800 });
+    const c = await gq.chat.completions.create({ model:'lla' + 'ma-3.1-8b-instant', messages:[{role:'system', content: SYS}, ...(history||[]).slice(-10), {role:'user', content:userMsg}], temperature:0.75, max_tokens:800 });
     return c.choices[0]?.message?.content || null;
   }catch(e){ console.log('AI chat error '+e.message); return null; }
 }
@@ -92,45 +91,86 @@ function logicalFallback(text, history){
   const lower=(text||'').toLowerCase();
   const answers=[];
   const histLen = history ? history.length : 0;
-  if(lower.includes('are you ai')||lower.includes('are u ai')||lower.includes('are you a robot')||lower.includes('are you human')||lower.includes('who are you')||lower.includes('are you real')||lower.includes('you are ai')||lower.includes('are you bot')){
-    answers.push('Yes, I am the AI helper for ' + P1 + ' - I reply fast here, and ' + U1 + ' himself checks and confirms your booking. Ask me anything, I will answer simply.');
+  const roomsRe = /ro+m/;
+  if((lower.includes('are you')||lower.includes('are u')||lower.includes('who are')) && (lower.includes('ai')||lower.includes('robot')||lower.includes('human')||lower.includes('bot')||lower.includes('real'))){
+    answers.push(pick([
+      'Yes, I am the AI helper for ' + P1 + ' - I reply fast here, and ' + U1 + ' himself checks and confirms your booking. Ask me anything, I will answer simply.',
+      'Yes, I am the AI for ' + P1 + '. ' + U1 + ' himself will confirm your booking. What do you want to ask?'
+    ]));
   }
-  if(lower.includes('dont understand')||lower.includes("don't understand")||lower.includes('not understand')||lower.includes('not getting')||lower.includes('confusing')||lower.includes('way you talking')||lower.includes('i dont understand')||lower.includes('understand')){
-    answers.push('Sorry, my fault. Let me say it very simply. This is ' + P1 + ' Pool Villa, a private villa with pool in ' + M1 + ', ' + W1 + '. Tell me which language you like - English, Malayalam, Hindi? I will speak in that language, slowly and clearly.');
+  if(lower.includes('understand')||lower.includes('confusing')||lower.includes('not getting')||lower.includes('way you talking')||lower.includes('dont get')){
+    answers.push(pick([
+      'Sorry, my fault. Let me say it very simply. This is ' + P1 + ' Pool Villa, a private villa with pool in ' + M1 + ', ' + W1 + '. Tell me which language you like - English, Malayalam, Hindi? I will speak in that language, slowly and clearly.',
+      'Sorry, let me make it simple. ' + P1 + ' is a private villa with pool in ' + M1 + ', ' + W1 + '. Which language do you prefer? I will speak in that.'
+    ]));
   }
-  if((lower.includes('where')&&(lower.includes('place')||lower.includes('location')||lower.includes('address')||lower.includes('situated')||lower.includes('which place')||lower.includes('this place')))||lower.includes('where is this')){
-    answers.push('This is ' + P1 + ' Pool Villa, at ' + L1 + ', ' + M1 + ', ' + W1 + ', ' + K1 + '. Maps here: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK);
+  if(lower.includes('where')||lower.includes('locat')||lower.includes('address')||lower.includes('location')){
+    answers.push(pick([
+      'This is ' + P1 + ' Pool Villa, at ' + L1 + ', ' + M1 + ', ' + W1 + ', ' + K1 + '. Maps here: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK,
+      'We are at ' + L1 + ', ' + M1 + ', ' + W1 + ', ' + K1 + ' - this is ' + P1 + ' Pool Villa. Maps: ' + MAPS_LINK
+    ]));
   }
-  if(lower.includes('is it pachapp')||lower.includes('is this pachapp')||lower.includes('is this pacha')||lower.includes('is it pacha')){
-    if(!answers.some(a=>a.includes('This is '+P1+' Pool Villa, at'))){
-      answers.push('Yes, this is ' + P1 + ' Pool Villa itself. You are talking to the right place.');
+  if(lower.includes('is it')||lower.includes('is this')){
+    if(lower.includes('pach')||lower.includes('pacha')){
+      if(!answers.some(a=>a.includes(P1+' Pool Villa'))){
+        answers.push('Yes, this is ' + P1 + ' Pool Villa itself. You are talking to the right place.');
+      }
     }
   }
-  if(lower.includes('few more questions')||lower.includes('let me ask')||lower.includes('i have questions')||lower.includes('can i ask')||lower.includes('few questions')||lower.includes('more questions')||lower.includes('ask you')){
+  if((lower.includes('few')&&lower.includes('question'))||lower.includes('let me ask')||lower.includes('can i ask')||lower.includes('i have question')){
     answers.push('Yes, please ask. Ask me anything - price, date, pool, rooms, location, music. I am here.');
+  }
+  if(((lower.includes('how many')||lower.includes('total')||lower.includes('no of')||lower.includes('number of')||lower.includes('many')) && roomsRe.test(lower)) || lower.includes('rooms you have') || lower.includes('rooms are there') || lower.includes('rooms do you')){
+    answers.push(pick([
+      'We have 4 rooms in Full Villa - all private, breakfast free with Full Villa, pool private. Full Villa fits 8 adults + kids. Separate weekday: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Tell me how many rooms you need?',
+      '4 rooms in Full Villa - private, breakfast free with Full Villa, pool all yours. Fits 8 adults + kids. If you want separate weekday: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800.'
+    ]));
+  }
+  if((lower.includes('how many')||lower.includes('max')||lower.includes('capacity')) && (lower.includes('people')||lower.includes('person')||lower.includes('guest')||lower.includes('adult')||lower.includes('stay')||lower.includes('accommodat')||lower.includes('fit'))){
+    answers.push('Full Villa fits 8 adults + kids. 4 rooms, breakfast free with Full Villa.');
   }
   const d=parseDate(text);
   if(d){
     const t=getDateType(text);
-    const price=t==='weekday'?PRICING.fullWeekday:t==='weekend'?PRICING.fullWeekend:PRICING.fullFestival;
-    answers.push('For '+d.toDateString()+' ('+t+'), Full Villa is '+formatPrice(price)+' - 4 rooms, 8 adults + kids, breakfast free, pool all yours. Advance '+formatPrice(calcAdvance(price))+'.');
+    const price=t==='weekday'?PRICING.fullWeekday:PRICING.fullWeekend;
+    answers.push(pick([
+      'For '+d.toDateString()+' ('+t+'), Full Villa is '+formatPrice(price)+' - 4 rooms, 8 adults + kids, breakfast free with Full Villa, pool all yours. Advance to lock - owner will confirm exact advance amount.',
+      d.toDateString()+' ('+t+') - Full Villa '+formatPrice(price)+', 4 rooms, 8 adults + kids, breakfast free, pool private. To lock it, advance is needed - owner will tell you the exact advance.'
+    ]));
   }
-  if(lower.includes('adult')||lower.includes('kid')||lower.includes('guest')||lower.includes('person')||lower.includes('people')){
-    if(!answers.some(a=>a.includes('Full Villa is'))){
-      answers.push('For your group, Full Villa fits - 8 adults + kids, 4 rooms, breakfast free.');
-    }
+  if(lower.includes('festival')){
+    answers.push('Festival days Full Villa is '+formatPrice(PRICING.fullFestival)+'. If your date is a festival / holiday, owner will confirm if festival price applies to your date.');
   }
-  if(lower.includes('pool')) answers.push('Pool is private, included - all yours. Evening swim under stars at ' + L1 + '.');
+  if(lower.includes('1 room')||lower.includes('one room')||lower.includes('single room')){
+    answers.push('Separate 1 Room weekday is Rs.1600 - tell me date, I will give exact price for that date. For weekend / festival separate, owner will confirm.');
+  }
+  if(lower.includes('2 room')||lower.includes('two room')){
+    answers.push('Separate 2 Rooms weekday is Rs.3200 - tell me date, I will give exact price for that date. For weekend / festival separate, owner will confirm.');
+  }
+  if(lower.includes('3 room')||lower.includes('three room')){
+    answers.push('Separate 3 Rooms weekday is Rs.4800 - tell me date, I will give exact price for that date. For weekend / festival separate, owner will confirm.');
+  }
+  if(lower.includes('pool')) answers.push(pick([
+    'Pool is private, included - all yours. Evening swim under stars at ' + L1 + '.',
+    'Yes, private pool is included, all yours.'
+  ]));
   if(lower.includes('barbecue')||lower.includes('barbeque')||lower.includes('bbq')||lower.includes('barbe')) answers.push('Barbecue - yes, we can arrange. Tell me veg or non-veg, owner will confirm charge.');
-  if(lower.includes('musical')||lower.includes('music')||lower.includes('song')){
-    answers.push('Music - special here. ' + U1 + ' composes his own songs - if he is at the villa that day, you might hear them live. What style do you love?');
-  }
+  if(lower.includes('musical')||lower.includes('music')||lower.includes('song')) answers.push('Music - special here. ' + U1 + ' composes his own songs - if he is at the villa that day, you might hear them live. What style do you love?');
   if(lower.includes('price')||lower.includes('rate')||lower.includes('cost')||lower.includes('charge')||lower.includes('how much')){
-    if(!d) answers.push('Price depends on date - tell me which date? Weekday Full Villa Rs.6400, Weekend Rs.8000, Festival Rs.9600. Separate: 1 Room Rs.1600, 2 Rooms Rs.3200.');
+    if(!d && !answers.some(a=>a.includes('Full Villa is'))) answers.push('Price depends on date - tell me which date? Weekday Full Villa Rs.6400, Weekend Rs.8000, Festival Rs.9600. Separate weekday: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. For separate weekend / festival, owner will confirm.');
   }
+  if(lower.includes('breakfast')||lower.includes('food')||lower.includes('meal')||lower.includes('dinner')||lower.includes('lunch')) answers.push('Breakfast is free with Full Villa. For separate rooms, owner will confirm if breakfast included. For lunch / dinner / barbecue, we can arrange - tell me veg or non-veg, owner will confirm.');
+  if(lower.includes('check')) answers.push('Check-in / check-out timing - tell me your date, owner will confirm exact timing for you, it is flexible.');
+  if(lower.includes('how far')||lower.includes('distance')||lower.includes('airport')||lower.includes('railway')||lower.includes('calicut')||lower.includes('kozhikode')||lower.includes('kalpetta')) answers.push('We are at ' + M1 + ', ' + W1 + ' - near Kalpetta. Best is to open Maps: ' + MAPS_LINK + ' Tell me from where you are coming, I will tell you the route.');
+  if(lower.includes('uday')||lower.includes('owner')) answers.push(U1 + ' is the owner - musician, composer, poet, singer. If he is at the villa, good chance to hear his own original compositions live.');
+  if(lower.includes('parking')) answers.push('Parking - tell me your date, I will check with owner and confirm for you.');
+  if(lower.includes('wifi')||lower.includes('wi-fi')||lower.includes('internet')) answers.push('WiFi - tell me your date, I will check with owner and confirm for you.');
+  if(lower.includes('pet')||lower.includes('dog')) answers.push('For pet, tell me your date and pet details, owner will confirm - we will try to help.');
+  if(lower.includes('bachelor')||lower.includes('family')||lower.includes('couple')) answers.push('Full Villa is private for your group - 4 rooms, pool private. Tell me your group + date, owner will confirm.');
+  if(lower.includes('advance')) answers.push('Advance is needed to lock your booking - owner will confirm exact advance amount after you confirm date + guests.');
   if(wantsPhotos(text)){
     if(lower.includes('pool')) answers.push('Pool photos - Drive: '+POOL_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
-    else if(lower.includes('room')) answers.push('Room photos - Drive: '+ROOM_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
+    else if(roomsRe.test(lower)) answers.push('Room photos - Drive: '+ROOM_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
     else if(lower.includes('activit')) answers.push('Activities photos - Drive: '+ACTIVITIES_PHOTOS_LINK+' (in OUTDOOR folder)\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
     else if(lower.includes('outdoor')) answers.push('Outdoor photos - Drive: '+OUTDOOR_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
     else answers.push('Photos - Drive: '+PHOTOS_LINK+'\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
@@ -144,8 +184,7 @@ function logicalFallback(text, history){
     else answers.push('Hey! This is ' + P1 + ', ' + M1 + '. Which date, how many guests?');
   }
   if(answers.length===0){
-    if(histLen>4) answers.push('Got it. Tell me what you want to know - date, price, pool, location? I will answer that one directly, simply.');
-    else answers.push('Hey! ' + P1 + ' here. Which date, how many guests, and what are you dreaming of - pool, barbecue, music?');
+    answers.push('I want to answer that correctly - did you mean price, rooms, location, or date? Tell me in one line, like "how many rooms" or "where is located", and I will answer that one directly. Or tell me your date + guests, I will give you everything together.');
   }
   return answers.join('\n\n');
 }
@@ -197,13 +236,13 @@ const buffers = new Map();
 async function processCombined(from, senderName, combinedText){
   try{
     const lower = combinedText.toLowerCase();
-    const utrMatch = combinedText.match(/\b\d{10,18}\b/);
+    const utrMatch = combinedText.match(/\b\d{12}\b/);
     if(utrMatch && (lower.includes('paid')||lower.includes('utr')||lower.includes('payment')||lower.includes('advance'))){
       const utr=utrMatch[0];
-      const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance: pendingBookings.get(from)?.advance||0, utr, status:'Pending' };
+      const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance: 0, utr, status:'Pending' };
       pendingBookings.set(from, pending);
-      await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+formatPrice(pending.advance)+'\n\nReply YES to confirm, NO to reject.');
-      await sendWA(from, 'Payment screenshot + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
+      await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nTotal: '+formatPrice(pending.total)+'\nAdvance amount: To be confirmed by owner\n\nReply YES to confirm, NO to reject.');
+      await sendWA(from, 'Payment + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
       return;
     }
     if(!chatHistories.has(from)) chatHistories.set(from, []);
@@ -213,13 +252,13 @@ async function processCombined(from, senderName, combinedText){
     if(!reply){ reply=logicalFallback(combinedText, history); }
     if(wantsPhotos(combinedText) && !reply.includes('drive.'+G1+'.com')){
       if(lower.includes('pool')) reply += '\n\nPool photos - Drive: '+POOL_PHOTOS_LINK;
-      else if(lower.includes('room')) reply += '\n\nRoom photos - Drive: '+ROOM_PHOTOS_LINK;
+      else if(/ro+m/.test(lower)) reply += '\n\nRoom photos - Drive: '+ROOM_PHOTOS_LINK;
       else reply += '\n\nPhotos - Drive: '+PHOTOS_LINK;
     }
     if(wantsQRForPayment(combinedText) && !reply.includes('drive.'+G1+'.com')){
       const pending = pendingBookings.get(from);
       const dealNearClose = pending && pending.date && pending.date!=='To confirm' && pending.total && pending.total>0;
-      if(dealNearClose) reply += '\n\nQR for advance - Drive: '+QR_CODE_LINK+'\nAdvance: '+formatPrice(pending.advance)+' / Total: '+formatPrice(pending.total);
+      if(dealNearClose) reply += '\n\nQR for advance - Drive: '+QR_CODE_LINK+'\nTotal: '+formatPrice(pending.total)+'\nAdvance amount: Owner will confirm exact advance.';
       else reply += '\n\nPlease confirm date and guests first, then I will send QR for advance payment.';
     }
     history.push({ role:'assistant', content: reply });
@@ -227,8 +266,8 @@ async function processCombined(from, senderName, combinedText){
     const parsedDate=parseDate(combinedText);
     if(parsedDate){
       const t=getDateType(combinedText);
-      const price=t==='weekday'?PRICING.fullWeekday:t==='weekend'?PRICING.fullWeekend:PRICING.fullFestival;
-      pendingBookings.set(from, { name:senderName, phone:from, date:parsedDate.toISOString().slice(0,10), guests:combinedText, total:price, advance:calcAdvance(price), status:'Enquiry' });
+      const price=t==='weekday'?PRICING.fullWeekday:PRICING.fullWeekend;
+      pendingBookings.set(from, { name:senderName, phone:from, date:parsedDate.toISOString().slice(0,10), guests:combinedText, total:price, advance:0, status:'Enquiry' });
     }
     await sendWA(from, reply);
   }catch(e){ console.log('processCombined error '+e.message); }
@@ -253,7 +292,7 @@ app.get('/webhook', (req,res)=>{
   if(mode==='subscribe' && token===VERIFY_TOKEN){ return res.status(200).send(challenge); }
   return res.sendStatus(403);
 });
-app.get('/', (req,res)=> res.send(P1 + ' AI - Logical - LIVE'));
+app.get('/', (req,res)=> res.send(P1 + ' AI - Precise Human - LIVE'));
 app.get('/health', (req,res)=> res.json({ ok:true, phone: BOT_PHONE }));
 app.post('/webhook', async (req,res)=>{
   try{
@@ -276,14 +315,16 @@ app.post('/webhook', async (req,res)=>{
       if(from===OWNER_NUMBER && type==='text'){
         const txt=(m.text?.body||'').toLowerCase().trim();
         if(txt==='yes' || txt==='no' || txt.includes('confirm') || txt.includes('verified')){
-          let targetPhone=null, targetBooking=null;
-          for(const [phone,b] of pendingBookings){ targetPhone=phone; targetBooking=b; }
-          if(targetBooking){
+          const allPending = Array.from(pendingBookings.entries());
+          if(allPending.length>0){
+            const lastEntry = allPending[allPending.length-1];
+            const targetPhone = lastEntry[0];
+            const targetBooking = lastEntry[1];
             if(txt==='yes' || txt.includes('confirm') || txt.includes('verified')){
               targetBooking.status='Confirmed';
               await saveToDB(targetBooking);
-              await sendWA(targetBooking.phone, 'Booking CONFIRMED - ' + P1 + ' Pool Villa!\n\nDate: '+targetBooking.date+'\nGuests: '+targetBooking.guests+'\nTotal: '+formatPrice(targetBooking.total)+'\nAdvance: '+formatPrice(targetBooking.advance)+' received\nBalance before check-in.\n\nMaps: '+MAPS_LINK+'\nNearby: '+NEARBY_LINK+'\n\nWelcome to ' + P1 + '!');
-              await sendWA(from, 'Confirmed to guest '+targetBooking.name);
+              await sendWA(targetBooking.phone, 'Booking CONFIRMED - ' + P1 + ' Pool Villa!\n\nDate: '+targetBooking.date+'\nGuests: '+targetBooking.guests+'\nTotal: '+formatPrice(targetBooking.total)+'\nAdvance: Verified by owner\nBalance: Owner will tell you balance before check-in.\n\nMaps: '+MAPS_LINK+'\nNearby: '+NEARBY_LINK+'\n\nWelcome to ' + P1 + '!');
+              await sendWA(from, 'Confirmed to guest '+targetBooking.name+' - latest booking.');
               pendingBookings.delete(targetPhone);
             } else { await sendWA(from, 'Not confirmed.'); }
             continue;
@@ -309,11 +350,11 @@ app.post('/webhook', async (req,res)=>{
       }
       if(type==='image'){
         const caption=m.image?.caption||'';
-        const utrMatch=caption.match(/\b\d{10,18}\b/);
+        const utrMatch=caption.match(/\b\d{12}\b/);
         const utr=utrMatch?utrMatch[0]:'Screenshot received';
-        const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance: pendingBookings.get(from)?.advance||0, utr, status:'Pending' };
+        const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance:0, utr, status:'Pending' };
         pendingBookings.set(from, pending);
-        await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+formatPrice(pending.advance)+'\n\nReply YES to confirm, NO to reject.');
+        await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nTotal: '+formatPrice(pending.total)+'\nAdvance amount: To be confirmed by owner\n\nReply YES to confirm, NO to reject.');
         await sendWA(from, 'Payment screenshot + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
         continue;
       }
@@ -322,4 +363,4 @@ app.post('/webhook', async (req,res)=>{
     return res.sendStatus(200);
   }catch(e){ console.log('Webhook error '+e.message); return res.sendStatus(200); }
 });
-app.listen(PORT, ()=> console.log(P1 + ' AI Logical LIVE on '+PORT));
+app.listen(PORT, ()=> console.log(P1 + ' AI Precise Human LIVE on '+PORT));
