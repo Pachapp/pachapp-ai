@@ -1,10 +1,5 @@
-// Pachapp AI - DRIVE PHOTOS VERSION - Cloud API + VOICE ALL LANGUAGES
-// Photos = Google Drive, NOT website. Website has NO gallery.
-// Main: https://drive.google.com/drive/folders/113zNhiOsHIvSWM6Uvt04GQojISQKO1TI
-// OUTDOOR: https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh
-// POOL: https://drive.google.com/drive/folders/1RUsjNpD0IlyPRAhcKBtXHWVTMU_LcFYh
-// ROOMS: https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO
-// QR Code: https://drive.google.com/drive/folders/1P2pAgfc36HWsRNKAdswEVW7k8D1cxvCz
+// Pachapp AI - QR ONLY WHEN DEAL NEARING CLOSE + GUEST ASKS QR FOR PAYMENT
+// Photos = Drive only when guest asks. QR = Only when deal near close + guest asks QR for payment.
 const express = require('express');
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -18,7 +13,6 @@ const BOT_PHONE = '971529100668';
 const WEBSITE = 'https://www.pachapp.green';
 const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
 const NEARBY_LINK = 'https://pachapp.green/here-around/';
-// --- GOOGLE DRIVE PHOTOS - REAL LINKS ---
 const PHOTOS_LINK = 'https://drive.google.com/drive/folders/113zNhiOsHIvSWM6Uvt04GQojISQKO1TI';
 const POOL_PHOTOS_LINK = 'https://drive.google.com/drive/folders/1RUsjNpD0IlyPRAhcKBtXHWVTMU_LcFYh';
 const ROOM_PHOTOS_LINK = 'https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO';
@@ -46,6 +40,19 @@ function parseDate(text){
 function getDateType(text){ const d=parseDate(text); if(!d) return 'weekday'; if(isFestival(d)) return 'festival'; if(isWeekend(d)) return 'weekend'; return 'weekday'; }
 function calcAdvance(total){ if(total<=1600) return 1600; if(total<=10000) return 2000; return Math.round(total*0.20); }
 function formatPrice(n){ return 'Rs.'+n.toLocaleString('en-IN'); }
+function wantsPhotos(text){
+  const l=(text||'').toLowerCase();
+  if(l.includes('photo')||l.includes('pics')||l.includes('picture')||l.includes('image')||l.includes('gallery')||l.includes('phot')) return true;
+  if(l.includes('show') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('villa'))) return true;
+  if(l.includes('send') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('photo'))) return true;
+  return false;
+}
+// QR ONLY when guest asks QR FOR PAYMENT - must contain payment words, not just "QR"
+function wantsQRForPayment(text){
+  const l=(text||'').toLowerCase();
+  if(!l.includes('qr')) return false;
+  return l.includes('payment')||l.includes('pay')||l.includes('advance')||l.includes('upi')||l.includes('booking')||l.includes('send qr')||l.includes('give qr');
+}
 let dbBase=null;
 try{ if(process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID){ const AT=require('airtable'); dbBase=new AT({apiKey:process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID); } }catch(e){}
 async function saveToDB(booking){
@@ -62,15 +69,16 @@ try{ const {Groq}=require('groq-sdk'); if(GROQ_API_KEY) gq=new Groq({apiKey:GROQ
 const SYSTEM_PROMPT = `You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website https://www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday.
 OWNER IS ARTIST: Owner Uday Hue is a musician, composer, poet, singer, creative person. He composes original songs, music, poetry. When guest asks about live music, music, songs, concert, poetry, singing, jam, performance - answer about OWNER: If Uday Hue is at the villa during your stay, there is a good chance to hear his own original compositions, live music, poetry - a rare, personal experience. Do NOT give generic "we can arrange a local band" as first answer. First say about owner and his compositions, then say if owner is not there we can try local artist. Never promise guaranteed, say good chances if owner is there. Ask what style they like - folk, classical, contemporary.
 RULES:
-1. Answer directly. NEVER start with "First the right answer", "Here is the answer", "Answer:", "The answer is", "First," "Let me tell you the answer" or any meta phrase like that. Start directly with the real answer sentence. Example: Guest "Live music?" -> Start "If Uday Hue is at the villa..." NOT "Answer: Yes..." NOT "First the right answer is...".
+0. PHOTO LINK RULE: NEVER send photo link on every answer. ONLY send photo link when guest EXPLICITLY asks for photos. Guest asks "room price?" -> Price ONLY, NO photo link. Guest asks "live music?" -> Music ONLY, NO photo link. Guest asks "show room photos" -> THEN send that specific Drive link ONLY.
+1. Answer directly. NEVER start with "First the right answer", "Here is the answer", "Answer:", "The answer is", "First," "Let me tell you the answer". Start directly with the real answer sentence. Example: Guest "Live music?" -> Start "If Uday Hue is at the villa..." NOT "Answer: Yes..."
 2. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad.
 3. NEVER give price without date. NEVER say let me check Indian Calendar, personal/group, routine, internal pricing.
-4. ALL LANGUAGES - TYPED + VOICE: Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. Typed and voice both. If guest types in Malayalam, reply in Malayalam. If guest sends voice in Hindi, reply in Hindi. If guest sends voice in Tamil, reply in Tamil. Never switch to English unless guest uses English. If not understandable, say only Please ask in ENGLISH.
-5. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. When agents in GROUP ask for images/photos, send SPECIFIC Google Drive links: Rooms: https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO, Pool: https://drive.google.com/drive/folders/1RUsjNpD0IlyPRAhcKBtXHWVTMU_LcFYh, Outdoor: https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh, Activities: https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh (Activities photos are in OUTDOOR folder). Do NOT send website link for photos.
-6. For DIRECT guests (outside group): When they ask for images/photos, send SPECIFIC Google Drive link if they ask specific (rooms -> ROOMS Drive link, pool -> POOL Drive link, outdoor -> OUTDOOR Drive link, activities -> OUTDOOR Drive link) OR send Main Drive link if they ask general photos: https://drive.google.com/drive/folders/113zNhiOsHIvSWM6Uvt04GQojISQKO1TI. You can also send Website https://www.pachapp.green for general info, but NOT for photos.
-7. PHOTOS: Photos are ONLY on Google Drive. Website has NO gallery. NEVER say "Gallery", "Photos Gallery", "Gallery link", "Gallery of website". Always say "Drive" or "Photos Link" with Drive link. Website link https://www.pachapp.green is ONLY for general info, NOT for photos.
-8. QR CODE: When guest asks for QR, payment QR, booking QR, UPI QR - send QR Code Drive link: https://drive.google.com/drive/folders/1P2pAgfc36HWsRNKAdswEVW7k8D1cxvCz
-9. VOICE: Guest may send voice note. You receive transcribed text. Treat it exactly like text. Do NOT say "I cannot hear voice" or "I cannot listen". Answer normally as if guest typed it. Do NOT ask guest to type. If transcription has [voice] marker, ignore marker and answer content.
+4. ALL LANGUAGES - TYPED + VOICE: Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. Typed and voice both. If guest types in Malayalam, reply in Malayalam. If guest sends voice in Hindi, reply in Hindi. Never switch to English unless guest uses English. If not understandable, say only Please ask in ENGLISH.
+5. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. When agents in GROUP ask for images/photos, send SPECIFIC Google Drive links: Rooms: https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO, Pool: https://drive.google.com/drive/folders/1RUsjNpD0IlyPRAhcKBtXHWVTMU_LcFYh, Outdoor: https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh, Activities: https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh (Activities in OUTDOOR folder). ONLY when they ask for photos.
+6. For DIRECT guests: When they ask for images/photos, send SPECIFIC Google Drive link if they ask specific (rooms -> ROOMS Drive, pool -> POOL Drive, outdoor -> OUTDOOR Drive, activities -> OUTDOOR Drive) OR Main Drive link if they ask general photos: https://drive.google.com/drive/folders/113zNhiOsHIvSWM6Uvt04GQojISQKO1TI. ONLY when they ask for photos.
+7. PHOTOS: Photos are ONLY on Google Drive. Website has NO gallery. NEVER say "Gallery", "Photos Gallery". Website https://www.pachapp.green is ONLY for general info, NOT for photos.
+8. QR CODE - VERY IMPORTANT: QR Code is given ONLY when deal is nearing close AND guest asks QR for payment. Deal nearing close means guest has ALREADY confirmed date, guests, price, advance amount. If guest asks QR early, before confirming date/guests/price, DO NOT send QR link. Instead say "Please confirm date and guests first, then I will send QR for advance payment." If guest asks "send QR for payment / QR for advance / QR for booking" AND date/guests/price already confirmed, THEN send QR Code Drive link: https://drive.google.com/drive/folders/1P2pAgfc36HWsRNKAdswEVW7k8D1cxvCz. NEVER send QR on first message, NEVER send QR on every answer, NEVER send QR just because guest said "QR".
+9. VOICE: Guest may send voice note. You receive transcribed text. Treat it exactly like text. Do NOT say "I cannot hear voice". Answer normally. If transcription has [voice] marker, ignore marker.
 10. Never give inappropriate, sexual, political, religious hate, or abusive answers. Always stay polite, family-safe, villa host tone. If guest asks inappropriate question, politely decline and bring back to villa booking.
 PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE.
 WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY.
@@ -89,21 +97,21 @@ function fallbackReply(text, isGroup){
   if(lower.includes('live music')||lower.includes('music')||lower.includes('song')){
     return 'If Uday Hue is at the villa during your stay, there is a good chance to hear his own original compositions, live music, poetry. What style do you like - folk, classical, contemporary?';
   }
-  if(lower.includes('qr')){
-    return 'QR Code: '+QR_CODE_LINK+'\nWebsite: '+WEBSITE+'\nMaps: '+MAPS_LINK;
+  if(wantsQRForPayment(text)){
+    return 'Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?';
   }
-  if(lower.includes('photo')||lower.includes('video')||lower.includes('pics')||lower.includes('pool')||lower.includes('room')){
+  if(wantsPhotos(text)){
     if(lower.includes('pool')) return 'Pool photos - Drive: '+POOL_PHOTOS_LINK+' 📸\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
     if(lower.includes('room')) return 'Room photos - Drive: '+ROOM_PHOTOS_LINK+' 📸\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
     if(lower.includes('activit')) return 'Activities photos - Drive: '+ACTIVITIES_PHOTOS_LINK+' 📸 (in OUTDOOR folder)\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
     if(lower.includes('outdoor')||lower.includes('outside')) return 'Outdoor photos - Drive: '+OUTDOOR_PHOTOS_LINK+' 📸\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
-    return 'Photos - Drive: '+PHOTOS_LINK+' 📸\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nQR Code: '+QR_CODE_LINK+'\nWebsite (info only): '+WEBSITE+'\nMaps: '+MAPS_LINK;
+    return 'Photos - Drive: '+PHOTOS_LINK+' 📸\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nWebsite (info only): '+WEBSITE+'\nMaps: '+MAPS_LINK;
   }
   if(lower.includes('price')||lower.includes('rate')||lower.includes('cost')||lower.includes('charge')){
     return 'Price depends on date. Please tell me which date and how many guests? Weekday Full Villa Rs.6400, Weekend Rs.8000, Festival Rs.9600. Weekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800.';
   }
   if(isGroup) return 'Pachapp Pool Villa, Meppadi, Wayanad. Full Villa Weekday Rs.6400, Weekend Rs.8000. Which date, how many guests?';
-  return 'Welcome to Pachapp Pool Villa, Meppadi, Wayanad! 🌿\n\nPlease tell me which date, how many guests, and what you love in Wayanad - nature, music, food?\n\nPhotos - Drive: '+PHOTOS_LINK+'\nWebsite: '+WEBSITE+'\nMaps: '+MAPS_LINK;
+  return 'Welcome to Pachapp Pool Villa, Meppadi, Wayanad! 🌿\n\nPlease tell me which date, how many guests, and what you love in Wayanad - nature, music, food?\n\nWebsite: '+WEBSITE+'\nMaps: '+MAPS_LINK;
 }
 async function sendWhatsApp(to, text){
   try{
@@ -244,16 +252,22 @@ app.post('/webhook', async (req,res)=>{
         pendingBookings.set(from, { name:senderName, phone:from, date:parsedDate.toISOString().slice(0,10), guests:text, total:price, advance:calcAdvance(price), status:'Enquiry' });
       }
       await sendWhatsApp(from, reply);
-      if(lower.includes('qr')){
-        if(!reply.includes('drive.google.com')){ await sendWhatsApp(from, `QR Code - Drive: ${QR_CODE_LINK}\nWebsite: ${WEBSITE}\nMaps: ${MAPS_LINK}`); }
+      // PHOTOS - ONLY if guest explicitly asked for photos and AI did not already send Drive link
+      if(wantsPhotos(text) && !reply.includes('drive.google.com')){
+        if(lower.includes('pool')){ await sendWhatsApp(from, `Pool photos - Drive: ${POOL_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
+        else if(lower.includes('room')){ await sendWhatsApp(from, `Room photos - Drive: ${ROOM_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
+        else if(lower.includes('activit')){ await sendWhatsApp(from, `Activities photos - Drive: ${ACTIVITIES_PHOTOS_LINK} 📸 (in OUTDOOR folder)\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
+        else if(lower.includes('outdoor')||lower.includes('outside')){ await sendWhatsApp(from, `Outdoor photos - Drive: ${OUTDOOR_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
+        else { await sendWhatsApp(from, `Photos - Drive: ${PHOTOS_LINK} 📸\nPool: ${POOL_PHOTOS_LINK}\nRooms: ${ROOM_PHOTOS_LINK}\nOutdoor / Activities: ${OUTDOOR_PHOTOS_LINK}\nWebsite (info only): ${WEBSITE}\nMaps: ${MAPS_LINK}`); }
       }
-      if(lower.includes('photo')||lower.includes('video')||lower.includes('pics')||lower.includes('photos')){
-        if(!reply.includes('drive.google.com')){
-          if(lower.includes('pool')){ await sendWhatsApp(from, `Pool photos - Drive: ${POOL_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
-          else if(lower.includes('room')){ await sendWhatsApp(from, `Room photos - Drive: ${ROOM_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
-          else if(lower.includes('activit')){ await sendWhatsApp(from, `Activities photos - Drive: ${ACTIVITIES_PHOTOS_LINK} 📸 (in OUTDOOR folder)\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
-          else if(lower.includes('outdoor')||lower.includes('outside')){ await sendWhatsApp(from, `Outdoor photos - Drive: ${OUTDOOR_PHOTOS_LINK} 📸\nAll Photos: ${PHOTOS_LINK}\nMaps: ${MAPS_LINK}`); }
-          else { await sendWhatsApp(from, `Photos - Drive: ${PHOTOS_LINK} 📸\nPool: ${POOL_PHOTOS_LINK}\nRooms: ${ROOM_PHOTOS_LINK}\nOutdoor / Activities: ${OUTDOOR_PHOTOS_LINK}\nQR Code: ${QR_CODE_LINK}\nWebsite (info only): ${WEBSITE}\nMaps: ${MAPS_LINK}`); }
+      // QR - ONLY when deal nearing close (pending booking exists with date+total) AND guest asks QR for payment
+      if(wantsQRForPayment(text) && !reply.includes('drive.google.com')){
+        const pending = pendingBookings.get(from);
+        const dealNearClose = pending && pending.date && pending.date!=='To confirm' && pending.total && pending.total>0;
+        if(dealNearClose){
+          await sendWhatsApp(from, `QR for advance payment - Drive: ${QR_CODE_LINK}\nAdvance: ${formatPrice(pending.advance)} / Total: ${formatPrice(pending.total)}\nDate: ${pending.date}\nAfter payment, send screenshot + UTR please.`);
+        } else {
+          await sendWhatsApp(from, `Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?`);
         }
       }
     }
