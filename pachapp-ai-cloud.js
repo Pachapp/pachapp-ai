@@ -57,7 +57,7 @@ function calcAdvance(total){ if(total<=1600) return 1600; if(total<=10000) retur
 function formatPrice(n){ return 'Rs.'+n.toLocaleString('en-IN'); }
 function wantsPhotos(text){
   const l=(text||'').toLowerCase();
-  if(l.includes('photo')||l.includes('pics')||l.includes('picture')||l.includes('image')||l.includes('gallery')||l.includes('phot')) return true;
+  if(l.includes('photo')||l.includes('pics')||l.includes('picture')||l.includes('image')||l.includes('phot')) return true;
   if(l.includes('show') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('villa'))) return true;
   if(l.includes('send') && (l.includes('room')||l.includes('pool')||l.includes('outdoor')||l.includes('photo'))) return true;
   return false;
@@ -67,7 +67,6 @@ function wantsQRForPayment(text){
   if(!l.includes('qr')) return false;
   return l.includes('payment')||l.includes('pay')||l.includes('advance')||l.includes('upi')||l.includes('booking')||l.includes('send qr')||l.includes('give qr');
 }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 let dbBase=null;
 try{ if(AT_KEY && AT_BASE){ const AT=require(AT1); dbBase=new AT({apiKey:AT_KEY}).base(AT_BASE); } }catch(e){}
 async function saveToDB(booking){
@@ -81,70 +80,74 @@ async function saveToDB(booking){
 }
 let gq=null;
 try{ const {Groq}=require(GQ1 + '-sdk'); if(G_KEY) gq=new Groq({apiKey:G_KEY}); }catch(e){}
-const SYS = "You are " + P1 + " host, warm, human, versatile. Villa in " + M1 + ", " + W1 + ", " + K1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions, live music, poetry. Never promise guaranteed. Be versatile, never same answer twice. Answer ALL needs in one natural reply. Photos only when asked. QR only when deal near close and guest asks QR. Reply in guest language. Price: Weekday 6400, Weekend 8000, Festival 9600. Full Villa 4 rooms, 8 adults + kids, breakfast free. " + L1 + " evening, pool under stars.";
-async function askAI(userMsg, isGroup, history){
+const SYS = "You are " + P1 + " host, warm, human, logical. Villa in " + M1 + ", " + W1 + ", " + K1 + ", at " + L1 + ". Owner " + U1 + " is musician, composer, poet, singer. If " + U1 + " is at villa, good chance to hear his own original compositions. Never promise guaranteed. RULES: 1) NEVER repeat same welcome twice. If guest already greeted, do NOT say Welcome again. 2) ALWAYS answer the ACTUAL question asked. If guest asks are you AI, say Yes I am AI helper for " + P1 + ", " + U1 + " confirms booking. If guest asks where is place, give full address + Maps link. If guest says I dont understand, apologise, speak very simply, ask language. If guest says let me ask questions, say Yes ask anything. 3) If guest sends multiple questions, answer ALL in ONE reply, in order. 4) Remember history, do NOT ask date again if already given. 5) Photos only when asked, QR only when deal near close and guest asks QR. Reply in guest language. Price: Weekday 6400, Weekend 8000, Festival 9600. Full Villa 4 rooms, 8 adults + kids, breakfast free. " + L1 + " evening, pool under stars.";
+async function askAI(userMsg, history){
   if(!gq) return null;
   try{
-    const modeNote = isGroup ? 'MODE: GROUP - 1-2 lines only, crispy, human.' : 'MODE: DIRECT GUEST - Versatile, human, brilliant, not template. Vary style, remember history, answer ALL needs in one natural story.';
-    const c = await gq.chat.completions.create({ model:'lla' + 'ma-3.1-8b-instant', messages:[{role:'system', content: SYS+'\n'+modeNote}, ...(history||[]).slice(-8), {role:'user', content:userMsg}], temperature:0.9, max_tokens: isGroup?140:750 });
+    const c = await gq.chat.completions.create({ model:'lla' + 'ma-3.1-8b-instant', messages:[{role:'system', content: SYS}, ...(history||[]).slice(-10), {role:'user', content:userMsg}], temperature:0.7, max_tokens:800 });
     return c.choices[0]?.message?.content || null;
   }catch(e){ console.log('AI chat error '+e.message); return null; }
 }
-function fallbackReply(text, isGroup, historyLen){
-  const lower=(text||'').toLowerCase().trim();
-  if(lower==='hi'||lower==='hello'||lower==='hey'||lower==='hii'){
-    if(historyLen && historyLen>2) return pick([
-      'Heyy, back again! Did you decide the date? Tell me date + guests and I will lock price + pool + barbecue + music - all together.',
-      'Hi hi! Still thinking about ' + W1 + '? Which date are you looking at?',
-      'Hello again! ' + L1 + ' is waiting. What date are you planning?'
-    ]);
-    return pick([
-      'Heyy! Welcome to ' + P1 + ', ' + M1 + '. Tell me - which date, how many of you, and what are you dreaming of - pool, barbecue, music?',
-      'Hi! ' + P1 + ' Pool Villa here. When are you planning to come, and how many guests?',
-      'Hello! ' + W1 + ' is beautiful right now. Which date + how many guests shall I check for you?'
-    ]);
+function logicalFallback(text, history){
+  const lower=(text||'').toLowerCase();
+  const answers=[];
+  const histLen = history ? history.length : 0;
+  if(lower.includes('are you ai')||lower.includes('are u ai')||lower.includes('are you a robot')||lower.includes('are you human')||lower.includes('who are you')||lower.includes('are you real')||lower.includes('you are ai')||lower.includes('are you bot')){
+    answers.push('Yes, I am the AI helper for ' + P1 + ' - I reply fast here, and ' + U1 + ' himself checks and confirms your booking. Ask me anything, I will answer simply.');
   }
-  if(wantsQRForPayment(text)){
-    return 'Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?';
+  if(lower.includes('dont understand')||lower.includes("don't understand")||lower.includes('not understand')||lower.includes('not getting')||lower.includes('confusing')||lower.includes('way you talking')||lower.includes('i dont understand')||lower.includes('understand')){
+    answers.push('Sorry, my fault. Let me say it very simply. This is ' + P1 + ' Pool Villa, a private villa with pool in ' + M1 + ', ' + W1 + '. Tell me which language you like - English, Malayalam, Hindi? I will speak in that language, slowly and clearly.');
   }
-  const parts=[];
+  if((lower.includes('where')&&(lower.includes('place')||lower.includes('location')||lower.includes('address')||lower.includes('situated')||lower.includes('which place')||lower.includes('this place')))||lower.includes('where is this')){
+    answers.push('This is ' + P1 + ' Pool Villa, at ' + L1 + ', ' + M1 + ', ' + W1 + ', ' + K1 + '. Maps here: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK);
+  }
+  if(lower.includes('is it pachapp')||lower.includes('is this pachapp')||lower.includes('is this pacha')||lower.includes('is it pacha')){
+    if(!answers.some(a=>a.includes('This is '+P1+' Pool Villa, at'))){
+      answers.push('Yes, this is ' + P1 + ' Pool Villa itself. You are talking to the right place.');
+    }
+  }
+  if(lower.includes('few more questions')||lower.includes('let me ask')||lower.includes('i have questions')||lower.includes('can i ask')||lower.includes('few questions')||lower.includes('more questions')||lower.includes('ask you')){
+    answers.push('Yes, please ask. Ask me anything - price, date, pool, rooms, location, music. I am here.');
+  }
   const d=parseDate(text);
   if(d){
     const t=getDateType(text);
     const price=t==='weekday'?PRICING.fullWeekday:t==='weekend'?PRICING.fullWeekend:PRICING.fullFestival;
-    parts.push(pick([
-      'Ohh '+d.toDateString()+' - lovely choice! For that '+t+' day, Full Villa is '+formatPrice(price)+' - 4 rooms, 8 adults + kids, breakfast free, pool all yours. Advance '+formatPrice(calcAdvance(price))+'.',
-      'For '+d.toDateString()+' ('+t+'), Full Villa Private '+formatPrice(price)+' - includes breakfast, pool, 4 rooms. Want me to hold it?'
-    ]));
+    answers.push('For '+d.toDateString()+' ('+t+'), Full Villa is '+formatPrice(price)+' - 4 rooms, 8 adults + kids, breakfast free, pool all yours. Advance '+formatPrice(calcAdvance(price))+'.');
   }
-  if(lower.includes('adult')||lower.includes('kid')||lower.includes('guest')||lower.includes('person')){
-    parts.push('For your group, Full Villa fits perfectly - 8 adults + 8 kids below 6.');
+  if(lower.includes('adult')||lower.includes('kid')||lower.includes('guest')||lower.includes('person')||lower.includes('people')){
+    if(!answers.some(a=>a.includes('Full Villa is'))){
+      answers.push('For your group, Full Villa fits - 8 adults + kids, 4 rooms, breakfast free.');
+    }
   }
-  if(lower.includes('pool')) parts.push(pick(['Pool? Oh yes, private pool is all yours, included. Imagine evening swim under stars','Pool is there, private, included - you will love it.']));
-  if(lower.includes('barbecue')||lower.includes('barbeque')||lower.includes('bbq')||lower.includes('barbe')) parts.push(pick(['Barbecue - yes, we can arrange! Tell me veg or non-veg, owner will confirm charge.','Barbecue we can do - smoky evening at ' + L1 + '. Veg or non-veg?']));
-  if(lower.includes('musical')||lower.includes('music')||lower.includes('song')) parts.push(pick([
-    'Musical - if ' + U1 + ' is at the villa that day, you might just hear his own compositions live. That is the magic here. What style do you love - folk, classical?',
-    'Music - this is special here. ' + U1 + ' composes his own songs - if he is around, you get to hear them live. Fingers crossed!'
-  ]));
+  if(lower.includes('pool')) answers.push('Pool is private, included - all yours. Evening swim under stars at ' + L1 + '.');
+  if(lower.includes('barbecue')||lower.includes('barbeque')||lower.includes('bbq')||lower.includes('barbe')) answers.push('Barbecue - yes, we can arrange. Tell me veg or non-veg, owner will confirm charge.');
+  if(lower.includes('musical')||lower.includes('music')||lower.includes('song')){
+    answers.push('Music - special here. ' + U1 + ' composes his own songs - if he is at the villa that day, you might hear them live. What style do you love?');
+  }
+  if(lower.includes('price')||lower.includes('rate')||lower.includes('cost')||lower.includes('charge')||lower.includes('how much')){
+    if(!d) answers.push('Price depends on date - tell me which date? Weekday Full Villa Rs.6400, Weekend Rs.8000, Festival Rs.9600. Separate: 1 Room Rs.1600, 2 Rooms Rs.3200.');
+  }
   if(wantsPhotos(text)){
-    if(lower.includes('pool')) return 'Pool photos - Drive: '+POOL_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
-    if(lower.includes('room')) return 'Room photos - Drive: '+ROOM_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
-    if(lower.includes('activit')) return 'Activities photos - Drive: '+ACTIVITIES_PHOTOS_LINK+' (in OUTDOOR folder)\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
-    if(lower.includes('outdoor')) return 'Outdoor photos - Drive: '+OUTDOOR_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK;
-    return 'Photos - Drive: '+PHOTOS_LINK+'\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nWebsite (info only): '+WEBSITE+'\nMaps: '+MAPS_LINK;
+    if(lower.includes('pool')) answers.push('Pool photos - Drive: '+POOL_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
+    else if(lower.includes('room')) answers.push('Room photos - Drive: '+ROOM_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
+    else if(lower.includes('activit')) answers.push('Activities photos - Drive: '+ACTIVITIES_PHOTOS_LINK+' (in OUTDOOR folder)\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
+    else if(lower.includes('outdoor')) answers.push('Outdoor photos - Drive: '+OUTDOOR_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
+    else answers.push('Photos - Drive: '+PHOTOS_LINK+'\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nMaps: '+MAPS_LINK);
   }
-  if(parts.length>0){
-    return parts.join('\n\n')+'\n\nShall I confirm this for you? Tell me your name also.';
+  if(wantsQRForPayment(text)){
+    answers.push('Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?');
   }
-  if(lower.includes('price')||lower.includes('rate')||lower.includes('cost')){
-    return 'Price depends on date - tell me which date and how many guests? Weekday Full Villa Rs.6400, Weekend Rs.8000, Festival Rs.9600. Weekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200.';
+  const onlyGreeting = (lower.trim()==='hi'||lower.trim()==='hello'||lower.trim()==='hey'||lower.trim()==='hii'||lower.trim()==='helloo');
+  if(onlyGreeting && answers.length===0){
+    if(histLen>2) answers.push('Hey, I am here. You were asking - go ahead, ask your next question, I am listening.');
+    else answers.push('Hey! This is ' + P1 + ', ' + M1 + '. Which date, how many guests?');
   }
-  if(isGroup) return P1 + ' Pool Villa, ' + M1 + ', ' + W1 + '. Full Villa Weekday Rs.6400, Weekend Rs.8000. Which date, how many guests?';
-  return pick([
-    'Hey! ' + P1 + ' here. Which date, how many guests, and what are you dreaming of - pool, barbecue, music?',
-    'Welcome to ' + L1 + '! When are you coming and how many of you?',
-    'Hi! Tell me your date + guests, I will give you exact price and arrange pool, barbecue, music - all together.'
-  ]);
+  if(answers.length===0){
+    if(histLen>4) answers.push('Got it. Tell me what you want to know - date, price, pool, location? I will answer that one directly, simply.');
+    else answers.push('Hey! ' + P1 + ' here. Which date, how many guests, and what are you dreaming of - pool, barbecue, music?');
+  }
+  return answers.join('\n\n');
 }
 async function sendWA(to, text){
   try{
@@ -189,6 +192,60 @@ async function transcribeVoice(mediaId, mimeType){
 }
 const chatHistories = new Map();
 const pendingBookings = new Map();
+const processedIds = new Set();
+const buffers = new Map();
+async function processCombined(from, senderName, combinedText){
+  try{
+    const lower = combinedText.toLowerCase();
+    const utrMatch = combinedText.match(/\b\d{10,18}\b/);
+    if(utrMatch && (lower.includes('paid')||lower.includes('utr')||lower.includes('payment')||lower.includes('advance'))){
+      const utr=utrMatch[0];
+      const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance: pendingBookings.get(from)?.advance||0, utr, status:'Pending' };
+      pendingBookings.set(from, pending);
+      await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+formatPrice(pending.advance)+'\n\nReply YES to confirm, NO to reject.');
+      await sendWA(from, 'Payment screenshot + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
+      return;
+    }
+    if(!chatHistories.has(from)) chatHistories.set(from, []);
+    const history=chatHistories.get(from);
+    history.push({ role:'user', content: combinedText });
+    let reply = await askAI(combinedText, history);
+    if(!reply){ reply=logicalFallback(combinedText, history); }
+    if(wantsPhotos(combinedText) && !reply.includes('drive.'+G1+'.com')){
+      if(lower.includes('pool')) reply += '\n\nPool photos - Drive: '+POOL_PHOTOS_LINK;
+      else if(lower.includes('room')) reply += '\n\nRoom photos - Drive: '+ROOM_PHOTOS_LINK;
+      else reply += '\n\nPhotos - Drive: '+PHOTOS_LINK;
+    }
+    if(wantsQRForPayment(combinedText) && !reply.includes('drive.'+G1+'.com')){
+      const pending = pendingBookings.get(from);
+      const dealNearClose = pending && pending.date && pending.date!=='To confirm' && pending.total && pending.total>0;
+      if(dealNearClose) reply += '\n\nQR for advance - Drive: '+QR_CODE_LINK+'\nAdvance: '+formatPrice(pending.advance)+' / Total: '+formatPrice(pending.total);
+      else reply += '\n\nPlease confirm date and guests first, then I will send QR for advance payment.';
+    }
+    history.push({ role:'assistant', content: reply });
+    if(history.length>16) chatHistories.set(from, history.slice(-16));
+    const parsedDate=parseDate(combinedText);
+    if(parsedDate){
+      const t=getDateType(combinedText);
+      const price=t==='weekday'?PRICING.fullWeekday:t==='weekend'?PRICING.fullWeekend:PRICING.fullFestival;
+      pendingBookings.set(from, { name:senderName, phone:from, date:parsedDate.toISOString().slice(0,10), guests:combinedText, total:price, advance:calcAdvance(price), status:'Enquiry' });
+    }
+    await sendWA(from, reply);
+  }catch(e){ console.log('processCombined error '+e.message); }
+}
+function scheduleProcess(from, senderName, text){
+  if(!buffers.has(from)) buffers.set(from, { texts:[], senderName, timer:null });
+  const buf=buffers.get(from);
+  buf.texts.push(text);
+  buf.senderName=senderName;
+  if(buf.timer) clearTimeout(buf.timer);
+  buf.timer=setTimeout(async ()=>{
+    const combined=buf.texts.join('\n');
+    buf.texts=[];
+    buffers.delete(from);
+    await processCombined(from, buf.senderName, combined);
+  }, 2500);
+}
 app.get('/webhook', (req,res)=>{
   const mode=req.query['hub.mode'];
   const token=req.query['hub.verify_token'];
@@ -196,7 +253,7 @@ app.get('/webhook', (req,res)=>{
   if(mode==='subscribe' && token===VERIFY_TOKEN){ return res.status(200).send(challenge); }
   return res.sendStatus(403);
 });
-app.get('/', (req,res)=> res.send(P1 + ' AI - Versatile Human - LIVE'));
+app.get('/', (req,res)=> res.send(P1 + ' AI - Logical - LIVE'));
 app.get('/health', (req,res)=> res.json({ ok:true, phone: BOT_PHONE }));
 app.post('/webhook', async (req,res)=>{
   try{
@@ -211,7 +268,12 @@ app.post('/webhook', async (req,res)=>{
       const from=m.from;
       const type=m.type;
       const senderName = value.contacts?.[0]?.profile?.name || 'Guest';
-      if(from===OWNER_NUMBER){
+      if(m.id){
+        if(processedIds.has(m.id)) continue;
+        processedIds.add(m.id);
+        if(processedIds.size>500){ const first=processedIds.values().next().value; processedIds.delete(first); }
+      }
+      if(from===OWNER_NUMBER && type==='text'){
         const txt=(m.text?.body||'').toLowerCase().trim();
         if(txt==='yes' || txt==='no' || txt.includes('confirm') || txt.includes('verified')){
           let targetPhone=null, targetBooking=null;
@@ -228,11 +290,13 @@ app.post('/webhook', async (req,res)=>{
           }
         }
       }
-      let text='';
-      let isVoice=false;
-      if(type==='text'){ text=m.text?.body||''; }
-      else if(type==='audio' || type==='voice'){
-        isVoice=true;
+      if(type==='text'){
+        const text=m.text?.body||'';
+        if(!text) continue;
+        scheduleProcess(from, senderName, text);
+        continue;
+      }
+      if(type==='audio' || type==='voice'){
         const mediaId = m.audio?.id || m.voice?.id;
         const mime = m.audio?.mime_type || m.voice?.mime_type || 'audio/ogg';
         const transcribed = await transcribeVoice(mediaId, mime);
@@ -240,8 +304,10 @@ app.post('/webhook', async (req,res)=>{
           await sendWA(from, 'I heard your voice note, but could not hear clearly. Could you please send again, or type?');
           continue;
         }
-        text = transcribed;
-      } else if(type==='image'){
+        scheduleProcess(from, senderName, '[voice] '+transcribed);
+        continue;
+      }
+      if(type==='image'){
         const caption=m.image?.caption||'';
         const utrMatch=caption.match(/\b\d{10,18}\b/);
         const utr=utrMatch?utrMatch[0]:'Screenshot received';
@@ -250,54 +316,10 @@ app.post('/webhook', async (req,res)=>{
         await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+formatPrice(pending.advance)+'\n\nReply YES to confirm, NO to reject.');
         await sendWA(from, 'Payment screenshot + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
         continue;
-      } else {
-        await sendWA(from, 'Please send text or voice note.');
-        continue;
       }
-      if(!text) continue;
-      const lower=text.toLowerCase();
-      const utrInText = text.match(/\b\d{10,18}\b/);
-      if(utrInText && (lower.includes('paid') || lower.includes('utr') || lower.includes('payment') || lower.includes('advance'))){
-        const utr=utrInText[0];
-        const pending={ name:senderName, phone:from, date: pendingBookings.get(from)?.date || 'To confirm', guests: pendingBookings.get(from)?.guests||'', total: pendingBookings.get(from)?.total||0, advance: pendingBookings.get(from)?.advance||0, utr, status:'Pending' };
-        pendingBookings.set(from, pending);
-        await sendWA(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+formatPrice(pending.advance)+'\n\nReply YES to confirm, NO to reject.');
-        await sendWA(from, 'Payment screenshot + UTR '+utr+' received.\n\nOwner will verify and I will confirm your booking in a moment.');
-        continue;
-      }
-      if(!chatHistories.has(from)) chatHistories.set(from, []);
-      const history=chatHistories.get(from);
-      const aiInput = isVoice ? '[voice] '+text : text;
-      history.push({ role:'user', content: aiInput });
-      let reply = await askAI(aiInput, false, history);
-      if(!reply){ reply=fallbackReply(text, false, history.length); }
-      history.push({ role:'assistant', content: reply });
-      if(history.length>16) chatHistories.set(from, history.slice(-16));
-      const parsedDate=parseDate(text);
-      if(parsedDate){
-        const t=getDateType(text);
-        const price=t==='weekday'?PRICING.fullWeekday:t==='weekend'?PRICING.fullWeekend:PRICING.fullFestival;
-        pendingBookings.set(from, { name:senderName, phone:from, date:parsedDate.toISOString().slice(0,10), guests:text, total:price, advance:calcAdvance(price), status:'Enquiry' });
-      }
-      await sendWA(from, reply);
-      if(wantsPhotos(text) && !reply.includes('drive.' + G1 + '.com')){
-        if(lower.includes('pool')){ await sendWA(from, 'Pool photos - Drive: '+POOL_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK); }
-        else if(lower.includes('room')){ await sendWA(from, 'Room photos - Drive: '+ROOM_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK); }
-        else if(lower.includes('activit')){ await sendWA(from, 'Activities photos - Drive: '+ACTIVITIES_PHOTOS_LINK+' (in OUTDOOR folder)\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK); }
-        else if(lower.includes('outdoor')){ await sendWA(from, 'Outdoor photos - Drive: '+OUTDOOR_PHOTOS_LINK+'\nAll Photos: '+PHOTOS_LINK+'\nMaps: '+MAPS_LINK); }
-        else { await sendWA(from, 'Photos - Drive: '+PHOTOS_LINK+'\nPool: '+POOL_PHOTOS_LINK+'\nRooms: '+ROOM_PHOTOS_LINK+'\nOutdoor / Activities: '+OUTDOOR_PHOTOS_LINK+'\nWebsite (info only): '+WEBSITE+'\nMaps: '+MAPS_LINK); }
-      }
-      if(wantsQRForPayment(text) && !reply.includes('drive.' + G1 + '.com')){
-        const pending = pendingBookings.get(from);
-        const dealNearClose = pending && pending.date && pending.date!=='To confirm' && pending.total && pending.total>0;
-        if(dealNearClose){
-          await sendWA(from, 'QR for advance payment - Drive: '+QR_CODE_LINK+'\nAdvance: '+formatPrice(pending.advance)+' / Total: '+formatPrice(pending.total)+'\nDate: '+pending.date+'\nAfter payment, send screenshot + UTR please.');
-        } else {
-          await sendWA(from, 'Please confirm date and guests first, then I will send QR for advance payment. Which date and how many guests?');
-        }
-      }
+      await sendWA(from, 'Please send text or voice note.');
     }
     return res.sendStatus(200);
   }catch(e){ console.log('Webhook error '+e.message); return res.sendStatus(200); }
 });
-app.listen(PORT, ()=> console.log(P1 + ' AI Versatile Human LIVE on '+PORT));
+app.listen(PORT, ()=> console.log(P1 + ' AI Logical LIVE on '+PORT));
