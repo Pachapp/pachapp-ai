@@ -1,8 +1,11 @@
 // =====================================================
-// Pachapp AI - FULL CODE - CLEAN - NO SIMPLE FORM INSIDE
-// Uses ORIGINAL LOCKED Pachapp Bookings Form as-is
-// DO NOT use meta.ai/share link - guests see "no artifacts"
-// Use Share link from Pachapp Bookings Form page Share control
+// Pachapp AI + LOCKED FORM in ONE file - NO SHARE LINK NEEDED
+// Form at: Your-Render-URL + /booking - Always works
+// Fixes:
+// - Never says "link is being fixed"
+// - Never says "already shared" - always resends when asked
+// - Understands "share the form", "edit it on the form", "booking form", any "form"
+// - Owner testing resets and resends
 // =====================================================
 
 const express = require('express');
@@ -10,15 +13,13 @@ const app = express();
 app.use(express.json());
 
 // =====================================================
-// 1. CHANGE HERE - EASY TO CHANGE - ONLY THIS PART
+// 1. CHANGE HERE - ONLY THIS PART - NO FORM_URL NEEDED NOW
 // =====================================================
 const CONFIG = {
-  // PASTE HERE: Share link from Pachapp Bookings Form page
-  // Open the Pachapp Bookings Form above -> Click Share control on that page -> Copy link -> Paste here
-  // Example: https://your-original-form-share-link
-  // DO NOT PASTE https://www.meta.ai/share/... - guests see "no artifacts"
-  FORM_URL: process.env.FORM_URL || "PASTE_YOUR_ORIGINAL_PACHAPP_BOOKINGS_FORM_SHARE_LINK_HERE",
-
+  // Leave FORM_URL empty - bot will use Render /booking automatically
+  // If you ever want to force a different link, paste it here, but not needed
+  FORM_URL: process.env.FORM_URL || "",
+  QR_IMAGE_URL: process.env.QR_IMAGE_URL || "",
   OWNER_PHONE: "918943666911",
   CARETAKER_PHONE: "91894366911",
   AIRTABLE_TABLE: "Pachapp Bookings",
@@ -34,20 +35,20 @@ const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN || "";
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || "";
 
 function getFormUrl() {
-  if (CONFIG.FORM_URL && !CONFIG.FORM_URL.includes("PASTE_YOUR") && !CONFIG.FORM_URL.includes("meta.ai/share")) return CONFIG.FORM_URL;
-  return CONFIG.FORM_URL;
+  if (CONFIG.FORM_URL && !CONFIG.FORM_URL.includes("PASTE") && !CONFIG.FORM_URL.includes("meta.ai/share")) return CONFIG.FORM_URL;
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL + "/booking";
+  return "https://pachapp-ai-1.onrender.com/booking";
 }
-function formLink() {
-  if (!CONFIG.FORM_URL || CONFIG.FORM_URL.includes("PASTE_YOUR") || CONFIG.FORM_URL.includes("meta.ai/share")) {
-    return "Booking form link is being fixed. Please ask owner for the latest link.";
-  }
-  return CONFIG.FORM_URL;
-}
+function formLink() { return getFormUrl(); }
 
 const sessions = new Map();
 const groupPaused = new Map();
 function getSession(phone) {
   if (!sessions.has(phone)) sessions.set(phone, { asked: new Set(), lastDates: "", greeted: false, formSent: false, qaMode: false, details: null });
+  return sessions.get(phone);
+}
+function resetSession(phone) {
+  sessions.set(phone, { asked: new Set(), lastDates: "", greeted: false, formSent: false, qaMode: false, details: null });
   return sessions.get(phone);
 }
 function cleanPhone(p) { return String(p || "").replace(/\D/g, ""); }
@@ -79,7 +80,7 @@ function calcTotal(o) {
 }
 
 // =====================================================
-// 3. READ DETAILS - Reads "dec 1 1 couple 1 room no kids no breakfast"
+// 3. READ DETAILS
 // =====================================================
 function parseDetails(text) {
   const lower = text.toLowerCase();
@@ -112,7 +113,7 @@ function detailsSummary(d) {
 }
 
 // =====================================================
-// 4. AIRTABLE - Form -> Pachapp Bookings
+// 4. AIRTABLE
 // =====================================================
 async function createAirtableBooking(d) {
   if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID) { console.log("Airtable not set"); return null; }
@@ -173,14 +174,48 @@ async function sendWhatsApp(to, text) {
 }
 
 // =====================================================
-// 6. PAGES - NO FORM HTML HERE - Redirects to ORIGINAL locked form only
+// 6. LOCKED FORM HTML - Black, White letters, Real logo on white card
+// NOT the vulgar simple white form - This is Pachapp Bookings Form locked design
 // =====================================================
-app.get("/", (req, res) => res.send("Pachapp AI is running"));
+const FORM_HTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pachapp Bookings Form</title>' +
+'<style>body{background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:16px}.wrap{max-width:520px;margin:0 auto}.logo-card{background:#fff;color:#000;border-radius:14px;padding:16px;text-align:center;margin-bottom:12px}.logo{font-size:36px;font-weight:900;letter-spacing:3px;color:#4a5d23}.logo span{color:#000;font-size:18px;display:block;letter-spacing:4px}.sub{font-size:12px;margin-top:6px;color:#333}h1{text-align:center;font-size:22px;margin:12px 0;color:#fff}.card{background:#111;border:1px solid #333;border-radius:12px;padding:14px;margin-bottom:12px}label{display:block;font-size:13px;margin:12px 0 4px;color:#fff}input,select,textarea{width:100%;padding:11px;border-radius:8px;border:1px solid #444;background:#fff;color:#000;font-size:15px;box-sizing:border-box}textarea{min-height:60px}.row{display:flex;gap:10px}.row>div{flex:1}.type-row{display:flex;gap:10px}.type-btn{flex:1;padding:12px;border-radius:10px;border:1px solid #555;font-weight:700;cursor:pointer;text-align:center}.type-full{background:#fff;color:#000}.type-room{background:#333;color:#fff}.type-active{outline:3px solid #22c55e}.tick{color:#22c55e;font-weight:900}.blue-arrow{color:#3b82f6;border:2px solid #3b82f6;border-radius:50%;padding:1px 7px;font-weight:900;background:transparent}.light-green{background:#dcfce7 !important}.green-bg{background:#22c55e !important;color:#fff !important}.red-bold{color:#ef4444;font-weight:900}.total-box{background:#fff;color:#000;border-radius:8px;padding:14px;text-align:center;font-size:20px;font-weight:900;border:2px solid #fff}.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;margin-top:10px}.btn-green{background:#22c55e;color:#fff}.btn-white{background:#fff;color:#000}.small{font-size:12px;color:#bbb;text-align:center;margin-top:8px}.qr-box{background:#fff;color:#000;border-radius:12px;padding:14px;text-align:center;display:none;margin-top:12px}.qr-box img{max-width:260px;width:100%}.saved{margin-top:12px}summary{cursor:pointer;background:#222;padding:11px;border-radius:10px;color:#fff}.saved-list{background:#111;padding:10px;border-radius:10px;margin-top:8px;font-size:13px;color:#fff}</style></head><body>' +
+'<div class="wrap"><div class="logo-card"><div class="logo">Pachapp<span>BE NOWHERE</span></div><div class="sub">POOL VILLA - Lucky Hill, Meppadi, Wayanad - Dolby Atmos Included</div></div>' +
+'<h1>Pachapp Bookings Form</h1>' +
+'<div class="card"><div class="type-row"><div id="btnFull" class="type-btn type-full" onclick="setType(\'Full Villa\')">Full Villa <span class="tick" id="tickFull">✓</span></div><div id="btnRoom" class="type-btn type-room" onclick="setType(\'Rooms\')">Rooms <span class="tick" id="tickRoom" style="display:none">✓</span></div></div>' +
+'<label>Guest Name *</label><input id="guestName" placeholder="Guest Name">' +
+'<label>Phone / WhatsApp *</label><input id="phone" placeholder="Phone / WhatsApp">' +
+'<div class="row"><div><label>Check-in *</label><input type="date" id="checkIn"></div><div><label>Check-out <span class="red-bold">* Auto</span></label><input type="date" id="checkOut" readonly></div></div>' +
+'<label>Nights <span class="red-bold" id="nightsLabel">1</span></label><input type="number" id="nights" value="1" min="1" max="7" readonly>' +
+'<label>Adults <span class="blue-arrow">↕</span> 1 - 20</label><input type="number" id="adults" value="2" min="1" max="20">' +
+'<div class="row"><div><label>Kids 0-6 Free <span class="blue-arrow">↕</span></label><input type="number" id="kidsFree" value="0" min="0"></div><div><label>Kids 6-12 Half Price <span class="blue-arrow">↕</span></label><input type="number" id="kidsHalf" value="0" min="0"></div></div>' +
+'<label>Rooms <span id="roomsHint"></span></label><input type="number" id="rooms" value="1" min="1" max="4" class="light-green" readonly>' +
+'<label>Breakfast Count</label><input type="number" id="breakfastCount" value="0" min="0" class="green-bg">' +
+'<label>Notes</label><textarea id="notes" placeholder="Any note - arrival time, extra beds, etc."></textarea></div>' +
+'<div class="card"><div>Rate Applied: <b id="rateText">Full Villa Weekday Rs.6400</b></div><div style="margin-top:8px">Room Total: Rs.<span id="roomTotal">6400</span> | Extra Adult: Rs.<span id="extraTotal">0</span> | Kids 6-12: Rs.<span id="kidsTotal">0</span> | Breakfast: Rs.<span id="bfTotal">0</span></div></div>' +
+'<div class="total-box">Grand Total: Rs.<span id="grandTotal">6400</span><div style="font-size:13px;font-weight:400;margin-top:4px">Advance to Pay: Rs.<span id="advance">2000</span></div></div>' +
+'<button class="btn btn-green" onclick="showQR()">Pay Advance - Show QR Code</button>' +
+'<div class="qr-box" id="qrBox"><b>Scan to Pay - 【entity-PhonePe¦canonical_name=PhonePe】</b><div>UDAYABHANU RAMACHANDRAN</div><div id="qrImgWrap" style="margin:10px 0"></div><div>Pay Advance, then enter UTR below</div></div>' +
+'<div class="card"><label>UTR / Transaction ID (after payment)</label><input id="utr" placeholder="Enter UTR - Example TEST123"><div class="small">No UTR = Pending - Waiting for Advance. With UTR = Confirmed.</div></div>' +
+'<button class="btn btn-white" onclick="confirmBooking()">I Have Paid - Confirm My Booking</button>' +
+'<div id="result" class="small" style="font-size:14px;color:#fff"></div>' +
+'<div class="saved"><details><summary>Saved Bookings ▼ (Closed)</summary><div class="saved-list" id="savedList">No saved bookings yet on this device. All bookings are saved in Airtable - Pachapp Bookings.</div></details></div>' +
+'<div class="small">Pay before Confirm. No payment = No Confirmed booking.</div></div>' +
+'<script>' +
+'var bookingType="Full Villa"; var QR_URL="' + (CONFIG.QR_IMAGE_URL || "") + '";' +
+'function setType(t){ bookingType=t; document.getElementById("btnFull").classList.toggle("type-active", t==="Full Villa"); document.getElementById("btnRoom").classList.toggle("type-active", t==="Rooms"); document.getElementById("tickFull").style.display = t==="Full Villa" ? "inline" : "none"; document.getElementById("tickRoom").style.display = t==="Rooms" ? "inline" : "none"; calc(); }' +
+'function autoRooms(adults){ if(adults<=2) return 1; if(adults<=4) return 2; if(adults<=6) return 3; return 4; }' +
+'function calc(){ var checkIn=document.getElementById("checkIn").value; var adults=parseInt(document.getElementById("adults").value||"2"); var kidsHalf=parseInt(document.getElementById("kidsHalf").value||"0"); var bf=parseInt(document.getElementById("breakfastCount").value||"0"); var rooms=autoRooms(adults); document.getElementById("rooms").value=rooms; var nights=1; if(checkIn){ var d=new Date(checkIn); d.setDate(d.getDate()+1); var out=d.toISOString().slice(0,10); document.getElementById("checkOut").value=out; } var roomTotal=0; var rateText=""; if(bookingType==="Full Villa"){ var dt=new Date(checkIn||new Date()); var day=dt.getDay(); if(day===5||day===6||day===0){ roomTotal=8000*nights; rateText="Full Villa Weekend Rs.8000"; } else { roomTotal=6400*nights; rateText="Full Villa Weekday Rs.6400"; } } else { roomTotal=1600*rooms*nights; rateText="Rooms Rs.1600 per room / night"; } var extraCount=Math.max(0, adults-8); var extraTotal=extraCount*800*nights; var kidsTotal=kidsHalf*400*nights; var bfTotal= bookingType==="Full Villa" ? 0 : bf*100; var grand=roomTotal+extraTotal+kidsTotal+bfTotal; var advance=0; if(bookingType!=="Full Villa" && rooms===1 && nights===1 && adults<=2 && kidsHalf===0){ advance=1600; } else if(grand<=10000){ advance=2000; } else { advance=Math.round(grand*0.20); } document.getElementById("nights").value=nights; document.getElementById("nightsLabel").innerText=nights; document.getElementById("rateText").innerText=rateText; document.getElementById("roomTotal").innerText=roomTotal; document.getElementById("extraTotal").innerText=extraTotal; document.getElementById("kidsTotal").innerText=kidsTotal; document.getElementById("bfTotal").innerText=bfTotal; document.getElementById("grandTotal").innerText=grand; document.getElementById("advance").innerText=advance; var hint=""; if(adults>8){ hint="(Extra beds for "+adults+" adults)"; } document.getElementById("roomsHint").innerText=hint; return {nights:nights, rooms:rooms, grand:grand, advance:advance, roomTotal:roomTotal, extraTotal:extraTotal, kidsTotal:kidsTotal, bfTotal:bfTotal, rateText:rateText}; }' +
+'function showQR(){ var box=document.getElementById("qrBox"); box.style.display="block"; var wrap=document.getElementById("qrImgWrap"); if(QR_URL){ wrap.innerHTML="<img src=\'"+QR_URL+"\'>"; } else { wrap.innerHTML="<div style=\'border:2px dashed #000;padding:20px;font-weight:800\'>QR CODE<br>PhonePe - UDAYABHANU RAMACHANDRAN<br>Ask owner for QR if not showing</div>"; } }' +
+'async function confirmBooking(){ var c=calc(); var data={ guestName: document.getElementById("guestName").value, phone: document.getElementById("phone").value, bookingType: bookingType, checkIn: document.getElementById("checkIn").value, checkOut: document.getElementById("checkOut").value, nights: c.nights, adults: parseInt(document.getElementById("adults").value||"2"), kidsFree: parseInt(document.getElementById("kidsFree").value||"0"), kidsHalf: parseInt(document.getElementById("kidsHalf").value||"0"), kidsHalfTotal: c.kidsTotal, rooms: c.rooms, breakfastCount: parseInt(document.getElementById("breakfastCount").value||"0"), breakfastIncluded: bookingType==="Full Villa" ? "Yes - Free" : "No", rateApplied: c.rateText, perNightRate: 0, roomTotal: c.roomTotal, extraCount: Math.max(0, parseInt(document.getElementById("adults").value||"2")-8), extraTotal: c.extraTotal, breakfastTotal: c.bfTotal, grandTotal: c.grand, advanceToPay: c.advance, utr: document.getElementById("utr").value, notes: document.getElementById("notes").value }; if(!data.guestName){ alert("Please enter guest name"); return; } if(!data.phone){ alert("Please enter phone"); return; } document.getElementById("result").innerText="Saving..."; try{ var res=await fetch("/booking",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}); var out=await res.json(); if(out.ok){ document.getElementById("result").innerText="Saved - Status: "+out.status+" | Grand Total Rs."+out.grandTotal+" | Advance Rs."+out.advance; } else { document.getElementById("result").innerText=out.error||"Could not save"; } }catch(e){ document.getElementById("result").innerText="Could not save - check connection"; } }' +
+'document.getElementById("checkIn").addEventListener("change", calc); document.getElementById("adults").addEventListener("input", calc); document.getElementById("kidsHalf").addEventListener("input", calc); document.getElementById("breakfastCount").addEventListener("input", calc); setType("Full Villa"); calc();' +
+'</script></body></html>';
+
+// =====================================================
+// 7. PAGES
+// =====================================================
+app.get("/", (req, res) => res.send(FORM_HTML));
+app.get("/booking", (req, res) => res.send(FORM_HTML));
 app.get("/health", (req, res) => res.json({ ok: true, form: getFormUrl(), airtable: CONFIG.AIRTABLE_TABLE }));
-app.get("/booking", (req, res) => {
-  if (CONFIG.FORM_URL && !CONFIG.FORM_URL.includes("PASTE_YOUR") && !CONFIG.FORM_URL.includes("meta.ai/share")) return res.redirect(CONFIG.FORM_URL);
-  return res.send("FORM_URL not set to original locked form Share link. Set it in Section 1.");
-});
 
 app.post("/booking", async (req, res) => {
   try {
@@ -226,7 +261,7 @@ app.post("/booking", async (req, res) => {
 });
 
 // =====================================================
-// 7. WHATSAPP WEBHOOK - HUMAN, READS DETAILS
+// 8. WHATSAPP WEBHOOK - HUMAN, ALWAYS RESENDS FORM
 // =====================================================
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
@@ -254,50 +289,51 @@ app.post("/webhook", async (req, res) => {
     if (lower === "pause ai" && isOwner(from)) { groupPaused.set(from, true); await sendWhatsApp(from, "AI paused. I will stay silent. Send RESUME AI to start again."); return; }
     if (lower === "resume ai" && isOwner(from)) { groupPaused.set(from, false); await sendWhatsApp(from, "AI resumed."); return; }
 
-    const s = getSession(from);
+    let s = getSession(from);
 
+    // OWNER TESTING - Reset and resend - Fixes "i am the owner testing the ai"
+    if (lower.includes("i am the owner") || lower.includes("i am owner") || lower.includes("owner testing") || lower.includes("testing the ai")) {
+      s = resetSession(from);
+      await sendWhatsApp(from, "Okay owner, testing mode - I reset. Here is the form again to check:\n\n" + formLink() + "\n\nTell me what you want to test - Dec 1, 1 couple, 1 room - and I will calculate. Or say - give me the booking form.");
+      return;
+    }
+
+    // ASK QUESTIONS MODE
     if (lower.includes("ask") && lower.includes("question") || lower.includes("so many question") || lower.includes("just asking") || lower.includes("not book")) {
       s.qaMode = true;
       await sendWhatsApp(from, "Of course, please ask me anything, I am here. No need to fill the form until you are ready.\n\nYou can ask me about price, rooms, dates, pool, breakfast, check-in, photos, anything. What would you like to know first?");
       return;
     }
 
-    if (lower.includes("booking form") || lower.includes("give me") && lower.includes("form") || lower.includes("send form") || lower.includes("share form") || lower.includes("send me the form") || lower.includes("booking link")) {
+    // FORM - ANY message with "form" - ALWAYS SEND, NEVER BLOCK - Fixes all form cases
+    // Covers: "give me the booking form", "share the form", "please share the form i will edit it", "needs the booking form", "send form", "form"
+    if (lower.includes("form")) {
       s.qaMode = false;
       const sum = s.details ? detailsSummary(s.details) + ". " : "";
-      if (s.formSent && !s.details) {
-        await sendWhatsApp(from, "I already shared the form above, you can open it anytime. Here it is again:\n" + formLink());
-        return;
-      }
+      // NEVER say "already shared" - always resend working link
+      await sendWhatsApp(from, "Here you go - " + sum + "Pachapp Pool Villa booking form. You can edit it on the form itself - change dates, adults, rooms, it will calculate total. Please fill it when you are ready.\n\n" + formLink() + "\n\nPachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.");
       s.formSent = true;
-      await sendWhatsApp(from, "Here you go - " + sum + "Pachapp Pool Villa booking form. It shows total, advance, and QR. Please fill it when you are ready.\n\n" + formLink() + "\n\nPachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.");
       return;
     }
 
-    const isBookingIntent = lower.includes("book now") || lower.includes("want book") || lower.includes("want to book") || lower.includes("pay and book") || lower.includes("book straight") || lower.includes("can book") || lower.includes("book your room") || lower.includes("i want book") || lower.includes("book room") || lower.includes("book it") || lower.includes("book for") || lower.includes("i have given") && lower.includes("book") || lower.includes("been there before") && lower.includes("book");
+    // BOOKING INTENT - ALWAYS SEND FORM, NEVER BLOCK
+    const isBookingIntent = lower.includes("book now") || lower.includes("want book") || lower.includes("want to book") || lower.includes("pay and book") || lower.includes("book straight") || lower.includes("can book") || lower.includes("book your room") || lower.includes("i want book") || lower.includes("book room") || lower.includes("book it") || lower.includes("book for") || lower.includes("i have given") && lower.includes("book") || lower.includes("been there before") && lower.includes("book") || lower.includes("i want to book");
     if (isBookingIntent) {
       s.qaMode = false;
       if (text.length > 5) s.lastDates = text;
       const sum = s.details ? "Got it - " + detailsSummary(s.details) + ". " : "";
       if (s.details && s.details.adults !== null) {
         const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: s.details.adults, kidsHalf: 0, rooms: s.details.rooms || 1, breakfastCount: 0 });
-        if (s.formSent) {
-          await sendWhatsApp(from, sum + "Total Rs." + c.grandTotal + " for 1 night, Advance Rs." + c.advance + ". Form is already shared above, you can open it anytime. If it did not open, tell me and I will share again.");
-          return;
-        }
+        await sendWhatsApp(from, "Welcome back, great you have been here before. Yes, you can book straight away. " + sum + "Total Rs." + c.grandTotal + " for 1 night, Advance Rs." + c.advance + ". Here is the form to confirm - you can edit it on the form:\n\n" + formLink());
         s.formSent = true;
-        await sendWhatsApp(from, "Welcome back, great you have been here before. Yes, you can book straight away. " + sum + "Total Rs." + c.grandTotal + " for 1 night, Advance Rs." + c.advance + ". Here is the form to confirm:\n\n" + formLink());
         return;
       }
-      if (s.formSent) {
-        await sendWhatsApp(from, "I already shared the form above, you can open it anytime. If it did not open, tell me and I will share again. What dates did you want?");
-        return;
-      }
+      await sendWhatsApp(from, sum + "Yes, you can book straight away. Here is the Pachapp Pool Villa booking form. You can edit it on the form. It shows total, advance, and QR.\n\n" + formLink());
       s.formSent = true;
-      await sendWhatsApp(from, sum + "Yes, you can book straight away. Here is the Pachapp Pool Villa booking form. It shows total, advance, and QR.\n\n" + formLink());
       return;
     }
 
+    // DETAILS
     const parsed = parseDetails(text);
     if (parsed.hasDetails) {
       s.details = parsed;
@@ -388,7 +424,7 @@ app.post("/webhook", async (req, res) => {
       s.greeted = true;
       await sendWhatsApp(from, "Hi, this is Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.\n\nYou can ask me anything - price, rooms, dates, photos. Or say Book Now when you are ready. What would you like to know?");
     } else if (s.formSent) {
-      await sendWhatsApp(from, "I am here. What would you like to know? You can ask about price, rooms, dates, anything. The form is already shared above when you are ready to book.");
+      await sendWhatsApp(from, "I am here. What would you like to know? You can ask about price, rooms, dates, anything. The form is already shared above when you are ready to book. If you want it again, just say - give me the booking form - and I will resend it.");
     } else {
       await sendWhatsApp(from, "Thanks for your message. What would you like to know? You can ask about price, rooms, dates, pool, breakfast, anything. Say Book Now or give me the booking form only when you are ready to book.");
     }
