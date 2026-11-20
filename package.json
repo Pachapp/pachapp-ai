@@ -1,1 +1,10 @@
-{"dependencies":{"airtable":"0.12.2","express":"4.21.2","groq-sdk":"0.9.0"},"engines":{"node":"20.x"},"main":"pachapp-ai-cloud.js","name":"pachapp-ai","scripts":{"start":"node pachapp-ai-cloud.js"},"version":"1.0.0"}
+{
+  "name": "pachapp-ai-1",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.4.5"
+  }
+}
