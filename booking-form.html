@@ -1,1 +1,258 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pachapp Bookings Form</title><style>*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:Arial} .w{max-width:520px;margin:auto;padding:16px} .logo{background:#fff;border-radius:20px;padding:18px;text-align:center} .logo img{width:100%;max-width:420px} .sub{text-align:center;color:#ccc;margin:10px 0 18px} label{display:block;margin:14px 0 6px;font-weight:700} .f{width:100%;min-height:52px;border-radius:10px;background:#111;color:#fff;padding:12px;border:1px solid #333;font-size:16px} .ctr{display:flex;justify-content:space-between;align-items:center;border:1px solid #333;border-radius:10px;padding:8px;background:#111} .ctr button{width:48px;height:44px;font-size:22px;border-radius:8px;border:none;background:#222;color:#fff} .red{color:#FF3B30;font-weight:700} .warn{color:#FF2D2D;font-weight:700;display:none;margin-top:6px} .row{display:flex;gap:10px} .row>div{flex:1} .box{border:1px solid #333;border-radius:12px;padding:12px;margin-top:16px;background:#0d0d0d} .paybox{background:#d4edda;color:#000;border-radius:12px;padding:12px;margin-top:16px} .paybox label{color:#000} .switch{width:100%;background:#90EE90;border:2px solid #2e7d32;border-radius:10px;padding:12px;font-weight:800;color:#000;cursor:pointer} .switch.on{background:#2e7d32;color:#fff} .total{display:none;margin-top:14px;background:#111;border-radius:12px;padding:14px} .btn{width:100%;padding:14px;border:none;border-radius:10px;background:#25D366;color:#000;font-weight:800;font-size:16px;margin-top:12px} .small{color:#aaa;font-size:13px;line-height:1.5}</style></head><body><div class="w"><div class="logo"><img src="Pachapp_1.png" alt="Pachapp"></div><div class="sub">Pool Villa - Lucky Hill, Meppadi, Wayanad</div><label>Your Name *</label><input id="name" class="f" placeholder="Full name"><div class="warn" id="wName">Name is required</div><label>Phone *</label><input id="phone" class="f" placeholder="Phone number"><div class="warn" id="wPhone">Phone is required</div><label>Check-in *</label><input id="ci" type="date" class="f"><div class="warn" id="wCi">Check-in is required</div><p><span class="red" id="nL">Nights: 1</span> | <span class="red" id="cL">Check-out: -</span></p><label>Booking Type</label><div class="row"><button class="f" id="bFull" onclick="setType('full')" style="background:#25D366;color:#000;font-weight:800">Full Villa</button><button class="f" id="bRooms" onclick="setType('rooms')">Rooms</button></div><label>Nights</label><div class="ctr"><button onclick="chgN(-1)">-</button><span id="nT">1 Night</span><button onclick="chgN(1)">+</button></div><label>Adults</label><div class="ctr"><button onclick="chg('a',-1)">-</button><span id="aT">2 Adults</span><button onclick="chg('a',1)">+</button></div><label>Kids 0-6 Free</label><div class="ctr"><button onclick="chg('k0',-1)">-</button><span id="k0T">0 Kids</span><button onclick="chg('k0',1)">+</button></div><label>Kids 6-12 Half Price Rs.400</label><div class="ctr"><button onclick="chg('k12',-1)">-</button><span id="k12T">0 Kids</span><button onclick="chg('k12',1)">+</button></div><label>Rooms</label><div class="ctr"><button onclick="chgR(-1)">-</button><span id="rT">1 Room</span><button onclick="chgR(1)">+</button></div><div class="warn" id="wRooms">Fewer rooms than needed for Adults. Rooms follow Adults only.</div><p class="small">Rooms follow Adults only. Kids 6-12 do not change Rooms or Nights. Extra = Adults - (Rooms x 2) x Rs.800. Kids Half Rs.400. Breakfast Rs.100. Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000. Breakfast Full Villa FREE.</p><label>Breakfast?</label><div class="row"><button class="f" id="bfYes" onclick="setBf(true)">Yes</button><button class="f" id="bfNo" onclick="setBf(false)" style="background:#333">No</button></div><label>Notes</label><select id="notes" class="f"><option value="">Select Notes</option><option>Early check-in</option><option>Late check-out</option><option>Extra mattress</option><option>Veg only</option><option>Birthday setup</option></select><div class="paybox"><button class="switch" id="paySw" onclick="togglePay()">Pay Advance — Tap to Show Total</button><div class="total" id="totalBox"><div id="breakdown" style="white-space:pre-line;line-height:1.6"></div><hr><div style="font-size:20px;font-weight:800" id="grand"></div><div style="margin-top:10px"><b>Pay to 0091 996 191 7169</b><br>Name: <b>UDAYABHANU</b><br><span id="adv"></span></div><label>UTR *</label><input id="utr" class="f" placeholder="Enter UTR after payment"><div class="warn" id="wUtr">UTR is required</div></div></div><button class="btn" onclick="confirmBooking()">Confirm Booking</button><p class="small" id="msg"></p></div><script>let n=1,a=2,k0=0,k12=0,r=1,type='full',bf=false,payOn=false;function fmt(v){return 'Rs.'+v.toLocaleString('en-IN');}function needRooms(){return Math.max(1,Math.ceil(a/2));}function setType(t){type=t;document.getElementById('bFull').style.background=t==='full'?'#25D366':'#111';document.getElementById('bFull').style.color=t==='full'?'#000':'#fff';document.getElementById('bRooms').style.background=t==='rooms'?'#25D366':'#111';document.getElementById('bRooms').style.color=t==='rooms'?'#000':'#fff';if(t==='full'){r=4;}else{r=needRooms();}update();}function setBf(v){bf=v;document.getElementById('bfYes').style.background=v?'#25D366':'#111';document.getElementById('bfNo').style.background=!v?'#333':'#111';update();}function chgN(d){n=Math.min(7,Math.max(1,n+d));update();}function chg(k,d){if(k==='a')a=Math.min(20,Math.max(1,a+d));if(k==='k0')k0=Math.min(10,Math.max(0,k0+d));if(k==='k12')k12=Math.min(10,Math.max(0,k12+d));if(type==='rooms'){let need=needRooms();if(r<need)r=need;}update();}function chgR(d){let need=needRooms();r=Math.min(4,Math.max(1,r+d));update();}function calc(){let ci=document.getElementById('ci').value;let d=ci?new Date(ci):null;let isWeekend=false;if(d){let day=d.getDay();isWeekend=(day===5||day===6||day===0);}let roomCost=0,extra=0,kidsHalf=0,bfCost=0;if(type==='full'){roomCost=(isWeekend?8000:6400)*n;extra=Math.max(0,a-8)*800*n;kidsHalf=k12*400*n;bfCost=0;}else{roomCost=r*1600*n;extra=Math.max(0,a-(r*2))*800*n;kidsHalf=k12*400*n;bfCost=bf?(a+k12)*100*n:0;}let total=roomCost+extra+kidsHalf+bfCost;let adv=total<=1600?1600:(total<=10000?2000:Math.round(total*0.20));return {roomCost,extra,kidsHalf,bfCost,total,adv,isWeekend};}function update(){document.getElementById('nT').textContent=n+' Night'+(n>1?'s':'');document.getElementById('aT').textContent=a+' Adults';document.getElementById('k0T').textContent=k0+' Kids';document.getElementById('k12T').textContent=k12+' Kids';document.getElementById('rT').textContent=r+' Room'+(r>1?'s':'');document.getElementById('nL').textContent='Nights: '+n;let ci=document.getElementById('ci').value;let co='-';if(ci){let d=new Date(ci);d.setDate(d.getDate()+n);co=d.toISOString().slice(0,10);}document.getElementById('cL').textContent='Check-out: '+co;let need=needRooms();let warn=document.getElementById('wRooms');if(type==='rooms'&&r<need){warn.style.display='block';}else{warn.style.display='none';}if(payOn){let c=calc();document.getElementById('breakdown').textContent=(type==='full'?'Full Villa ('+(c.isWeekend?'Weekend':'Weekday')+') x '+n+' night(s): '+fmt(c.roomCost):'Rooms ('+r+' x Rs.1600 x '+n+'): '+fmt(c.roomCost))+'\nExtra Adults: '+fmt(c.extra)+'\nKids 6-12 Total: '+fmt(c.kidsHalf)+'\nBreakfast: '+fmt(c.bfCost)+'\nNotes: '+(document.getElementById('notes').value||'-');document.getElementById('grand').textContent='Grand Total: '+fmt(c.total);document.getElementById('adv').textContent='Advance to Pay: '+fmt(c.adv);}}function togglePay(){payOn=!payOn;let sw=document.getElementById('paySw');sw.textContent=payOn?'Pay Advance — Total Shown':'Pay Advance — Tap to Show Total';sw.classList.toggle('on',payOn);document.getElementById('totalBox').style.display=payOn?'block':'none';if(payOn)update();}document.getElementById('ci').addEventListener('change',update);document.getElementById('notes').addEventListener('change',update);function confirmBooking(){let ok=true;let name=document.getElementById('name').value.trim();let phone=document.getElementById('phone').value.trim();let ci=document.getElementById('ci').value;let utr=document.getElementById('utr').value.trim();document.getElementById('wName').style.display=name?'none':'block';document.getElementById('wPhone').style.display=phone?'none':'block';document.getElementById('wCi').style.display=ci?'none':'block';document.getElementById('wUtr').style.display=(payOn&&!utr)?'block':'none';if(!name||!phone||!ci)return;if(!payOn){document.getElementById('msg').textContent='Please tap Pay Advance to see Grand Total and pay.';document.getElementById('msg').style.color='#FF2D2D';document.getElementById('msg').style.fontWeight='700';return;}if(!utr)return;let c=calc();document.getElementById('msg').textContent='Thank you '+name+'! Booking noted. Total '+fmt(c.total)+', Advance '+fmt(c.adv)+', UTR '+utr+'. Please send UTR on WhatsApp for confirmation.';document.getElementById('msg').style.color='#25D366';document.getElementById('msg').style.fontWeight='700';}setType('full');update();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pachapp Booking Form</title>
+<style>
+*{box-sizing:border-box}
+body{background:#000;color:#fff;font-family:sans-serif;margin:0;padding:16px}
+.wrap{max-width:600px;margin:0 auto}
+.logo-card{background:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:8px}
+.logo-card img{max-width:240px;width:100%;display:block;margin:0 auto}
+label{display:block;margin:18px 0 6px;font-weight:700;font-size:16px}
+input,select{width:100%;padding:13px;border-radius:10px;border:1px solid #444;background:#111;color:#fff;font-size:16px}
+.row{display:flex;gap:10px;align-items:center}
+.nights-box{display:flex;align-items:center;gap:12px;background:#111;border:1px solid #444;border-radius:10px;padding:8px 12px}
+.nights-box button{width:40px;height:40px;border-radius:50%;border:2px solid #2f7bff;background:transparent;color:#fff;font-size:22px;cursor:pointer}
+.nights-num{font-size:18px;font-weight:700;min-width:30px;text-align:center}
+.redline{color:#ff3b30;font-weight:800;margin-top:8px;font-size:16px}
+.type-row{display:flex;gap:10px}
+.type-btn{flex:1;padding:14px;border-radius:12px;border:1px solid #555;font-size:16px;font-weight:700;cursor:pointer}
+.type-full{background:#fff;color:#000}
+.type-rooms{background:#333;color:#fff}
+.type-btn.active{outline:3px solid #2ecc71}
+.stepper{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid #444;border-radius:10px;padding:8px 10px}
+.stepper button{width:38px;height:38px;border-radius:50%;border:2px solid #2f7bff;background:transparent;color:#fff;font-size:20px;cursor:pointer}
+.stepper span{flex:1;text-align:center;font-size:17px;font-weight:700}
+.stepper-rooms{background:#d9f2d9;border-color:#d9f2d9}
+.stepper-rooms button{border-color:#2f7bff}
+.stepper-rooms span{color:#fff}
+.opt-row{display:flex;gap:10px}
+.opt-btn{flex:1;padding:13px;border-radius:12px;border:1px solid #555;background:#222;color:#fff;font-size:16px;cursor:pointer}
+.opt-btn.active{background:#2ecc71;color:#fff;border-color:#2ecc71}
+.opt-break-yes.active{background:#2ecc71}
+.warn{color:#ff2d2d;font-weight:900;margin:10px 0;display:none;font-size:15px}
+.pay-box{background:#d9f2d9;color:#000;border-radius:14px;padding:14px;margin-top:20px}
+.pay-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.switch{position:relative;width:62px;height:32px;display:inline-block}
+.switch input{display:none}
+.slider{position:absolute;inset:0;background:#999;border-radius:30px;transition:.2s;cursor:pointer}
+.slider:before{content:"";position:absolute;width:26px;height:26px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked + .slider{background:#2ecc71}
+.switch input:checked + .slider:before{transform:translateX(30px)}
+.total-box{background:#111;color:#fff;border-radius:12px;padding:16px;margin-top:12px;display:none}
+.total-box p{margin:8px 0;font-size:16px;color:#fff}
+.total-box .big{font-size:20px;font-weight:900;border-top:1px solid #fff;padding-top:10px}
+.total-box .payline{margin-top:12px;font-weight:700}
+.save-btn{width:100%;padding:15px;margin-top:18px;border-radius:12px;border:none;background:#2ecc71;color:#fff;font-size:18px;font-weight:800;cursor:pointer}
+details{margin-top:18px;background:#111;border:1px solid #444;border-radius:12px;padding:12px}
+summary{cursor:pointer;font-weight:700}
+.saved-item{border-top:1px solid #333;padding:8px 0;font-size:14px;white-space:pre-line}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="logo-card"><img src="Pachapp_1.png" alt="Pachapp"></div>
+
+<label>Your Name *</label>
+<input id="guestName" type="text" placeholder="Enter guest name">
+<label>Phone *</label>
+<input id="phone" type="tel" placeholder="Enter phone number">
+<label>Check-in *</label>
+<input id="checkin" type="date">
+
+<label>Nights</label>
+<div class="nights-box">
+<button onclick="changeNights(-1)">-</button>
+<div class="nights-num"><span id="nightsVal">1</span> Night</div>
+<button onclick="changeNights(1)">+</button>
+</div>
+<div class="redline">Nights: <span id="nightsLabel">1</span> | Check-out: <span id="checkoutLabel">-</span></div>
+
+<label>Booking Type</label>
+<div class="type-row">
+<button id="btnFull" class="type-btn type-full active" onclick="setType('full')">Full Villa ✓</button>
+<button id="btnRooms" class="type-btn type-rooms" onclick="setType('rooms')">Rooms</button>
+</div>
+
+<label>Rooms</label>
+<div class="stepper stepper-rooms">
+<button onclick="changeRooms(-1)">-</button><span id="roomsVal">1</span><button onclick="changeRooms(1)">+</button>
+</div>
+
+<label>Adults</label>
+<div class="stepper">
+<button onclick="changeAdults(-1)">-</button><span id="adultsVal">2</span><button onclick="changeAdults(1)">+</button>
+</div>
+
+<label>Kids 0-6 (Free)</label>
+<div class="stepper">
+<button onclick="changeKids06(-1)">-</button><span id="kids06Val">0</span><button onclick="changeKids06(1)">+</button>
+</div>
+
+<label>Kids 6-12 (Rs.400)</label>
+<div class="stepper">
+<button onclick="changeKids612(-1)">-</button><span id="kids612Val">0</span><button onclick="changeKids612(1)">+</button>
+</div>
+
+<label>Breakfast?</label>
+<div class="opt-row">
+<button id="bfYes" class="opt-btn opt-break-yes" onclick="setBreakfast(true)">Yes</button>
+<button id="bfNo" class="opt-btn active" onclick="setBreakfast(false)">No</button>
+</div>
+
+<div id="warnBox" class="warn"></div>
+
+<div class="pay-box">
+<div class="pay-top">
+<div><b>Pay Advance</b><div style="font-size:13px">Turn ON to see Grand Total</div></div>
+<label class="switch"><input id="payToggle" type="checkbox" onchange="updateTotals()"><span class="slider"></span></label>
+</div>
+<div id="totalHint" style="margin-top:10px;font-size:14px">Turn Pay Advance ON to see total</div>
+<div id="totalBox" class="total-box">
+<p id="lineRoom">Room charge: Rs.0</p>
+<p id="lineExtra">Extra Adult charge: Rs.0</p>
+<p id="lineKids">Kids 6-12 charge: Rs.0</p>
+<p id="lineBreakfast">Breakfast charge: Rs.0</p>
+<p class="big" id="lineTotal">Grand Total: Rs.0</p>
+<p class="payline">Pay to 0091 996 191 7169</p>
+<p>Name: <b>UDAYABHANU</b></p>
+<p class="big" id="lineAdvance">Advance to Pay: Rs.0</p>
+<label style="color:#fff;margin-top:12px">UTR *</label>
+<input id="utr" type="text" placeholder="Enter UTR after payment">
+</div>
+</div>
+
+<button class="save-btn" onclick="saveBooking()">Save Booking</button>
+
+<details>
+<summary>Saved Bookings</summary>
+<div id="savedList"></div>
+</details>
+</div>
+
+<script>
+let nights=1, rooms=1, adults=2, kids06=0, kids612=0, breakfast=false, btype='full';
+function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN');}
+function isWeekend(dateStr){
+  if(!dateStr) return false;
+  let d=new Date(dateStr+'T00:00:00');
+  let day=d.getDay();
+  return day===5||day===6||day===0;
+}
+function calc(){
+  let checkin=document.getElementById('checkin').value;
+  let weekend=isWeekend(checkin);
+  let roomCharge=0;
+  if(btype==='full'){
+    roomCharge=(weekend?8000:6400)*nights;
+  } else {
+    roomCharge=rooms*1600*nights;
+  }
+  let extraCount=0;
+  if(btype==='full'){ extraCount=Math.max(0, adults-8); }
+  else { extraCount=Math.max(0, adults-(rooms*2)); }
+  let extraCharge=extraCount*800*nights;
+  let kidsCharge=kids612*400*nights;
+  let breakfastCharge=0;
+  if(breakfast){
+    if(btype==='full'){ breakfastCharge=0; }
+    else { breakfastCharge=(adults+kids612)*100*nights; }
+  }
+  let total=roomCharge+extraCharge+kidsCharge+breakfastCharge;
+  let advance=0;
+  if(rooms===1 && nights===1 && adults<=2 && kids612===0){ advance=1600; }
+  else if(total<=10000){ advance=2000; }
+  else { advance=Math.round(total*0.20); }
+  return {roomCharge,extraCharge,kidsCharge,breakfastCharge,total,advance,weekend,extraCount};
+}
+function updateTotals(){
+  document.getElementById('nightsVal').textContent=nights;
+  document.getElementById('nightsLabel').textContent=nights;
+  document.getElementById('roomsVal').textContent=rooms;
+  document.getElementById('adultsVal').textContent=adults;
+  document.getElementById('kids06Val').textContent=kids06;
+  document.getElementById('kids612Val').textContent=kids612;
+  let checkin=document.getElementById('checkin').value;
+  if(checkin){
+    let d=new Date(checkin+'T00:00:00'); d.setDate(d.getDate()+nights);
+    document.getElementById('checkoutLabel').textContent=d.toISOString().slice(0,10);
+  } else { document.getElementById('checkoutLabel').textContent='-'; }
+  let c=calc();
+  let on=document.getElementById('payToggle').checked;
+  document.getElementById('totalBox').style.display=on?'block':'none';
+  document.getElementById('totalHint').style.display=on?'none':'block';
+  if(btype==='full'){
+    document.getElementById('lineRoom').textContent='Full Villa ('+(c.weekend?'Weekend':'Weekday')+') x '+nights+' night(s): '+fmt(c.roomCharge);
+  } else {
+    document.getElementById('lineRoom').textContent='Rooms ('+rooms+' x Rs.1600 x '+nights+' night(s)): '+fmt(c.roomCharge);
+  }
+  document.getElementById('lineExtra').textContent='Extra Adults ('+c.extraCount+' x Rs.800 x '+nights+'): '+fmt(c.extraCharge);
+  document.getElementById('lineKids').textContent='Kids 6-12 Total ('+kids612+' x Rs.400 x '+nights+'): '+fmt(c.kidsCharge);
+  document.getElementById('lineBreakfast').textContent='Breakfast: '+fmt(c.breakfastCharge);
+  document.getElementById('lineTotal').textContent='Grand Total: '+fmt(c.total);
+  document.getElementById('lineAdvance').textContent='Advance to Pay: '+fmt(c.advance);
+}
+function changeNights(d){ nights=Math.min(7,Math.max(1,nights+d)); updateTotals(); }
+function changeRooms(d){ rooms=Math.max(1,rooms+d); updateTotals(); }
+function changeAdults(d){
+  adults=Math.max(1,adults+d);
+  if(btype==='rooms'){
+    let suggested=Math.ceil(adults/2);
+    if(rooms<suggested){ rooms=suggested; }
+  }
+  updateTotals();
+}
+function changeKids06(d){ kids06=Math.max(0,kids06+d); updateTotals(); }
+function changeKids612(d){ kids612=Math.max(0,kids612+d); updateTotals(); }
+function setType(t){
+  btype=t;
+  document.getElementById('btnFull').className='type-btn type-full'+(t==='full'?' active':'');
+  document.getElementById('btnFull').textContent=t==='full'?'Full Villa ✓':'Full Villa';
+  document.getElementById('btnRooms').className='type-btn type-rooms'+(t==='rooms'?' active':'');
+  document.getElementById('btnRooms').textContent=t==='rooms'?'Rooms ✓':'Rooms';
+  if(t==='rooms'){ rooms=Math.ceil(adults/2); }
+  updateTotals();
+}
+function setBreakfast(v){
+  breakfast=v;
+  document.getElementById('bfYes').className='opt-btn opt-break-yes'+(v?' active':'');
+  document.getElementById('bfNo').className='opt-btn'+(!v?' active':'');
+  updateTotals();
+}
+function saveBooking(){
+  let name=document.getElementById('guestName').value.trim();
+  let phone=document.getElementById('phone').value.trim();
+  let checkin=document.getElementById('checkin').value;
+  let warn=document.getElementById('warnBox');
+  warn.style.display='none'; warn.textContent='';
+  if(!name){ warn.textContent='WARNING: PLEASE ENTER THE GUEST NAME'; warn.style.display='block'; return; }
+  if(!phone){ warn.textContent='WARNING: PLEASE ENTER THE PHONE NUMBER'; warn.style.display='block'; return; }
+  if(!checkin){ warn.textContent='WARNING: PLEASE SELECT CHECK-IN DATE'; warn.style.display='block'; return; }
+  if(btype==='rooms'){
+    let suggested=Math.ceil(adults/2);
+    if(rooms<suggested){ warn.textContent='WARNING: FEWER ROOMS THAN SUGGESTED'; warn.style.display='block'; return; }
+  }
+  let c=calc();
+  let utr=document.getElementById('utr').value.trim();
+  let status=utr?'Confirmed':'Pending';
+  let b={name,phone,checkin,nights,btype,rooms,adults,kids06,kids612,breakfast,total:c.total,advance:c.advance,utr,status};
+  let list=JSON.parse(localStorage.getItem('pachapp_bookings')||'[]');
+  list.unshift(b); localStorage.setItem('pachapp_bookings',JSON.stringify(list));
+  renderSaved();
+  alert('Saved - '+status+' - Total '+fmt(c.total)+' - Advance '+fmt(c.advance));
+}
+function renderSaved(){
+  let list=JSON.parse(localStorage.getItem('pachapp_bookings')||'[]');
+  let el=document.getElementById('savedList');
+  if(!list.length){ el.innerHTML='<p>No saved bookings yet</p>'; return; }
+  el.innerHTML=list.map(function(b){
+    return '<div class="saved-item">'+b.name+' | '+b.phone+' | '+b.checkin+' | '+b.nights+' night(s) | '+b.btype+' | Total '+fmt(b.total)+' | Advance '+fmt(b.advance)+' | '+b.status+'</div>';
+  }).join('');
+}
+document.getElementById('checkin').addEventListener('change',updateTotals);
+renderSaved(); updateTotals();
+</script>
+</body>
+</html>
