@@ -149,7 +149,7 @@ async function startSock() {
   sock = makeWASocket({
     version,
     auth: state,
-    logger: P({ level: 'silent' }),
+    logger: P({ level: 'error' }),
     printQRInTerminal: false,
     browser: ['Pachapp', 'Chrome', '1.0'],
     syncFullHistory: false
