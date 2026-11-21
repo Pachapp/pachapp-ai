@@ -11,7 +11,7 @@
     "groq-sdk": "0.9.0",
     "airtable": "0.12.2",
     "pino": "2.4.0",
-    "【entity-express¦canonical_name=Express】": "4.18.2"
+    "express": "4.18.2"
   },
   "engines": {
     "node": "20.x"
