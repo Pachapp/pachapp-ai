@@ -8,9 +8,10 @@
 * { box-sizing: border-box; }
 body { background: #000; color: #fff; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 20px 14px 40px; }
 .wrap { max-width: 620px; margin: 0 auto; }
-.logo-card { background: #fff; border-radius: 18px; padding: 22px 16px 14px; text-align: center; }
-.logo-main { color: #7a8b2a; font-family: Georgia, serif; font-style: italic; font-size: 52px; line-height: 1; margin: 0; }
-.logo-sub { color: #000; letter-spacing: 10px; font-size: 20px; margin: 4px 0 0 10px; }
+.logo-card { background: #fff; border-radius: 18px; padding: 18px; text-align: center; }
+.logo-card img { max-width: 320px; width: 100%; display: block; margin: 0 auto; }
+.logo-fallback { color: #7a8b2a; font-family: Georgia, serif; font-style: italic; font-size: 48px; margin: 0; }
+.logo-fallback-sub { color: #000; letter-spacing: 10px; font-size: 18px; margin: 4px 0 0 10px; }
 .sub { text-align: center; font-size: 13px; letter-spacing: 1px; line-height: 1.6; margin: 18px 0 6px; font-weight: bold; }
 h1 { text-align: center; font-size: 32px; letter-spacing: 3px; margin: 22px 0 2px; }
 h2 { text-align: center; font-size: 16px; letter-spacing: 3px; margin: 0 0 22px; }
@@ -25,20 +26,20 @@ textarea { min-height: 70px; }
 .row2 { display: flex; gap: 12px; }
 .row2 > div { flex: 1; }
 .counter { display: flex; align-items: center; gap: 10px; }
-.counter button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #2f7bff; background: transparent; color: #fff; font-size: 22px; cursor: pointer; }
+.counter button { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #2f7bff; background: transparent; color: #fff; font-size: 22px; cursor: pointer; }
 .counter span { min-width: 30px; text-align: center; font-size: 18px; font-weight: bold; }
 .rooms-box { background: #d6f5d6; color: #000; border-radius: 10px; padding: 12px; font-weight: bold; }
 .breakfast-box { background: #1db954; color: #fff; border-radius: 10px; padding: 12px; font-weight: bold; }
 .red { color: #ff3b30; font-weight: bold; }
-.total-box { background: #fff; color: #000; border-radius: 12px; padding: 16px; margin-top: 20px; }
+.total-box { background: #fff; color: #000; border-radius: 4px; padding: 16px; margin-top: 20px; }
 .total-box details { cursor: pointer; }
 .total-box summary { font-weight: bold; font-size: 18px; list-style: none; }
 .total-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ccc; font-size: 14px; }
 .total-line b { font-size: 14px; }
 .grand { font-size: 20px; font-weight: bold; }
 .pay-btn { width: 100%; background: #1db954; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 16px; }
-.qr-box { background: #fff; color: #000; border-radius: 12px; padding: 16px; text-align: center; margin-top: 12px; display: none; }
-.qr-box img { max-width: 260px; width: 100%; border: 4px solid #fff; }
+.qr-box { background: #fff; border-radius: 12px; padding: 10px; text-align: center; margin-top: 12px; display: none; }
+.qr-box img { max-width: 280px; width: 100%; border: 4px solid #fff; display: block; margin: 0 auto; }
 .confirm-btn { width: 100%; background: #fff; color: #000; border: none; border-radius: 12px; padding: 16px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 16px; }
 .msg { text-align: center; margin-top: 14px; font-weight: bold; min-height: 22px; }
 .warn { color: #ffb340; font-size: 13px; margin-top: 6px; }
@@ -49,55 +50,28 @@ textarea { min-height: 70px; }
 </head>
 <body>
 <div class="wrap">
-<div class="logo-card"><p class="logo-main">Pachapp</p><p class="logo-sub">be nowhere</p></div>
+<div class="logo-card"><img src="Pachapp_1.png" alt="Pachapp" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'"><div id="logoFallback" style="display:none;"><p class="logo-fallback">Pachapp</p><p class="logo-fallback-sub">be nowhere</p></div></div>
 <p class="sub">POOL VILLA — LUCKY HILL, MEPPADI, WAYANAD — DOLBY ATMOS INCLUDED</p>
 <h1>PACHAPP BOOKINGS FORM</h1>
 <h2>PACHAPP POOL VILLA</h2>
-
-<label>YOUR NAME</label>
-<input id="name" placeholder="Guest name">
-
-<label>PHONE / WHATSAPP</label>
-<input id="phone" placeholder="Phone number">
-
+<label>YOUR NAME</label><input id="name" placeholder="Guest name">
+<label>PHONE / WHATSAPP</label><input id="phone" placeholder="Phone number">
 <label>BOOKING TYPE</label>
 <div class="type-row">
 <div id="btnVilla" class="type-btn active" onclick="setType('Full Villa')"><span class="tick">✓</span> FULL VILLA<br><span class="small">WHOLE VILLA</span></div>
 <div id="btnRooms" class="type-btn" onclick="setType('Rooms')">ROOMS<br><span class="small">1 TO 4 ROOMS</span></div>
 </div>
-
-<div class="row2">
-<div><label>CHECK-IN</label><input type="date" id="checkin"></div>
-<div><label>CHECK-OUT</label><input type="date" id="checkout"></div>
-</div>
-
+<div class="row2"><div><label>CHECK-IN</label><input type="date" id="checkin"></div><div><label>CHECK-OUT</label><input type="date" id="checkout"></div></div>
 <label>NIGHTS: <span class="red" id="nightsLabel">1</span> &nbsp; | &nbsp; CHECK-OUT: <span class="red" id="checkoutLabel">-</span></label>
-<div class="row2">
-<div><label>ADULTS</label><div class="counter"><button onclick="changeVal('adults',-1)">−</button><span id="adultsVal">2</span><button onclick="changeVal('adults',1)">+</button></div></div>
-<div><label>ROOMS</label><div class="rooms-box" id="roomsBox">1 Room</div><div class="warn" id="roomsWarn"></div></div>
-</div>
-
-<div class="row2">
-<div><label>KIDS 0-6 (FREE)</label><div class="counter"><button onclick="changeVal('kids06',-1)">−</button><span id="kids06Val">0</span><button onclick="changeVal('kids06',1)">+</button></div></div>
-<div><label>KIDS 6-12 (HALF)</label><div class="counter"><button onclick="changeVal('kids612',-1)">−</button><span id="kids612Val">0</span><button onclick="changeVal('kids612',1)">+</button></div></div>
-</div>
-
+<div class="row2"><div><label>ADULTS</label><div class="counter"><button onclick="changeVal('adults',-1)">−</button><span id="adultsVal">2</span><button onclick="changeVal('adults',1)">+</button></div></div><div><label>ROOMS</label><div class="rooms-box" id="roomsBox">1 Room</div><div class="warn" id="roomsWarn"></div></div></div>
+<div class="row2"><div><label>KIDS 0-6 (FREE)</label><div class="counter"><button onclick="changeVal('kids06',-1)">−</button><span id="kids06Val">0</span><button onclick="changeVal('kids06',1)">+</button></div></div><div><label>KIDS 6-12 (HALF)</label><div class="counter"><button onclick="changeVal('kids612',-1)">−</button><span id="kids612Val">0</span><button onclick="changeVal('kids612',1)">+</button></div></div></div>
 <label>BREAKFAST</label>
-<div class="type-row">
-<div id="btnBreakYes" class="type-btn" onclick="setBreakfast(true)">YES</div>
-<div id="btnBreakNo" class="type-btn active" onclick="setBreakfast(false)">NO</div>
-</div>
+<div class="type-row"><div id="btnBreakYes" class="type-btn" onclick="setBreakfast(true)">YES</div><div id="btnBreakNo" class="type-btn active" onclick="setBreakfast(false)">NO</div></div>
 <div id="breakfastNote" class="breakfast-box" style="margin-top:10px; display:none;">Breakfast included - Free for Full Villa</div>
-
 <label>ROOMS - MANUAL CHANGE</label>
 <select id="roomsManual" onchange="manualRooms()"><option value="auto">Auto (recommended)</option><option value="1">1 Room</option><option value="2">2 Rooms</option><option value="3">3 Rooms</option><option value="4">4 Rooms</option></select>
-
-<label>NOTES</label>
-<textarea id="notes" placeholder="Any special request?"></textarea>
-
-<div class="total-box">
-<details open>
-<summary>GRAND TOTAL - <span id="grandSummary">Rs. 0</span> ▼</summary>
+<label>NOTES</label><textarea id="notes" placeholder="Any special request?"></textarea>
+<div class="total-box"><details open><summary>GRAND TOTAL - <span id="grandSummary">Rs. 0</span> ▼</summary>
 <div class="total-line"><span>Booking Type</span><b id="lineType">Full Villa</b></div>
 <div class="total-line"><span>Per Night Rate</span><b id="lineRate">Rs. 0</b></div>
 <div class="total-line"><span>Room Total</span><b id="lineRoom">Rs. 0</b></div>
@@ -109,198 +83,34 @@ textarea { min-height: 70px; }
 <div class="total-line grand"><span>Grand Total</span><b id="lineGrand">Rs. 0</b></div>
 <div class="total-line"><span>Advance to Pay</span><b id="lineAdvance">Rs. 0</b></div>
 <div class="total-line"><span>Payment Status</span><b id="lineStatus">Pending - Waiting for Advance</b></div>
-</details>
-</div>
-
+</details></div>
 <button class="pay-btn" onclick="showPay()">Pay Advance - QR</button>
-<div class="qr-box" id="qrBox">
-<p><b>Pay Advance to UDAYABHANU RAMACHANDRAN</b></p>
-<img src="qr.png" alt="【entity-PhonePe¦canonical_name=PhonePe】 QR - Ask owner for QR if not shown" onerror="this.style.display='none'">
-<p id="qrAmount">Advance: Rs. 0</p>
-<p style="font-size:13px;">Pay with 【entity-PhonePe¦canonical_name=PhonePe】 / UPI, then copy your UTR below.</p>
-</div>
-
-<label>UTR / TRANSACTION ID (IF PAID)</label>
-<input id="utr" placeholder="Enter UTR after payment - leave blank if not paid">
-
+<div class="qr-box" id="qrBox"><img src="qr.png" alt=""></div>
+<label>UTR / TRANSACTION ID (IF PAID)</label><input id="utr" placeholder="Enter UTR after payment - leave blank if not paid">
 <button class="confirm-btn" onclick="confirmBooking()">I Have Paid - Confirm My Booking</button>
 <div class="msg" id="msg"></div>
-
 <div class="saved"><details><summary>Saved Bookings ▼</summary><div id="savedList"></div></details></div>
-
 </div>
 <script>
 var state = { type: "Full Villa", adults: 2, kids06: 0, kids612: 0, roomsManual: "auto", breakfast: false, nights: 1 };
-function setType(t) {
-  state.type = t;
-  document.getElementById("btnVilla").className = t === "Full Villa" ? "type-btn active" : "type-btn";
-  document.getElementById("btnRooms").className = t === "Rooms" ? "type-btn active" : "type-btn";
-  updateBreakfastNote(); calc();
-}
-function setBreakfast(v) {
-  state.breakfast = v;
-  document.getElementById("btnBreakYes").className = v ? "type-btn active" : "type-btn";
-  document.getElementById("btnBreakNo").className = !v ? "type-btn active" : "type-btn";
-  updateBreakfastNote(); calc();
-}
-function updateBreakfastNote() {
-  var el = document.getElementById("breakfastNote");
-  if (state.type === "Full Villa" && state.breakfast) { el.style.display = "block"; el.textContent = "Breakfast included - Free for Full Villa"; }
-  else if (state.type === "Rooms" && state.breakfast) { el.style.display = "block"; el.textContent = "Breakfast - Rs.100 per person per night"; }
-  else { el.style.display = "none"; }
-}
-function changeVal(key, d) {
-  var max = key === "adults" ? 20 : 20;
-  var v = state[key] + d;
-  if (v < 0) v = 0;
-  if (key === "adults" && v < 1) v = 1;
-  if (v > max) v = max;
-  state[key] = v;
-  document.getElementById(key + "Val").textContent = v;
-  if (key === "adults") { document.getElementById("roomsManual").value = "auto"; state.roomsManual = "auto"; }
-  calc();
-}
-function manualRooms() {
-  state.roomsManual = document.getElementById("roomsManual").value;
-  calc();
-}
-function autoRooms() {
-  var a = state.adults;
-  if (a <= 2) return 1;
-  if (a <= 4) return 2;
-  if (a <= 6) return 3;
-  return 4;
-}
-function getRooms() {
-  if (state.roomsManual !== "auto") return parseInt(state.roomsManual, 10);
-  return autoRooms();
-}
-function getNights() {
-  var ci = document.getElementById("checkin").value;
-  var co = document.getElementById("checkout").value;
-  if (!ci || !co) return 1;
-  var d1 = new Date(ci); var d2 = new Date(co);
-  var n = Math.round((d2 - d1) / 86400000);
-  if (n < 1) n = 1; if (n > 7) n = 7;
-  return n;
-}
-function perNight() {
-  if (state.type === "Full Villa") {
-    var ci = document.getElementById("checkin").value;
-    var day = ci ? new Date(ci).getDay() : 0;
-    if (day === 5 || day === 6 || day === 0) return 8000;
-    return 6400;
-  }
-  return 1600;
-}
-function calc() {
-  var nights = getNights();
-  state.nights = nights;
-  var rooms = getRooms();
-  var rate = perNight();
-  var roomTotal = 0;
-  if (state.type === "Full Villa") roomTotal = rate * nights;
-  else roomTotal = rate * rooms * nights;
-  var extra = 0;
-  if (state.adults > 8) extra = (state.adults - 8) * 800 * nights;
-  var kidsHalf = state.kids612 * 400 * nights;
-  var breakTotal = 0;
-  if (state.breakfast) {
-    if (state.type === "Full Villa") breakTotal = 0;
-    else breakTotal = (state.adults + state.kids612) * 100 * nights;
-  }
-  var grand = roomTotal + extra + kidsHalf + breakTotal;
-  var advance = 0;
-  if (rooms === 1 && nights === 1 && state.adults <= 2) advance = 1600;
-  else if (grand <= 10000) advance = 2000;
-  else advance = Math.round(grand * 0.20);
-  if (state.type === "Full Villa" && rooms === 1 && nights === 1 && state.adults <= 2) {
-    if (grand < 1600) advance = grand;
-  }
-  document.getElementById("nightsLabel").textContent = nights;
-  document.getElementById("lineType").textContent = state.type;
-  document.getElementById("lineRate").textContent = "Rs. " + rate;
-  document.getElementById("lineRoom").textContent = "Rs. " + roomTotal;
-  document.getElementById("lineExtra").textContent = "Rs. " + extra;
-  document.getElementById("lineKids").textContent = "Rs. " + kidsHalf;
-  document.getElementById("lineBreak").textContent = "Rs. " + breakTotal;
-  document.getElementById("lineNights").textContent = nights;
-  var notes = document.getElementById("notes").value || "-";
-  document.getElementById("lineNotes").textContent = notes;
-  document.getElementById("lineGrand").textContent = "Rs. " + grand;
-  document.getElementById("grandSummary").textContent = "Rs. " + grand;
-  document.getElementById("lineAdvance").textContent = "Rs. " + advance;
-  document.getElementById("roomsBox").textContent = rooms + (rooms === 1 ? " Room" : " Rooms") + (state.adults > 8 ? " + extra beds" : "");
-  var warn = document.getElementById("roomsWarn");
-  if (state.roomsManual !== "auto" && parseInt(state.roomsManual, 10) < autoRooms()) warn.textContent = "Warning: Too few rooms for " + state.adults + " adults. Recommended: " + autoRooms();
-  else warn.textContent = "";
-  var utr = document.getElementById("utr").value.trim();
-  document.getElementById("lineStatus").textContent = utr ? "Confirmed" : "Pending - Waiting for Advance";
-  document.getElementById("qrAmount").textContent = "Advance: Rs. " + advance;
-  return { nights: nights, rooms: rooms, rate: rate, roomTotal: roomTotal, extra: extra, kidsHalf: kidsHalf, breakTotal: breakTotal, grand: grand, advance: advance };
-}
-function showPay() {
-  calc();
-  document.getElementById("qrBox").style.display = "block";
-  document.getElementById("msg").textContent = "Pay the Advance, then enter UTR below.";
-}
-function loadSaved() {
-  try {
-    var list = JSON.parse(localStorage.getItem("pachapp_saved") || "[]");
-    var html = "";
-    for (var i = list.length - 1; i >= 0; i--) {
-      var b = list[i];
-      html += "<div class='saved-item'><b>" + b.name + "</b> - " + b.phone + "<br>" + b.type + " | " + b.checkin + " to " + b.checkout + " | Nights " + b.nights + " | Adults " + b.adults + " | Rooms " + b.rooms + "<br>Grand Rs." + b.grand + " | Advance Rs." + b.advance + " | " + b.status + "<br>Notes: " + (b.notes || "-") + "</div>";
-    }
-    document.getElementById("savedList").innerHTML = html || "No bookings yet.";
-  } catch (e) { document.getElementById("savedList").innerHTML = "No bookings yet."; }
-}
-function confirmBooking() {
-  var c = calc();
-  var name = document.getElementById("name").value.trim();
-  var phone = document.getElementById("phone").value.trim();
-  var utr = document.getElementById("utr").value.trim();
-  if (!name) { document.getElementById("msg").textContent = "Please enter your name."; return; }
-  if (!phone) { document.getElementById("msg").textContent = "Please enter phone number."; return; }
-  var ci = document.getElementById("checkin").value;
-  var co = document.getElementById("checkout").value;
-  if (!ci) { document.getElementById("msg").textContent = "Please select Check-in date."; return; }
-  var status = utr ? "Confirmed" : "Pending - Waiting for Advance";
-  var booking = { name: name, phone: phone, type: state.type, checkin: ci, checkout: co, nights: c.nights, adults: state.adults, kids06: state.kids06, kids612: state.kids612, rooms: c.rooms, breakfast: state.breakfast ? "Yes" : "No", rate: c.rate, roomTotal: c.roomTotal, extra: c.extra, kidsHalf: c.kidsHalf, breakTotal: c.breakTotal, grand: c.grand, advance: c.advance, utr: utr, status: status, notes: document.getElementById("notes").value, created: new Date().toISOString() };
-  try {
-    var list = JSON.parse(localStorage.getItem("pachapp_saved") || "[]");
-    list.push(booking);
-    localStorage.setItem("pachapp_saved", JSON.stringify(list));
-  } catch (e) {}
-  fetch("/api/booking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) }).catch(function() {});
-  document.getElementById("msg").textContent = status === "Confirmed" ? "Confirmed! Thank you, " + name + ". Grand Rs." + c.grand : "Saved as Pending - Waiting for Advance. Please pay Advance Rs." + c.advance + " and enter UTR to Confirm.";
-  loadSaved();
-}
-document.getElementById("checkin").addEventListener("change", function() {
-  var ci = this.value;
-  if (!ci) return;
-  var d = new Date(ci); d.setDate(d.getDate() + 1);
-  var iso = d.toISOString().slice(0, 10);
-  document.getElementById("checkout").value = iso;
-  document.getElementById("checkoutLabel").textContent = iso;
-  calc();
-});
-document.getElementById("checkout").addEventListener("change", function() {
-  document.getElementById("checkoutLabel").textContent = this.value || "-";
-  calc();
-});
+function setType(t) { state.type = t; document.getElementById("btnVilla").className = t === "Full Villa" ? "type-btn active" : "type-btn"; document.getElementById("btnRooms").className = t === "Rooms" ? "type-btn active" : "type-btn"; updateBreakfastNote(); calc(); }
+function setBreakfast(v) { state.breakfast = v; document.getElementById("btnBreakYes").className = v ? "type-btn active" : "type-btn"; document.getElementById("btnBreakNo").className = !v ? "type-btn active" : "type-btn"; updateBreakfastNote(); calc(); }
+function updateBreakfastNote() { var el = document.getElementById("breakfastNote"); if (state.type === "Full Villa" && state.breakfast) { el.style.display = "block"; el.textContent = "Breakfast included - Free for Full Villa"; } else if (state.type === "Rooms" && state.breakfast) { el.style.display = "block"; el.textContent = "Breakfast - Rs.100 per person per night"; } else { el.style.display = "none"; } }
+function changeVal(key, d) { var v = state[key] + d; if (v < 0) v = 0; if (key === "adults" && v < 1) v = 1; if (v > 20) v = 20; state[key] = v; document.getElementById(key + "Val").textContent = v; if (key === "adults") { document.getElementById("roomsManual").value = "auto"; state.roomsManual = "auto"; } calc(); }
+function manualRooms() { state.roomsManual = document.getElementById("roomsManual").value; calc(); }
+function autoRooms() { var a = state.adults; if (a <= 2) return 1; if (a <= 4) return 2; if (a <= 6) return 3; return 4; }
+function getRooms() { if (state.roomsManual !== "auto") return parseInt(state.roomsManual, 10); return autoRooms(); }
+function getNights() { var ci = document.getElementById("checkin").value; var co = document.getElementById("checkout").value; if (!ci || !co) return 1; var d1 = new Date(ci); var d2 = new Date(co); var n = Math.round((d2 - d1) / 86400000); if (n < 1) n = 1; if (n > 7) n = 7; return n; }
+function perNight() { if (state.type === "Full Villa") { var ci = document.getElementById("checkin").value; var day = ci ? new Date(ci).getDay() : 0; if (day === 5 || day === 6 || day === 0) return 8000; return 6400; } return 1600; }
+function calc() { var nights = getNights(); state.nights = nights; var rooms = getRooms(); var rate = perNight(); var roomTotal = 0; if (state.type === "Full Villa") roomTotal = rate * nights; else roomTotal = rate * rooms * nights; var extra = 0; if (state.adults > 8) extra = (state.adults - 8) * 800 * nights; var kidsHalf = state.kids612 * 400 * nights; var breakTotal = 0; if (state.breakfast) { if (state.type === "Full Villa") breakTotal = 0; else breakTotal = (state.adults + state.kids612) * 100 * nights; } var grand = roomTotal + extra + kidsHalf + breakTotal; var advance = 0; if (rooms === 1 && nights === 1 && state.adults <= 2) advance = 1600; else if (grand <= 10000) advance = 2000; else advance = Math.round(grand * 0.20); document.getElementById("nightsLabel").textContent = nights; document.getElementById("lineType").textContent = state.type; document.getElementById("lineRate").textContent = "Rs. " + rate; document.getElementById("lineRoom").textContent = "Rs. " + roomTotal; document.getElementById("lineExtra").textContent = "Rs. " + extra; document.getElementById("lineKids").textContent = "Rs. " + kidsHalf; document.getElementById("lineBreak").textContent = "Rs. " + breakTotal; document.getElementById("lineNights").textContent = nights; var notes = document.getElementById("notes").value || "-"; document.getElementById("lineNotes").textContent = notes; document.getElementById("lineGrand").textContent = "Rs. " + grand; document.getElementById("grandSummary").textContent = "Rs. " + grand; document.getElementById("lineAdvance").textContent = "Rs. " + advance; document.getElementById("roomsBox").textContent = rooms + (rooms === 1 ? " Room" : " Rooms") + (state.adults > 8 ? " + extra beds" : ""); var warn = document.getElementById("roomsWarn"); if (state.roomsManual !== "auto" && parseInt(state.roomsManual, 10) < autoRooms()) warn.textContent = "Warning: Too few rooms for " + state.adults + " adults. Recommended: " + autoRooms(); else warn.textContent = ""; var utr = document.getElementById("utr").value.trim(); document.getElementById("lineStatus").textContent = utr ? "Confirmed" : "Pending - Waiting for Advance"; return { nights: nights, rooms: rooms, rate: rate, roomTotal: roomTotal, extra: extra, kidsHalf: kidsHalf, breakTotal: breakTotal, grand: grand, advance: advance }; }
+function showPay() { calc(); document.getElementById("qrBox").style.display = "block"; document.getElementById("msg").textContent = "Pay the Advance, then enter UTR below."; }
+function loadSaved() { try { var list = JSON.parse(localStorage.getItem("pachapp_saved") || "[]"); var html = ""; for (var i = list.length - 1; i >= 0; i--) { var b = list[i]; html += "<div class='saved-item'><b>" + b.name + "</b> - " + b.phone + "<br>" + b.type + " | " + b.checkin + " to " + b.checkout + " | Nights " + b.nights + " | Adults " + b.adults + " | Rooms " + b.rooms + "<br>Grand Rs." + b.grand + " | Advance Rs." + b.advance + " | " + b.status + "<br>Notes: " + (b.notes || "-") + "</div>"; } document.getElementById("savedList").innerHTML = html || "No bookings yet."; } catch (e) { document.getElementById("savedList").innerHTML = "No bookings yet."; } }
+function confirmBooking() { var c = calc(); var name = document.getElementById("name").value.trim(); var phone = document.getElementById("phone").value.trim(); var utr = document.getElementById("utr").value.trim(); if (!name) { document.getElementById("msg").textContent = "Please enter your name."; return; } if (!phone) { document.getElementById("msg").textContent = "Please enter phone number."; return; } var ci = document.getElementById("checkin").value; var co = document.getElementById("checkout").value; if (!ci) { document.getElementById("msg").textContent = "Please select Check-in date."; return; } var status = utr ? "Confirmed" : "Pending - Waiting for Advance"; var booking = { name: name, phone: phone, type: state.type, checkin: ci, checkout: co, nights: c.nights, adults: state.adults, kids06: state.kids06, kids612: state.kids612, rooms: c.rooms, breakfast: state.breakfast ? "Yes" : "No", rate: c.rate, roomTotal: c.roomTotal, extra: c.extra, kidsHalf: c.kidsHalf, breakTotal: c.breakTotal, grand: c.grand, advance: c.advance, utr: utr, status: status, notes: document.getElementById("notes").value, created: new Date().toISOString() }; try { var list = JSON.parse(localStorage.getItem("pachapp_saved") || "[]"); list.push(booking); localStorage.setItem("pachapp_saved", JSON.stringify(list)); } catch (e) {} fetch("/api/booking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) }).catch(function() {}); document.getElementById("msg").textContent = status === "Confirmed" ? "Confirmed! Thank you, " + name + ". Grand Rs." + c.grand : "Saved as Pending - Waiting for Advance. Please pay Advance Rs." + c.advance + " and enter UTR to Confirm."; loadSaved(); }
+document.getElementById("checkin").addEventListener("change", function() { var ci = this.value; if (!ci) return; var d = new Date(ci); d.setDate(d.getDate() + 1); var iso = d.toISOString().slice(0, 10); document.getElementById("checkout").value = iso; document.getElementById("checkoutLabel").textContent = iso; calc(); });
+document.getElementById("checkout").addEventListener("change", function() { document.getElementById("checkoutLabel").textContent = this.value || "-"; calc(); });
 document.getElementById("notes").addEventListener("input", calc);
 document.getElementById("utr").addEventListener("input", calc);
-(function init() {
-  var today = new Date(); today.setDate(today.getDate() + 1);
-  var iso = today.toISOString().slice(0, 10);
-  document.getElementById("checkin").value = iso;
-  var d2 = new Date(today); d2.setDate(d2.getDate() + 1);
-  var iso2 = d2.toISOString().slice(0, 10);
-  document.getElementById("checkout").value = iso2;
-  document.getElementById("checkoutLabel").textContent = iso2;
-  updateBreakfastNote(); calc(); loadSaved();
-})();
+(function init() { var today = new Date(); today.setDate(today.getDate() + 1); var iso = today.toISOString().slice(0, 10); document.getElementById("checkin").value = iso; var d2 = new Date(today); d2.setDate(d2.getDate() + 1); var iso2 = d2.toISOString().slice(0, 10); document.getElementById("checkout").value = iso2; document.getElementById("checkoutLabel").textContent = iso2; updateBreakfastNote(); calc(); loadSaved(); })();
 </script>
 </body>
 </html>
