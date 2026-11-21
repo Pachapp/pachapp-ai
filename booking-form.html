@@ -1,7 +1,4 @@
-const express = require('express');
-const path = require('path');
-const app = express();
-app.use(express.static(__dirname));
-app.get('/booking-form', (req,res) => {
-  res.sendFile(path.join(__dirname, 'booking-form.html'));
-});
+<!-- QR - shows only when Pay Advance is tapped -->
+<div id="qrBox" style="display:none; text-align:center; background:#ffffff; padding:12px; border-radius:12px; margin-top:12px;">
+  <img src="qr.png" alt="PhonePe QR" style="width:100%; max-width:320px; display:block; margin:0 auto;">
+</div>
