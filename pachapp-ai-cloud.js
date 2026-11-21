@@ -98,9 +98,9 @@ let isReady = false;
 let sock = null;
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady, method: 'Baileys' })); return; }
+  if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, ready: isReady, method: '【entity-Baileys¦canonical_name=Baileys】' })); return; }
   if (req.url === '/qr' || req.url === '/pair') {
-    if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready - Baileys.</h2>'); return; }
+    if (isReady) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<h2 style="text-align:center;font-family:sans-serif">Already Linked! Bot is Ready - 【entity-Baileys¦canonical_name=Baileys】.</h2>'); return; }
     let pairHtml = '';
     if (lastPairCode) { pairHtml = '<div style="border:3px solid green;padding:20px;margin:20px;background:#eaffea"><h1 style="font-size:50px;letter-spacing:8px;margin:0">' + lastPairCode + '</h1><p style="font-size:20px"><b>Pairing Code</b><br>On BOT phone 0529100668: WA Business - Linked Devices - Link with phone number - Enter this code</p></div>'; }
     else { pairHtml = '<p style="color:#666">Pairing code loading... Use QR below, or refresh in 20 sec.</p>'; }
@@ -135,7 +135,7 @@ async function startSock() {
   sock = makeWASocket({
     version,
     auth: state,
-    logger: P({ level: 'silent' }),
+    logger: P({ level: 'error' }),
     printQRInTerminal: false,
     browser: ['Pachapp', 'Chrome', '1.0'],
     syncFullHistory: false
