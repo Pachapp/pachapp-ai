@@ -2,10 +2,17 @@
   "name": "pachapp-ai",
   "version": "1.0.0",
   "main": "pachapp-ai-cloud.js",
-  "scripts": { "start": "node pachapp-ai-cloud.js" },
-  "dependencies": {
-    "groq-sdk": "0.9.0",
-    "airtable": "0.12.2"
+  "scripts": {
+    "start": "node pachapp-ai-cloud.js"
   },
-  "engines": { "node": "20.x" }
+  "dependencies": {
+    "@whiskeysockets/baileys": "6.7.18",
+    "qrcode": "1.5.4",
+    "groq-sdk": "0.9.0",
+    "airtable": "0.12.2",
+    "pino": "2.4.0"
+  },
+  "engines": {
+    "node": "20.x"
+  }
 }
