@@ -7,9 +7,10 @@ const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'pachapp_verify';
 const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
 const NEARBY_LINK = 'https://pachapp.green/here-around/';
+const FORM_LINK = 'https://pachapp-ai-1.onrender.com/booking-form.html';
 let gq = null;
 try { const { Groq } = require('groq-sdk'); if (process.env.GROQ_API_KEY) gq = new Groq({ apiKey: process.env.GROQ_API_KEY }); } catch (e) {}
-const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green. PRICING Full Villa Private: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Weekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Breakfast Rs.100 per head for Rooms. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000, Total over Rs.10000 20 percent. Reply in guest language. Never give price without date. Answer real answer first, then ask date and guests.';
+const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green. BOOKING FORM RULE: When guest asks for booking form, form, book, booking link, send ONLY this link: https://pachapp-ai-1.onrender.com/booking-form.html - Never make a table form, never ask for email, never make your own form. PRICING Full Villa Private: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Weekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Breakfast Rs.100 per head for Rooms. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000, Total over Rs.10000 20 percent. Reply in guest language. Never give price without date. Answer real answer first, then ask date and guests.';
 function formatPrice(n) { return 'Rs.' + Number(n).toLocaleString('en-IN'); }
 function calcAdvance(total) { if (total <= 1600) return 1600; if (total <= 10000) return 2000; return Math.round(total * 0.20); }
 function parseDate(text) {
@@ -69,6 +70,10 @@ async function handleMessage(senderNumber, senderName, text, msg) {
   if (isGroup) { console.log('Group ignored'); return; }
   const lower = text.toLowerCase();
   console.log('CLOUD MESSAGE from ' + senderNumber + ' ' + text.slice(0, 200));
+  if (lower.includes('booking form') || lower.includes('booking link') || lower.includes('form link') || lower.trim() === 'form' || lower.includes('give me the form') || lower.includes('send form')) {
+    await sendWhatsApp(senderNumber, 'Here is your Pachapp Booking Form:\n\n' + FORM_LINK + '\n\nPlease open it, fill Name, Phone, Check-in, Nights, Rooms, Adults, Kids, Breakfast, turn Pay Advance ON, and enter UTR after payment. Pay to 0091 996 191 7169, Name UDAYABHANU.');
+    return;
+  }
   if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no')) {
     let targetPhone = null;
     let targetBooking = null;
@@ -87,6 +92,9 @@ async function handleMessage(senderNumber, senderName, text, msg) {
   history.push({ role: 'user', content: text });
   let reply = await askAI(text, history);
   if (!reply) reply = fallbackReply(text);
+  if (reply.toLowerCase().includes('|') && reply.toLowerCase().includes('full name')) {
+    reply = 'Here is your Pachapp Booking Form:\n\n' + FORM_LINK + '\n\nPlease open it and fill it there.';
+  }
   history.push({ role: 'assistant', content: reply });
   const parsedDate = parseDate(text);
   if (parsedDate) {
