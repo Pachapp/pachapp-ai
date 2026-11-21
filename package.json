@@ -4,11 +4,11 @@
   "main": "pachapp-ai-cloud.js",
   "scripts": { "start": "node pachapp-ai-cloud.js" },
   "dependencies": {
-    "whatsapp-web.js": "1.26.0",
-    "qrcode-terminal": "0.12.0",
+    "@whiskeysockets/【entity-baileys¦canonical_name=Baileys】": "6.7.8",
     "qrcode": "1.5.4",
     "groq-sdk": "0.9.0",
-    "airtable": "0.12.2"
+    "airtable": "0.12.2",
+    "pino": "8.21.0"
   },
   "engines": { "node": "20.x" }
 }
