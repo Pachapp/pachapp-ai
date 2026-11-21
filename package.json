@@ -1,19 +1,19 @@
 {
   "name": "pachapp-ai",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "Pachapp Pool Villa AI",
+  "main": "pachapp-ai-cloud.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node pachapp-ai-cloud.js"
   },
   "dependencies": {
-    "@whiskeysockets/\u0062aileys": "6.7.18",
-    "\u0071rcode": "1.5.4",
-    "\u0067roq-sdk": "0.9.0",
-    "\u0061irtable": "0.12.2",
-    "\u0070ino": "2.4.0",
-    "\u0065xpress": "4.18.2"
+    "@whiskeysockets/\u0062aileys": "^6.7.18",
+    "\u0067roq-sdk": "^0.5.0",
+    "\u0061irtable": "^0.12.1",
+    "\u0071rcode": "^1.5.4",
+    "\u0070ino": "^8.21.0"
   },
   "engines": {
-    "node": "20.x"
+    "node": ">=18"
   }
 }
