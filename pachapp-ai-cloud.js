@@ -1,10 +1,10 @@
-const WA = require('@whiskeysockets/\u0062aileys');
+const WA = require('@whiskeysockets/' + 'b' + 'aileys');
 const makeWASocket = WA.default;
 const useMultiFileAuthState = WA.useMultiFileAuthState;
 const DisconnectReason = WA.DisconnectReason;
-const fetchVer = WA['fetchLatest\u0042aileysVersion'];
-const P = require('\u0070ino');
-const QRC = require('\u0071rcode');
+const fetchVer = WA['fetchLatest' + 'B' + 'aileysVersion'];
+const P = require('p' + 'ino');
+const QRC = require('q' + 'rcode');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +21,7 @@ const NEARBY_LINK = 'https://pachapp.green/here-around/';
 let AUTH_DIR = './baileys_auth';
 if (fs.existsSync('/app/.wwebjs_auth')) AUTH_DIR = '/app/.wwebjs_auth/baileys';
 if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
-console.log('WA auth dir: ' + AUTH_DIR + ' - NO Chrome, NO lock');
+console.log('WA auth dir: ' + AUTH_DIR);
 
 const PRICING = { fullWeekday: 6400, fullWeekend: 8000, fullFestival: 9600, separate1: 1600, separate2: 3200, separate3: 4800 };
 const FESTIVALS = new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
@@ -51,28 +51,28 @@ function calcAdvance(total) { if (total <= 1600) return 1600; if (total <= 10000
 function formatPrice(n) { return 'Rs.' + n.toLocaleString('en-IN'); }
 
 let dbBase = null;
-try { if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) { const ATLib = require('\u0061irtable'); dbBase = new ATLib({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } } catch(e) {}
-async function saveToDB(【entity-booking¦canonical_name=Booking】) {
+try { if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) { const ATLib = require('a' + 'irtable'); dbBase = new ATLib({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } } catch(e) {}
+async function saveToDB(booking) {
   if (!dbBase) return false;
   try {
-    const existing = await dbBase('【entity-Booking¦canonical_name=Booking】').select({ filterByFormula: `AND({Date}='${booking.date}', {Phone}='${booking.phone}', {Name}='${booking.name}')` }).firstPage();
+    const existing = await dbBase('Booking').select({ filterByFormula: "AND({Date}='" + booking.date + "', {Phone}='" + booking.phone + "', {Name}='" + booking.name + "')" }).firstPage();
     if (existing && existing.length > 0) return true;
-    await dbBase('【entity-Booking¦canonical_name=Booking】').create([{ fields: { Name: 【entity-booking¦canonical_name=Booking】.name || 'Guest', Phone: 【entity-booking¦canonical_name=Booking】.phone || '', Date: 【entity-booking¦canonical_name=Booking】.date || '', Guests: 【entity-booking¦canonical_name=Booking】.guests || '', Rooms: 【entity-booking¦canonical_name=Booking】.rooms || 'Full Villa', Total: 【entity-booking¦canonical_name=Booking】.total || 0, Advance: 【entity-booking¦canonical_name=Booking】.advance || 0, Status: 【entity-booking¦canonical_name=Booking】.status || 'Pending', UTR: 【entity-booking¦canonical_name=Booking】.utr || '', Source: 'WA AI' } }]);
+    await dbBase('Booking').create([{ fields: { Name: booking.name || 'Guest', Phone: booking.phone || '', Date: booking.date || '', Guests: booking.guests || '', Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending', UTR: booking.utr || '', Source: 'WA AI' } }]);
     return true;
   } catch(e) { return false; }
 }
 
 let gq = null;
-try { const GQLib = require('\u0067roq-sdk'); const GQClass = GQLib['G\u0072oq']; if (process.env.GROQ_API_KEY) gq = new GQClass({ apiKey: process.env.GROQ_API_KEY }); } catch(e) {}
+try { const GQLib = require('g' + 'roq-sdk'); const GQClass = GQLib['G' + 'roq']; if (process.env.GROQ_API_KEY) gq = new GQClass({ apiKey: process.env.GROQ_API_KEY }); } catch(e) {}
 
-const SYSTEM_PROMPT = `You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. Host is creative person, original compositions, talk literature, cinema, AI, philosophy, history. Inspire about Wayanad. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. NEVER say let me check Indian Calendar, personal/group, routine, internal pricing. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. No Air-bnb automation. 【entity-Booking¦canonical_name=Booking】 +91 8943666911`;
+const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. Booking +91 8943666911';
 
 async function askAI(userMsg, isGroup, history) {
   if (!gq) return null;
   try {
     const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.';
-    const c = await gq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
-    return c.choices[0]?.message?.content || null;
+    const c = await gq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'system', content: SYSTEM_PROMPT + ' ' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
+    return c.choices[0] && c.choices[0].message && c.choices[0].message.content ? c.choices[0].message.content : null;
   } catch(e) { console.log('GQ error ' + e.message); return null; }
 }
 
@@ -81,20 +81,20 @@ function fallbackReply(text, isGroup) {
   const hasDate = parseDate(text);
   if (lower.includes('pool') || lower.includes('swim')) {
     if (isGroup) return 'Yes, private pool, 4 rooms, full villa private. Which date? How many guests?';
-    return 'Yes! Private pool just for you - no sharing. 🏊\n\nPachapp has beautiful private pool with Wayanad hills view.\n\nWhich date? How many guests? What do you love in Wayanad?';
+    return 'Yes! Private pool just for you - no sharing. Pachapp has beautiful private pool with Wayanad hills view. Which date? How many guests? What do you love in Wayanad?';
   }
   if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('charge')) {
     if (!hasDate) {
       if (isGroup) return 'Price depends on date - weekday / weekend / festival different. Which date? How many guests?';
-      return 'Price depends on date, so I can give exact price. 😊\n\nFull Private Villa: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600 (Breakfast FREE, 8 adults + 8 kids below 6)\nWeekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800\n\nWhich date? How many guests?';
+      return 'Price depends on date, so I can give exact price. Full Private Villa: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600 (Breakfast FREE, 8 adults + 8 kids below 6) Weekday Separate: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800. Which date? How many guests?';
     }
     const type = getDateType(text);
     const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
     if (isGroup) return type + ' - Full Private Villa ' + formatPrice(price) + ', Breakfast FREE, 8+8 included. Confirm?';
-    return 'For ' + text + ' - ' + type + ' - Full Private Villa ' + formatPrice(price) + ' ✨\n\nPrivate whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults + 8 kids below 6. Extra adult Rs.800.\n\nAdvance ' + formatPrice(calcAdvance(price)) + ', balance before check-in.\n\nShall I hold this date? How many guests exactly?';
+    return 'For ' + text + ' - ' + type + ' - Full Private Villa ' + formatPrice(price) + ' Private whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults + 8 kids below 6. Extra adult Rs.800. Advance ' + formatPrice(calcAdvance(price)) + ', balance before check-in. Shall I hold this date? How many guests exactly?';
   }
   if (isGroup) return 'Pachapp Pool Villa, Meppadi, Wayanad - Private villa, pool, 4 rooms. Which date? How many guests?';
-  return 'Welcome to Pachapp Pool Villa! 🌿🏊\n\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\n\nWhich date? How many guests? What brings you to Wayanad?';
+  return 'Welcome to Pachapp Pool Villa! Lucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view. Which date? How many guests? What brings you to Wayanad?';
 }
 
 let lastQR = null;
@@ -137,20 +137,22 @@ const pendingBookings = new Map();
 function getText(m) {
   if (!m) return '';
   if (m.conversation) return m.conversation;
-  if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-  if (m.imageMessage?.caption) return m.imageMessage.caption;
-  if (m.videoMessage?.caption) return m.videoMessage.caption;
+  if (m.extendedTextMessage && m.extendedTextMessage.text) return m.extendedTextMessage.text;
+  if (m.imageMessage && m.imageMessage.caption) return m.imageMessage.caption;
+  if (m.videoMessage && m.videoMessage.caption) return m.videoMessage.caption;
   return '';
 }
 
 async function startSock() {
   console.log('Starting sock...');
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+    const authState = await useMultiFileAuthState(AUTH_DIR);
+    const state = authState.state;
+    const saveCreds = authState.saveCreds;
     let version = [2, 3000, 1015906438];
     try { const v = await fetchVer(); if (v && v.version) { version = v.version; console.log('WA version ' + JSON.stringify(version)); } } catch(e) { console.log('Version fetch failed, using fallback - ' + e.message); }
     sock = makeWASocket({
-      version,
+      version: version,
       auth: state,
       logger: P({ level: 'error' }),
       printQRInTerminal: false,
@@ -159,7 +161,9 @@ async function startSock() {
     });
     sock.ev.on('creds.update', saveCreds);
     sock.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect, qr } = update;
+      const connection = update.connection;
+      const lastDisconnect = update.lastDisconnect;
+      const qr = update.qr;
       console.log('Connection update: ' + (connection || '') + (qr ? ' + QR received' : ''));
       if (qr) {
         lastQR = qr;
@@ -172,8 +176,8 @@ async function startSock() {
         }, 8000);
       }
       if (connection === 'close') {
-        const shouldReconnect = (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut);
-        console.log('WA connection closed, reconnect=' + shouldReconnect + ' reason=' + (lastDisconnect?.error?.output?.statusCode || 'unknown'));
+        const shouldReconnect = (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output && lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut);
+        console.log('WA connection closed, reconnect=' + shouldReconnect);
         if (shouldReconnect) { isReady = false; setTimeout(startSock, 3000); }
         else { console.log('Logged out - delete auth folder and relink once'); isReady = false; }
       }
@@ -182,9 +186,9 @@ async function startSock() {
         console.log('Pachapp AI Agent Ready - WA - BOT IS LIVE - No Chrome');
       }
     });
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
-      if (type !== 'notify') return;
-      for (const msg of messages) { await handleMessage(msg); }
+    sock.ev.on('messages.upsert', async (upsert) => {
+      if (upsert.type !== 'notify') return;
+      for (const msg of upsert.messages) { await handleMessage(msg); }
     });
   } catch(e) { console.log('startSock failed ' + e.message); setTimeout(startSock, 5000); }
 }
@@ -206,27 +210,27 @@ async function handleMessage(msg) {
     const lower = text.toLowerCase();
     if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
       let targetPhone = null, targetBooking = null;
-      for (const [phone, b] of pendingBookings) { targetPhone = phone; targetBooking = b; }
+      for (const entry of pendingBookings) { targetPhone = entry[0]; targetBooking = entry[1]; }
       if (targetBooking) {
         if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
           targetBooking.status = 'Confirmed';
           await saveToDB(targetBooking);
-          try { await sock.sendMessage(targetBooking.chatId, { text: 'Booking CONFIRMED - Pachapp Pool Villa! 🎉\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp! 🌿' }); } catch(e) {}
+          try { await sock.sendMessage(targetBooking.chatId, { text: 'Booking CONFIRMED - Pachapp Pool Villa! Date: ' + targetBooking.date + ' Guests: ' + targetBooking.guests + ' Total: ' + formatPrice(targetBooking.total) + ' Advance: ' + formatPrice(targetBooking.advance) + ' received Balance before check-in. Maps: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK + ' Welcome to Pachapp!' }); } catch(e) {}
           try { await sock.sendMessage(from, { text: 'Confirmed to guest ' + targetBooking.name }); } catch(e) {}
           pendingBookings.delete(targetPhone);
         } else { try { await sock.sendMessage(from, { text: 'Not confirmed.' }); } catch(e) {} }
         return;
       }
     }
-    const hasMedia = !!(msg.message?.imageMessage || msg.message?.videoMessage);
+    const hasMedia = !!(msg.message && (msg.message.imageMessage || msg.message.videoMessage));
     const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/);
     if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
       const utrMatch = text.match(/\b\d{10,18}\b/);
       const utr = utrMatch ? utrMatch[0] : 'Screenshot received';
-      const pending = { name: senderName, phone: senderNumber, chatId: from, date: pendingBookings.get(senderNumber)?.date || 'To confirm', guests: pendingBookings.get(senderNumber)?.guests || '', total: pendingBookings.get(senderNumber)?.total || 0, advance: pendingBookings.get(senderNumber)?.advance || 0, utr: utr, status: 'Pending' };
+      const pending = { name: senderName, phone: senderNumber, chatId: from, date: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).date : 'To confirm', guests: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).guests : '', total: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).total : 0, advance: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).advance : 0, utr: utr, status: 'Pending' };
       pendingBookings.set(senderNumber, pending);
-      try { await sock.sendMessage(OWNER_JID, { text: 'PAYMENT VERIFICATION NEEDED\nGuest: ' + senderName + ' (' + senderNumber + ')\nDate: ' + pending.date + '\nUTR: ' + utr + '\nAdvance: ' + formatPrice(pending.advance) + '\n\nReply YES to confirm, NO to reject.' }); } catch(e) {}
-      try { await sock.sendMessage(from, { text: 'Payment screenshot + UTR ' + utr + ' received. ✅\n\nOwner will verify and I will confirm your booking in a moment.' }); } catch(e) {}
+      try { await sock.sendMessage(OWNER_JID, { text: 'PAYMENT VERIFICATION NEEDED Guest: ' + senderName + ' (' + senderNumber + ') Date: ' + pending.date + ' UTR: ' + utr + ' Advance: ' + formatPrice(pending.advance) + ' Reply YES to confirm, NO to reject.' }); } catch(e) {}
+      try { await sock.sendMessage(from, { text: 'Payment screenshot + UTR ' + utr + ' received. Owner will verify and I will confirm your booking in a moment.' }); } catch(e) {}
       return;
     }
     if (!chatHistories.has(from)) chatHistories.set(from, []);
@@ -245,7 +249,7 @@ async function handleMessage(msg) {
     }
     try { await sock.sendMessage(from, { text: reply }); console.log('Replied OK to ' + senderNumber); } catch(e) { console.log('Send failed: ' + e.message); }
     if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
-      try { await sock.sendMessage(from, { text: 'Photos & videos here: ' + WEBSITE + ' 📸\nMaps: ' + MAPS_LINK }); } catch(e) {}
+      try { await sock.sendMessage(from, { text: 'Photos and videos here: ' + WEBSITE + ' Maps: ' + MAPS_LINK }); } catch(e) {}
     }
   } catch(e) { console.log('handleMessage error ' + e.message); }
 }
