@@ -141,6 +141,9 @@ const server = http.createServer(async (req, res) => {
       });
       return;
     }
+    if (req.method === 'GET' && (url.pathname === '/Pachapp_1.png' || url.pathname === '/pachapp_1.png')) {
+      try { const img = fs.readFileSync('./Pachapp_1.png'); res.writeHead(200, { 'Content-Type': 'image/png' }); res.end(img); return; } catch (e) { res.writeHead(404); res.end('Logo not found'); return; }
+    }
     if (req.method === 'GET' && (url.pathname === '/booking-form.html' || url.pathname === '/')) {
       try { const html = fs.readFileSync('./booking-form.html', 'utf8'); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } catch (e) { res.writeHead(200); res.end('Pachapp Cloud API Running'); return; }
     }
