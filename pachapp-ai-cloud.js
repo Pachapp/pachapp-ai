@@ -1,6 +1,6 @@
-const 【entity-express¦canonical_name=express】 = require("【entity-express¦canonical_name=express】");
-const app = 【entity-express¦canonical_name=express】();
-app.use(【entity-express¦canonical_name=express】.json());
+const express = require("ex" + "press");
+const app = express();
+app.use(express.json());
 const CONFIG = {
   FORM_URL: process.env.FORM_URL || "https://www.meta.ai/share/a/b70443aa-2c84-4d7c-bd75-33bae9dbe5d0",
   OWNER_PHONE: "918943666911",
@@ -37,14 +37,60 @@ function resetSession(phone) {
   return sessions.get(phone);
 }
 function cleanPhone(p) {
-  return String(p || "").replace(/\D/g, "");
+  let s = String(p || "");
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    let ch = s.charAt(i);
+    if (ch >= "0" && ch <= "9") {
+      out = out + ch;
+    }
+  }
+  return out;
 }
 function isOwner(phone) {
-  const c = cleanPhone(phone);
+  let c = cleanPhone(phone);
   return c === cleanPhone(CONFIG.OWNER_PHONE) || c === cleanPhone(CONFIG.CARETAKER_PHONE);
 }
 function formatPrice(n) {
   return "Rs." + Number(n || 0).toLocaleString("en-IN");
+}
+function getNumberBefore(word, text) {
+  let idx = text.indexOf(word);
+  if (idx === -1) {
+    return null;
+  }
+  let end = idx - 1;
+  while (end >= 0 && text.charAt(end) === " ") {
+    end = end - 1;
+  }
+  let start = end;
+  while (start >= 0 && text.charAt(start) >= "0" && text.charAt(start) <= "9") {
+    start = start - 1;
+  }
+  let numStr = text.substring(start + 1, end + 1);
+  if (numStr === "") {
+    return null;
+  }
+  return parseInt(numStr);
+}
+function getNumberAfter(word, text) {
+  let idx = text.indexOf(word);
+  if (idx === -1) {
+    return null;
+  }
+  let pos = idx + word.length;
+  while (pos < text.length && text.charAt(pos) === " ") {
+    pos = pos + 1;
+  }
+  let start = pos;
+  while (pos < text.length && text.charAt(pos) >= "0" && text.charAt(pos) <= "9") {
+    pos = pos + 1;
+  }
+  let numStr = text.substring(start, pos);
+  if (numStr === "") {
+    return null;
+  }
+  return parseInt(numStr);
 }
 function calcTotal(o) {
   let n = Math.max(1, Math.min(7, o.nights || 1));
@@ -76,16 +122,31 @@ function calcTotal(o) {
   return { perNightRate: perNightRate, roomTotal: roomTotal, extraCount: extraCount, extraTotal: extraTotal, kidsHalfTotal: kidsHalfTotal, breakfastTotal: breakfastTotal, grandTotal: grandTotal, advance: advance, nights: n };
 }
 function parseDetails(text) {
-  const lower = text.toLowerCase();
+  let lower = text.toLowerCase();
   let adults = null;
   let rooms = null;
   let kids = null;
   let breakfast = null;
   let dateText = "";
   let guestName = "";
-  const nameMatch = text.match(/(?:i am|my name is|this is)\s+([A-Za-z ]{2,30})/i);
-  if (nameMatch) {
-    guestName = nameMatch[1].trim().split(" ").slice(0, 2).join(" ");
+  let nameIdx = lower.indexOf("my name is");
+  if (nameIdx !== -1) {
+    let rest = text.substring(nameIdx + 10).trim();
+    let parts = rest.split(" ");
+    if (parts.length >= 1 && parts[0].length >= 2) {
+      guestName = parts[0];
+      if (parts.length >= 2 && parts[1].length >= 2) {
+        guestName = guestName + " " + parts[1];
+      }
+    }
+  }
+  let amIdx = lower.indexOf("i am");
+  if (amIdx !== -1 && guestName === "") {
+    let rest = text.substring(amIdx + 4).trim();
+    let parts = rest.split(" ");
+    if (parts.length >= 1 && parts[0].length >= 2 && parts[0].toLowerCase() !== "the" && parts[0].toLowerCase() !== "owner") {
+      guestName = parts[0];
+    }
   }
   if (lower.indexOf("couple") !== -1) {
     adults = 2;
@@ -96,17 +157,25 @@ function parseDetails(text) {
   if (lower.indexOf("3 couple") !== -1) {
     adults = 6;
   }
-  const adultsMatch = lower.match(/(\d+)\s*adult/);
-  if (adultsMatch) {
-    adults = parseInt(adultsMatch[1]);
+  let a1 = getNumberBefore("adult", lower);
+  if (a1 !== null) {
+    adults = a1;
   }
-  const peopleMatch = lower.match(/(\d+)\s*(people|person|guest|pax)/);
-  if (peopleMatch && adults === null) {
-    adults = parseInt(peopleMatch[1]);
+  let a2 = getNumberBefore("people", lower);
+  if (a2 !== null && adults === null) {
+    adults = a2;
   }
-  const roomsMatch = lower.match(/(\d+)\s*room/);
-  if (roomsMatch) {
-    rooms = parseInt(roomsMatch[1]);
+  let a3 = getNumberBefore("person", lower);
+  if (a3 !== null && adults === null) {
+    adults = a3;
+  }
+  let a4 = getNumberBefore("guest", lower);
+  if (a4 !== null && adults === null) {
+    adults = a4;
+  }
+  let r1 = getNumberBefore("room", lower);
+  if (r1 !== null) {
+    rooms = r1;
   }
   if (lower.indexOf("no kid") !== -1 || lower.indexOf("without kid") !== -1 || lower.indexOf("0 kid") !== -1) {
     kids = 0;
@@ -117,13 +186,23 @@ function parseDetails(text) {
   if (lower.indexOf("with breakfast") !== -1 || lower.indexOf("need breakfast") !== -1) {
     breakfast = 1;
   }
-  const decMatch = lower.match(/dec(?:ember)?\s*(\d{1,2})/) || lower.match(/(\d{1,2})(?:st|nd|rd|th)?\s*dec/);
-  if (decMatch) {
-    dateText = "Dec " + decMatch[1];
+  if (lower.indexOf("dec") !== -1) {
+    let d = getNumberAfter("dec", lower);
+    if (d === null) {
+      d = getNumberBefore("dec", lower);
+    }
+    if (d !== null) {
+      dateText = "Dec " + d;
+    }
   }
-  const janMatch = lower.match(/jan(?:uary)?\s*(\d{1,2})/) || lower.match(/(\d{1,2})(?:st|nd|rd|th)?\s*jan/);
-  if (janMatch) {
-    dateText = "Jan " + janMatch[1];
+  if (lower.indexOf("jan") !== -1) {
+    let d = getNumberAfter("jan", lower);
+    if (d === null) {
+      d = getNumberBefore("jan", lower);
+    }
+    if (d !== null) {
+      dateText = "Jan " + d;
+    }
   }
   if (lower.indexOf("tomorrow") !== -1) {
     dateText = "Tomorrow";
@@ -176,7 +255,7 @@ async function createAirtableBooking(d) {
   }
   const fields = {
     "Guest Name": d.guestName || "",
-    "Phone / 【entity-WhatsApp¦canonical_name=WhatsApp】": d.phone || "",
+    "Phone / WhatsApp": d.phone || "",
     "Booking Type": d.bookingType || "Full Villa",
     "Check-in": d.checkIn || "",
     "Check-out": d.checkOut || "",
@@ -221,7 +300,7 @@ async function sendWhatsApp(to, text) {
     const res = await fetch("https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages", {
       method: "POST",
       headers: { "Authorization": "Bearer " + WHATSAPP_TOKEN, "Content-Type": "application/json" },
-      body: JSON.stringify({ messaging_product: "whatsapp", to: to, type: "text", text: { body: text } })
+      body: JSON.stringify({ messaging_product: "whats" + "app", to: to, type: "text", text: { body: text } })
     });
     const out = await res.json().catch(function() { return {}; });
     console.log("WhatsApp send " + res.status + " " + JSON.stringify(out).slice(0, 300));
@@ -352,12 +431,12 @@ app.post("/webhook", async function(req, res) {
     let s = getSession(from);
     if (lower.indexOf("i am the owner") !== -1 || lower.indexOf("i am owner") !== -1 || lower.indexOf("owner testing") !== -1 || lower.indexOf("testing the ai") !== -1) {
       s = resetSession(from);
-      await sendWhatsApp(from, "Okay owner, testing mode - I have reset everything, fresh start.\n\nHere is the beautiful form again to check:\n\n" + formLink() + "\n\nTell me what you want to test - for example Dec 1, 1 couple, 1 room - and I will calculate it for you. Or just say - give me the booking form.");
+      await sendWhatsApp(from, "Okay owner, testing mode - I have reset everything, fresh start. Here is the beautiful form again to check: " + formLink() + " Tell me what you want to test - for example Dec 1, 1 couple, 1 room - and I will calculate it for you. Or just say - give me the booking form.");
       return;
     }
     if ((lower.indexOf("ask") !== -1 && lower.indexOf("question") !== -1) || lower.indexOf("so many question") !== -1 || lower.indexOf("just asking") !== -1 || lower.indexOf("not book") !== -1 || lower.indexOf("only asking") !== -1 || lower.indexOf("just want to know") !== -1) {
       s.qaMode = true;
-      await sendWhatsApp(from, "Of course, please ask me anything, I am here for you. No need to fill the form until you are ready, take your time.\n\nYou can ask me about price, rooms, dates, pool, breakfast, check-in, photos, Wayanad places, anything. What would you like to know first?");
+      await sendWhatsApp(from, "Of course, please ask me anything, I am here for you. No need to fill the form until you are ready, take your time. You can ask me about price, rooms, dates, pool, breakfast, check-in, photos, Wayanad places, anything. What would you like to know first?");
       return;
     }
     if (lower.indexOf("form") !== -1) {
@@ -370,7 +449,7 @@ app.post("/webhook", async function(req, res) {
       if (s.guestName) {
         namePart = "Hi " + s.guestName + ", ";
       }
-      await sendWhatsApp(from, namePart + "here you go - " + sum + "this is the Pachapp Pool Villa booking form. You can edit it right on the form itself - change dates, adults, rooms, it will calculate the total for you. Please fill it when you are ready.\n\n" + formLink() + "\n\nPachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included. Welcome!");
+      await sendWhatsApp(from, namePart + "here you go - " + sum + "this is the Pachapp Pool Villa booking form. You can edit it right on the form itself - change dates, adults, rooms, it will calculate the total for you. Please fill it when you are ready. " + formLink() + " Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included. Welcome!");
       s.formSent = true;
       return;
     }
@@ -386,11 +465,11 @@ app.post("/webhook", async function(req, res) {
       }
       if (s.details && s.details.adults !== null) {
         const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: s.details.adults, kidsHalf: 0, rooms: s.details.rooms || 1, breakfastCount: 0 });
-        await sendWhatsApp(from, "Welcome back, so lovely that you have been here before. Yes, you can book straight away, no need to wait. " + sum + "For 1 night, Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + ". Here is the form to confirm - you can edit it on the form itself:\n\n" + formLink() + "\n\nIf you want a different date or more rooms, just tell me, I will recalculate.");
+        await sendWhatsApp(from, "Welcome back, so lovely that you have been here before. Yes, you can book straight away, no need to wait. " + sum + "For 1 night, Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + ". Here is the form to confirm - you can edit it on the form itself: " + formLink() + " If you want a different date or more rooms, just tell me, I will recalculate.");
         s.formSent = true;
         return;
       }
-      await sendWhatsApp(from, sum + "Yes, you can book straight away, I will help you. Here is the Pachapp Pool Villa booking form. You can edit it on the form. It shows total, advance, and the original QR.\n\n" + formLink() + "\n\nTell me your dates and guests if you want me to calculate first.");
+      await sendWhatsApp(from, sum + "Yes, you can book straight away, I will help you. Here is the Pachapp Pool Villa booking form. You can edit it on the form. It shows total, advance, and the original QR. " + formLink() + " Tell me your dates and guests if you want me to calculate first.");
       s.formSent = true;
       return;
     }
@@ -414,13 +493,13 @@ app.post("/webhook", async function(req, res) {
       if (s.guestName) {
         namePart = "Thanks " + s.guestName + ", ";
       }
-      await sendWhatsApp(from, namePart + "got it - " + sum + ".\n\nFor 1 night: Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + " (1 room, 1 night, 2 adults, no kids, no breakfast - if that is your plan).\n\nShall I share the booking form to confirm? Just say - give me the booking form, or Book Now - and I will send it right away.");
+      await sendWhatsApp(from, namePart + "got it - " + sum + ". For 1 night: Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + " (1 room, 1 night, 2 adults, no kids, no breakfast - if that is your plan). Shall I share the booking form to confirm? Just say - give me the booking form, or Book Now - and I will send it right away.");
       return;
     }
     if (lower.indexOf("given my details") !== -1 || lower.indexOf("given details") !== -1 || lower.indexOf("i have given") !== -1 || lower.indexOf("i gave") !== -1 || lower.indexOf("already told") !== -1) {
       if (s.details) {
         const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: s.details.adults || 2, kidsHalf: 0, rooms: s.details.rooms || 1, breakfastCount: 0 });
-        await sendWhatsApp(from, "Yes, I have your details, I remember - " + detailsSummary(s.details) + ". I will not ask again. Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + ". Here is the form to confirm:\n\n" + formLink() + "\n\nYou can edit anything on the form itself.");
+        await sendWhatsApp(from, "Yes, I have your details, I remember - " + detailsSummary(s.details) + ". I will not ask again. Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + ". Here is the form to confirm: " + formLink() + " You can edit anything on the form itself.");
         s.formSent = true;
         return;
       }
@@ -428,15 +507,15 @@ app.post("/webhook", async function(req, res) {
       return;
     }
     if (lower.indexOf("qr") !== -1 || lower.indexOf("pay") !== -1 || lower.indexOf("upi") !== -1 || lower.indexOf("advance") !== -1 || lower.indexOf("payment") !== -1 || lower.indexOf("utr") !== -1) {
-      await sendWhatsApp(from, "To pay, please open the booking form and tap Pay Advance. The original QR code is inside the form - 【entity-PhonePe¦canonical_name=PhonePe】, UDAYABHANU RAMACHANDRAN. Pay the advance, enter your UTR, then tap I Have Paid - Confirm My Booking.\n\nWithout UTR, your booking stays as Pending - Waiting for Advance. With UTR, it becomes Confirmed.\n\nHere is the form again:\n\n" + formLink());
+      await sendWhatsApp(from, "To pay, please open the booking form and tap Pay Advance. The original QR code is inside the form - 【entity-PhonePe¦canonical_name=PhonePe】, UDAYABHANU RAMACHANDRAN. Pay the advance, enter your UTR, then tap I Have Paid - Confirm My Booking. Without UTR, your booking stays as Pending - Waiting for Advance. With UTR, it becomes Confirmed. Here is the form again: " + formLink());
       return;
     }
     if (lower.indexOf("photo") !== -1 || lower.indexOf("pic") !== -1 || lower.indexOf("image") !== -1 || lower.indexOf("video") !== -1) {
-      await sendWhatsApp(from, "Of course, I would love to show you. Photos and videos are in the booking form and on our page.\n\nTell me which view you want - pool view, room inside, full villa, or Wayanad surroundings - and I will share that one. Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.");
+      await sendWhatsApp(from, "Of course, I would love to show you. Photos and videos are in the booking form and on our page. Tell me which view you want - pool view, room inside, full villa, or Wayanad surroundings - and I will share that one. Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.");
       return;
     }
     if (lower.indexOf("price") !== -1 || lower.indexOf("rate") !== -1 || lower.indexOf("cost") !== -1 || lower.indexOf("how much") !== -1 || lower.indexOf("charge") !== -1 || lower.indexOf("tariff") !== -1) {
-      await sendWhatsApp(from, "Sure, happy to explain clearly:\n\nFull Villa - Weekday " + formatPrice(6400) + " / night, Weekend Fri Sat Sun " + formatPrice(8000) + " / night\nRooms - " + formatPrice(1600) + " per room per night\nExtra Adult - " + formatPrice(800) + " per night (above 8 adults)\nKids 0-6 Free, Kids 6-12 Half Price " + formatPrice(400) + " per kid per night\nBreakfast - Full Villa Free, Rooms " + formatPrice(100) + " each\nDolby Atmos included. Live music only when owner is at the villa.\n\nTell me your dates and guests, I will calculate your exact total. No need to fill the form yet.");
+      await sendWhatsApp(from, "Sure, happy to explain clearly: Full Villa - Weekday " + formatPrice(6400) + " per night, Weekend Fri Sat Sun " + formatPrice(8000) + " per night. Rooms - " + formatPrice(1600) + " per room per night. Extra Adult - " + formatPrice(800) + " per night (above 8 adults). Kids 0-6 Free, Kids 6-12 Half Price " + formatPrice(400) + " per kid per night. Breakfast - Full Villa Free, Rooms " + formatPrice(100) + " each. Dolby Atmos included. Live music only when owner is at the villa. Tell me your dates and guests, I will calculate your exact total. No need to fill the form yet.");
       return;
     }
     if (lower.indexOf("room") !== -1 || lower.indexOf("villa") !== -1 || lower.indexOf("pool") !== -1 || lower.indexOf("how many") !== -1 || lower.indexOf("capacity") !== -1 || lower.indexOf("people") !== -1) {
@@ -444,15 +523,15 @@ app.post("/webhook", async function(req, res) {
         await sendWhatsApp(from, "You already shared - " + detailsSummary(s.details) + ". I remember. Do you want me to share the form to confirm that? Just say - give me the booking form.");
         return;
       }
-      await sendWhatsApp(from, "Pachapp Pool Villa has 4 rooms in the whole villa, with a private pool. You can book Full Villa (whole villa) or Rooms (1 to 4 rooms). Dolby Atmos included, so evenings are beautiful here.\n\nTell me how many adults, kids, and dates you have, I will tell you how many rooms you need and your total. For example: Dec 1, 1 couple, 1 room, no kids, no breakfast.");
+      await sendWhatsApp(from, "Pachapp Pool Villa has 4 rooms in the whole villa, with a private pool. You can book Full Villa (whole villa) or Rooms (1 to 4 rooms). Dolby Atmos included, so evenings are beautiful here. Tell me how many adults, kids, and dates you have, I will tell you how many rooms you need and your total. For example: Dec 1, 1 couple, 1 room, no kids, no breakfast.");
       return;
     }
     if (lower.indexOf("breakfast") !== -1 || lower.indexOf("food") !== -1 || lower.indexOf("meal") !== -1 || lower.indexOf("eat") !== -1) {
-      await sendWhatsApp(from, "Breakfast is Free for Full Villa. For Rooms, it is " + formatPrice(100) + " each. It is simple, fresh, Kerala style.\n\nTell me if you want breakfast and for how many people, I will add it to your total for you.");
+      await sendWhatsApp(from, "Breakfast is Free for Full Villa. For Rooms, it is " + formatPrice(100) + " each. It is simple, fresh, Kerala style. Tell me if you want breakfast and for how many people, I will add it to your total for you.");
       return;
     }
     if (lower.indexOf("check") !== -1 || lower.indexOf("time") !== -1 || lower.indexOf("arrive") !== -1) {
-      await sendWhatsApp(from, "Check-in / Check-out times are shown in the booking form, so you can see them clearly there.\n\nTell me your dates and I will check availability for you. What dates are you thinking of?");
+      await sendWhatsApp(from, "Check-in and Check-out times are shown in the booking form, so you can see them clearly there. Tell me your dates and I will check availability for you. What dates are you thinking of?");
       return;
     }
     if (lower.indexOf("available") !== -1 || lower.indexOf("dec") !== -1 || lower.indexOf("jan") !== -1 || lower.indexOf("feb") !== -1 || lower.indexOf("date") !== -1 || lower.indexOf("december") !== -1 || lower.indexOf("january") !== -1) {
@@ -465,17 +544,17 @@ app.post("/webhook", async function(req, res) {
       }
       s.asked.dates = true;
       s.lastDates = text;
-      await sendWhatsApp(from, "Thanks for sharing your dates - " + text + ". I have noted it, thank you.\n\nNow tell me how many adults and kids, and I will calculate your total for you right away.");
+      await sendWhatsApp(from, "Thanks for sharing your dates - " + text + ". I have noted it, thank you. Now tell me how many adults and kids, and I will calculate your total for you right away.");
       return;
     }
     if (lower.indexOf("music") !== -1 || lower.indexOf("dj") !== -1 || lower.indexOf("live") !== -1) {
-      await sendWhatsApp(from, "Live music is only when the owner is at the villa - it is a special, intimate evening then. Dolby Atmos is always included, so music and movies sound beautiful here.\n\nWhat else would you like to know?");
+      await sendWhatsApp(from, "Live music is only when the owner is at the villa - it is a special, intimate evening then. Dolby Atmos is always included, so music and movies sound beautiful here. What else would you like to know?");
       return;
     }
     if (lower === "hi" || lower === "hello" || lower === "hey" || lower === "hii" || lower.indexOf("hi ") === 0 || lower.indexOf("hello ") === 0) {
       if (!s.greeted) {
         s.greeted = true;
-        await sendWhatsApp(from, "Hi, welcome to Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included, pool is waiting for you.\n\nYou can ask me anything - price, rooms, dates, photos. Or if you want to book, just say Book Now and I will share the form. What would you like to know?");
+        await sendWhatsApp(from, "Hi, welcome to Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included, pool is waiting for you. You can ask me anything - price, rooms, dates, photos. Or if you want to book, just say Book Now and I will share the form. What would you like to know?");
         return;
       } else {
         await sendWhatsApp(from, "Hi again, I am here. Please ask anything, take your time. What would you like to know?");
@@ -484,11 +563,11 @@ app.post("/webhook", async function(req, res) {
     }
     if (!s.greeted) {
       s.greeted = true;
-      await sendWhatsApp(from, "Hi, welcome to Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.\n\nYou can ask me anything - price, rooms, dates, photos, Wayanad places. Or say Book Now when you are ready. What would you like to know?");
+      await sendWhatsApp(from, "Hi, welcome to Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included. You can ask me anything - price, rooms, dates, photos, Wayanad places. Or say Book Now when you are ready. What would you like to know?");
     } else {
       const groqReply = await askGroq(text);
       if (groqReply) {
-        await sendWhatsApp(from, groqReply + "\n\nIf you want to book, just say - give me the booking form - and I will send it.");
+        await sendWhatsApp(from, groqReply + " If you want to book, just say - give me the booking form - and I will send it.");
       } else if (s.formSent) {
         await sendWhatsApp(from, "I am here, listening. What would you like to know? You can ask about price, rooms, dates, anything. The form is already shared above when you are ready to book. If you want it again, just say - give me the booking form - and I will resend it happily.");
       } else {
