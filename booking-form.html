@@ -9,12 +9,11 @@
 body{margin:0;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif;padding:16px}
 a{color:#7CFF8A !important;text-decoration:none !important}
 .wrap{max-width:520px;margin:0 auto}
-.logo-card{background:#fff;border-radius:14px;padding:14px 14px 10px;text-align:center;margin-bottom:14px}
+.logo-card{background:#fff;border-radius:14px;padding:14px;text-align:center;margin-bottom:14px}
 .logo-card img{max-width:230px;width:100%;height:auto;display:block;margin:0 auto;background:#fff}
 .card{background:#111;border:1px solid #333;border-radius:14px;padding:16px}
 label{display:block;font-size:13px;color:#fff;margin:14px 0 6px}
-input,select{width:100%;background:#fff;color:#000;border:none;border-radius:10px;padding:12px;font-size:15px}
-input[type="date"]{background:#fff}
+input{width:100%;background:#fff;color:#000;border:none;border-radius:10px;padding:12px;font-size:15px}
 .type-row{display:flex;gap:10px;margin-top:6px}
 .type-btn{flex:1;padding:12px;border-radius:10px;border:1px solid #555;font-weight:800;cursor:pointer;text-align:center}
 .type-btn.full{background:#fff;color:#000}
@@ -22,17 +21,13 @@ input[type="date"]{background:#fff}
 .type-btn.active{outline:3px solid #22c55e}
 .tick{color:#22c55e;font-weight:900}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-top:10px}
-.row b{font-size:15px}
-.counter{display:flex;align-items:center;gap:10px}
-.circle{width:32px;height:32px;border-radius:50%;background:#2563eb;color:#fff;border:none;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.circle{width:32px;height:32px;border-radius:50%;background:#2563eb;color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .count{font-size:18px;font-weight:800;min-width:28px;text-align:center;color:#fff}
-.rooms-box{background:#b8ffc0;color:#000;border-radius:10px;padding:10px 12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
-.rooms-box span{font-size:18px}
+.rooms-box{background:#b8ffc0;color:#000;border-radius:10px;padding:10px 12px;margin-top:10px;display:flex;justify-content:space-between;font-weight:800}
 .breakfast-row{background:#14532d;border-radius:10px;padding:12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center}
-.breakfast-row b{color:#fff}
-.switch{position:relative;width:52px;height:28px;background:#ccc;border-radius:30px;cursor:pointer;flex-shrink:0}
+.switch{width:52px;height:28px;background:#ccc;border-radius:30px;position:relative;cursor:pointer;flex-shrink:0}
 .switch.on{background:#7CFF8A}
-.knob{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s}
+.knob{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%}
 .switch.on .knob{left:27px}
 .nights-red,.checkout-red{color:#ff2d2d;font-weight:900}
 .warn{color:#ff2d2d;font-weight:900;font-size:14px;margin-top:10px;display:none}
@@ -40,12 +35,10 @@ input[type="date"]{background:#fff}
 .pay-box{margin-top:16px;background:#0f0f0f;border:1px solid #2f2f2f;border-radius:12px;padding:14px}
 .pay-top{display:flex;justify-content:space-between;align-items:center}
 .pay-switch{width:52px;height:28px;background:#7CFF8A;border-radius:30px;position:relative;cursor:pointer;flex-shrink:0}
-.pay-switch .knob{left:27px}
 .pay-switch.off{background:#555}
+.pay-switch .knob{left:27px}
 .pay-switch.off .knob{left:3px}
-.pay-phone{color:#7CFF8A !important;font-weight:900;font-size:19px;letter-spacing:.3px}
-.pay-name{color:#fff;font-weight:800}
-.total-box{display:none;margin-top:14px;background:#fff;color:#000;border-radius:12px;padding:14px}
+.total-box{display:none;margin-top:14px;background:#fff;color:#000;border-radius:8px;padding:14px}
 .total-box.show{display:block}
 .total-line{display:flex;justify-content:space-between;padding:6px 0;color:#000}
 .total-line.total{font-weight:900;font-size:18px;border-top:1px solid #ccc;margin-top:6px;padding-top:10px}
@@ -66,17 +59,17 @@ summary{cursor:pointer;font-weight:800}
 <input id="phone" placeholder="e.g. 98XXXXXXX">
 <label>Check-in Date *</label>
 <input id="checkin" type="date">
-<div class="row"><b>Nights <span class="nights-red" id="nightsLabel">1 Night</span></b><div class="counter"><button class="circle" onclick="changeNights(-1)">−</button><span class="count" id="nightsCount">1</span><button class="circle" onclick="changeNights(1)">+</button></div></div>
+<div class="row"><b>Nights <span class="nights-red" id="nightsLabel">1 Night</span></b><div style="display:flex;align-items:center;gap:10px"><button class="circle" onclick="changeNights(-1)">−</button><span class="count" id="nightsCount">1</span><button class="circle" onclick="changeNights(1)">+</button></div></div>
 <div style="margin-top:10px">Check-out: <span class="checkout-red" id="checkoutText">Select Check-in</span></div>
 <label>Stay Type</label>
 <div class="type-row">
-<div class="type-btn rooms" id="btnRooms" onclick="setType('rooms')">Rooms <span class="tick" id="tickRooms">✓</span></div>
 <div class="type-btn full" id="btnFull" onclick="setType('full')">Full Villa <span class="tick" id="tickFull" style="display:none">✓</span></div>
+<div class="type-btn rooms" id="btnRooms" onclick="setType('rooms')">Rooms <span class="tick" id="tickRooms">✓</span></div>
 </div>
 <div class="rooms-box"><span>Rooms</span><span id="roomsText">1 Room</span></div>
-<div class="row"><b>Adults</b><div class="counter"><button class="circle" onclick="changeAdults(-1)">−</button><span class="count" id="adultsCount">2</span><button class="circle" onclick="changeAdults(1)">+</button></div></div>
-<div class="row"><b>Kids 0-6 (Free)</b><div class="counter"><button class="circle" onclick="changeKids06(-1)">−</button><span class="count" id="kids06Count">0</span><button class="circle" onclick="changeKids06(1)">+</button></div></div>
-<div class="row"><b>Kids 6-12 (Rs.400)</b><div class="counter"><button class="circle" onclick="changeKids612(-1)">−</button><span class="count" id="kids612Count">0</span><button class="circle" onclick="changeKids612(1)">+</button></div></div>
+<div class="row"><b>Adults</b><div style="display:flex;align-items:center;gap:10px"><button class="circle" onclick="changeAdults(-1)">−</button><span class="count" id="adultsCount">2</span><button class="circle" onclick="changeAdults(1)">+</button></div></div>
+<div class="row"><b>Kids 0-6 (Free)</b><div style="display:flex;align-items:center;gap:10px"><button class="circle" onclick="changeKids06(-1)">−</button><span class="count" id="kids06Count">0</span><button class="circle" onclick="changeKids06(1)">+</button></div></div>
+<div class="row"><b>Kids 6-12 (Rs.400)</b><div style="display:flex;align-items:center;gap:10px"><button class="circle" onclick="changeKids612(-1)">−</button><span class="count" id="kids612Count">0</span><button class="circle" onclick="changeKids612(1)">+</button></div></div>
 <div class="breakfast-row"><b>Breakfast <span id="breakfastPrice" style="font-weight:400">(Rs.100 / head)</span></b><div class="switch" id="breakfastSwitch" onclick="toggleBreakfast()"><div class="knob"></div></div></div>
 <div id="warn" class="warn"></div>
 <div class="pay-box">
@@ -91,7 +84,7 @@ summary{cursor:pointer;font-weight:800}
 <div class="total-line"><span>Advance to Pay</span><span id="advanceVal">Rs.1,600</span></div>
 <div class="total-line"><span>Balance before Check-in</span><span id="balanceVal">Rs.0</span></div>
 <div style="margin-top:12px;border-top:1px solid #ddd;padding-top:10px;color:#000">
-Pay to: <span class="pay-phone">0091 996 191 7169</span><br>
+Pay to: <span style="color:#7CFF8A !important;font-weight:900;font-size:19px">0091 996 191 7169</span><br>
 Name: <b>UDAYABHANU</b><br>
 <span style="font-size:12px">No QR. Pay by UPI to above number.</span>
 </div>
@@ -114,28 +107,15 @@ function calc(){
   let weekend=d?isWeekend(d):false;
   let rooms=getRooms();
   let roomCost=0, roomLabel='';
-  if(stayType==='full'){
-    let per=weekend?8000:6400;
-    roomCost=per*nights;
-    roomLabel='Full Villa ('+(weekend?'Weekend':'Weekday')+' x '+nights+' Night'+(nights>1?'s':'')+')';
-  } else {
-    roomCost=rooms*1600*nights;
-    roomLabel='Room ('+rooms+' Room'+(rooms>1?'s':'')+' x '+nights+' Night'+(nights>1?'s':'')+')';
-  }
+  if(stayType==='full'){let per=weekend?8000:6400;roomCost=per*nights;roomLabel='Full Villa ('+(weekend?'Weekend':'Weekday')+' x '+nights+' Night'+(nights>1?'s':'')+')';}
+  else{roomCost=rooms*1600*nights;roomLabel='Room ('+rooms+' Room'+(rooms>1?'s':'')+' x '+nights+' Night'+(nights>1?'s':'')+')';}
   let includedAdults=stayType==='full'?8:rooms*2;
   let extraAdults=Math.max(0,adults-includedAdults);
   let extra=extraAdults*800*nights;
   let kidsCost=kids612*400*nights;
-  let bf=0;
-  if(breakfastOn){
-    if(stayType==='full') bf=0;
-    else bf=(adults+kids612)*100*nights;
-  }
+  let bf=0; if(breakfastOn){if(stayType==='full')bf=0;else bf=(adults+kids612)*100*nights;}
   let total=roomCost+extra+kidsCost+bf;
-  let advance=0;
-  if(rooms===1&&nights===1&&adults<=2) advance=1600;
-  else if(total<=10000) advance=2000;
-  else advance=Math.round(total*0.20);
+  let advance=0; if(rooms===1&&nights===1&&adults<=2)advance=1600; else if(total<=10000)advance=2000; else advance=Math.round(total*0.20);
   let balance=total-advance;
   return {rooms,roomCost,roomLabel,extra,extraAdults,kidsCost,bf,total,advance,balance,weekend};
 }
@@ -157,12 +137,8 @@ function render(){
   document.getElementById('balanceVal').innerText=fmt(r.balance);
   document.getElementById('breakfastPrice').innerText=stayType==='full'?'(FREE for Full Villa)':'(Rs.100 / head)';
   let checkin=document.getElementById('checkin').value;
-  if(checkin){
-    let d=new Date(checkin+'T00:00:00'); d.setDate(d.getDate()+nights);
-    document.getElementById('checkoutText').innerText=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-  } else {
-    document.getElementById('checkoutText').innerText='Select Check-in';
-  }
+  if(checkin){let d=new Date(checkin+'T00:00:00');d.setDate(d.getDate()+nights);document.getElementById('checkoutText').innerText=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
+  else{document.getElementById('checkoutText').innerText='Select Check-in';}
   document.getElementById('totalBox').className='total-box'+(payOn?' show':'');
   document.getElementById('btnRooms').className='type-btn rooms'+(stayType==='rooms'?' active':'');
   document.getElementById('btnFull').className='type-btn full'+(stayType==='full'?' active':'');
@@ -188,11 +164,11 @@ function saveBooking(){
   let warnEl=document.getElementById('saveWarn');
   if(!name||!phone||!checkin){warnEl.innerText='Please fill Full Name, Phone Number and Check-in Date';warnEl.className='warn show';return}
   let r=calc();
-  let checkout=new Date(checkin+'T00:00:00'); checkout.setDate(checkout.getDate()+nights);
+  let checkout=new Date(checkin+'T00:00:00');checkout.setDate(checkout.getDate()+nights);
   let booking={name,phone,checkin,nights,checkout:checkout.toISOString().slice(0,10),stayType,rooms:r.rooms,adults,kids06,kids612,breakfast:breakfastOn,total:r.total,advance:r.advance,utr,status:utr?'Confirmed':'Pending',time:new Date().toLocaleString('en-IN')};
   let list=JSON.parse(localStorage.getItem('pachapp_bookings')||'[]');
-  list.unshift(booking); localStorage.setItem('pachapp_bookings',JSON.stringify(list));
-  warnEl.innerText=''; warnEl.className='warn';
+  list.unshift(booking);localStorage.setItem('pachapp_bookings',JSON.stringify(list));
+  warnEl.innerText='';warnEl.className='warn';
   alert('Booking Saved - '+(utr?'Confirmed':'Pending')+'\nTotal '+fmt(r.total)+' Advance '+fmt(r.advance));
   render();
 }
