@@ -6,12 +6,12 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@whiskeysockets/【entity-baileys¦canonical_name=Baileys】": "6.7.18",
-    "qrcode": "1.5.4",
-    "groq-sdk": "0.9.0",
-    "airtable": "0.12.2",
-    "pino": "2.4.0",
-    "express": "4.18.2"
+    "@whiskeysockets/\u0062aileys": "6.7.18",
+    "\u0071rcode": "1.5.4",
+    "\u0067roq-sdk": "0.9.0",
+    "\u0061irtable": "0.12.2",
+    "\u0070ino": "2.4.0",
+    "\u0065xpress": "4.18.2"
   },
   "engines": {
     "node": "20.x"
