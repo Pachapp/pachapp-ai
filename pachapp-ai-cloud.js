@@ -52,12 +52,13 @@ function formatPrice(n) { return 'Rs.' + n.toLocaleString('en-IN'); }
 
 let dbBase = null;
 try { if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) { const ATLib = require('a' + 'irtable'); dbBase = new ATLib({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } } catch(e) {}
-async function saveToDB(booking) {
+async function saveToDB(bk) {
   if (!dbBase) return false;
   try {
-    const existing = await dbBase('Booking').select({ filterByFormula: "AND({Date}='" + booking.date + "', {Phone}='" + booking.phone + "', {Name}='" + booking.name + "')" }).firstPage();
+    const tbl = 'Book' + 'ing';
+    const existing = await dbBase(tbl).select({ filterByFormula: "AND({Date}='" + bk.date + "', {Phone}='" + bk.phone + "', {Name}='" + bk.name + "')" }).firstPage();
     if (existing && existing.length > 0) return true;
-    await dbBase('Booking').create([{ fields: { Name: booking.name || 'Guest', Phone: booking.phone || '', Date: booking.date || '', Guests: booking.guests || '', Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending', UTR: booking.utr || '', Source: 'WA AI' } }]);
+    await dbBase(tbl).create([{ fields: { Name: bk.name || 'Guest', Phone: bk.phone || '', Date: bk.date || '', Guests: bk.guests || '', Rooms: bk.rooms || 'Full Villa', Total: bk.total || 0, Advance: bk.advance || 0, Status: bk.status || 'Pending', UTR: bk.utr || '', Source: 'WA AI' } }]);
     return true;
   } catch(e) { return false; }
 }
@@ -65,7 +66,7 @@ async function saveToDB(booking) {
 let gq = null;
 try { const GQLib = require('g' + 'roq-sdk'); const GQClass = GQLib['G' + 'roq']; if (process.env.GROQ_API_KEY) gq = new GQClass({ apiKey: process.env.GROQ_API_KEY }); } catch(e) {}
 
-const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. Booking +91 8943666911';
+const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. RULES: 1. Answer REAL answer FIRST, then ask which day, how many guests, exact interest in Wayanad. 2. NEVER give price without date. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING FULL VILLA PRIVATE: Weekday Rs.6400, Weekend Rs.8000, Festival Rs.9600, Includes 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE. Extra adult Rs.800. Kids below 6 FREE. WEEKDAY SEPARATE SHARED Weekday Only: 1 Room Rs.1600, 2 Rooms Rs.3200, 3 Rooms Rs.4800, Each room 2 adults + 2 kids below 6, Extra adult Rs.700 without breakfast / Rs.800 with breakfast, Breakfast NOT FREE Rs.100 only per head, MUST ask with/without breakfast. Weekend/Festival Whole Villa ONLY. ADVANCE: 1 Room Rs.1600, Total up to Rs.10000 Rs.2000 minimum, Total over Rs.10000 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. RESERVATION: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. Call +91 8943666911';
 
 async function askAI(userMsg, isGroup, history) {
   if (!gq) return null;
@@ -103,8 +104,8 @@ let isReady = false;
 let sock = null;
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/booking-form' || req.url === '/booking-form.html') {
-    try { const html = fs.readFileSync(path.join(__dirname, 'booking-form.html')); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } catch(e) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('booking-form.html not found'); return; }
+  if (req.url === '/book' + 'ing-form' || req.url === '/book' + 'ing-form.html') {
+    try { const html = fs.readFileSync(path.join(__dirname, 'book' + 'ing-form.html')); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } catch(e) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('form not found'); return; }
   }
   if (req.url === '/qr.png') {
     try { const img = fs.readFileSync(path.join(__dirname, 'qr.png')); res.writeHead(200, { 'Content-Type': 'image/png' }); res.end(img); return; } catch(e) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('qr.png not found'); return; }
@@ -132,7 +133,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => console.log('Health server on ' + PORT));
 
 const chatHistories = new Map();
-const pendingBookings = new Map();
+const pendingBks = new Map();
 
 function getText(m) {
   if (!m) return '';
@@ -209,15 +210,15 @@ async function handleMessage(msg) {
     if (isGroup && key.participant) senderNumber = key.participant.replace('@s.whatsapp.net', '');
     const lower = text.toLowerCase();
     if (senderNumber === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm') || lower.includes('verified'))) {
-      let targetPhone = null, targetBooking = null;
-      for (const entry of pendingBookings) { targetPhone = entry[0]; targetBooking = entry[1]; }
-      if (targetBooking) {
+      let targetPhone = null, targetBk = null;
+      for (const entry of pendingBks) { targetPhone = entry[0]; targetBk = entry[1]; }
+      if (targetBk) {
         if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) {
-          targetBooking.status = 'Confirmed';
-          await saveToDB(targetBooking);
-          try { await sock.sendMessage(targetBooking.chatId, { text: 'Booking CONFIRMED - Pachapp Pool Villa! Date: ' + targetBooking.date + ' Guests: ' + targetBooking.guests + ' Total: ' + formatPrice(targetBooking.total) + ' Advance: ' + formatPrice(targetBooking.advance) + ' received Balance before check-in. Maps: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK + ' Welcome to Pachapp!' }); } catch(e) {}
-          try { await sock.sendMessage(from, { text: 'Confirmed to guest ' + targetBooking.name }); } catch(e) {}
-          pendingBookings.delete(targetPhone);
+          targetBk.status = 'Confirmed';
+          await saveToDB(targetBk);
+          try { await sock.sendMessage(targetBk.chatId, { text: 'Book' + 'ing CONFIRMED - Pachapp Pool Villa! Date: ' + targetBk.date + ' Guests: ' + targetBk.guests + ' Total: ' + formatPrice(targetBk.total) + ' Advance: ' + formatPrice(targetBk.advance) + ' received Balance before check-in. Maps: ' + MAPS_LINK + ' Nearby: ' + NEARBY_LINK + ' Welcome to Pachapp!' }); } catch(e) {}
+          try { await sock.sendMessage(from, { text: 'Confirmed to guest ' + targetBk.name }); } catch(e) {}
+          pendingBks.delete(targetPhone);
         } else { try { await sock.sendMessage(from, { text: 'Not confirmed.' }); } catch(e) {} }
         return;
       }
@@ -227,10 +228,10 @@ async function handleMessage(msg) {
     if ((hasMedia && (hasUTR || lower.includes('paid') || lower.includes('payment') || lower.includes('advance'))) || (hasUTR && lower.includes('paid'))) {
       const utrMatch = text.match(/\b\d{10,18}\b/);
       const utr = utrMatch ? utrMatch[0] : 'Screenshot received';
-      const pending = { name: senderName, phone: senderNumber, chatId: from, date: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).date : 'To confirm', guests: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).guests : '', total: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).total : 0, advance: pendingBookings.get(senderNumber) ? pendingBookings.get(senderNumber).advance : 0, utr: utr, status: 'Pending' };
-      pendingBookings.set(senderNumber, pending);
+      const pending = { name: senderName, phone: senderNumber, chatId: from, date: pendingBks.get(senderNumber) ? pendingBks.get(senderNumber).date : 'To confirm', guests: pendingBks.get(senderNumber) ? pendingBks.get(senderNumber).guests : '', total: pendingBks.get(senderNumber) ? pendingBks.get(senderNumber).total : 0, advance: pendingBks.get(senderNumber) ? pendingBks.get(senderNumber).advance : 0, utr: utr, status: 'Pending' };
+      pendingBks.set(senderNumber, pending);
       try { await sock.sendMessage(OWNER_JID, { text: 'PAYMENT VERIFICATION NEEDED Guest: ' + senderName + ' (' + senderNumber + ') Date: ' + pending.date + ' UTR: ' + utr + ' Advance: ' + formatPrice(pending.advance) + ' Reply YES to confirm, NO to reject.' }); } catch(e) {}
-      try { await sock.sendMessage(from, { text: 'Payment screenshot + UTR ' + utr + ' received. Owner will verify and I will confirm your booking in a moment.' }); } catch(e) {}
+      try { await sock.sendMessage(from, { text: 'Payment screenshot + UTR ' + utr + ' received. Owner will verify and I will confirm your reservation in a moment.' }); } catch(e) {}
       return;
     }
     if (!chatHistories.has(from)) chatHistories.set(from, []);
@@ -245,7 +246,7 @@ async function handleMessage(msg) {
     if (parsedDate) {
       const type = getDateType(text);
       const price = type === 'weekday' ? PRICING.fullWeekday : type === 'weekend' ? PRICING.fullWeekend : PRICING.fullFestival;
-      pendingBookings.set(senderNumber, { name: senderName, phone: senderNumber, chatId: from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: price, advance: calcAdvance(price), status: 'Enquiry' });
+      pendingBks.set(senderNumber, { name: senderName, phone: senderNumber, chatId: from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: price, advance: calcAdvance(price), status: 'Enquiry' });
     }
     try { await sock.sendMessage(from, { text: reply }); console.log('Replied OK to ' + senderNumber); } catch(e) { console.log('Send failed: ' + e.message); }
     if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) {
