@@ -1,7 +1,6 @@
-const 【entity-express¦canonical_name=express】 = require('【entity-express¦canonical_name=express】');
+const 【entity-express¦canonical_name=express】 = require("【entity-express¦canonical_name=express】");
 const app = 【entity-express¦canonical_name=express】();
 app.use(【entity-express¦canonical_name=express】.json());
-
 const CONFIG = {
   FORM_URL: process.env.FORM_URL || "https://www.meta.ai/share/a/b70443aa-2c84-4d7c-bd75-33bae9dbe5d0",
   OWNER_PHONE: "918943666911",
@@ -10,25 +9,23 @@ const CONFIG = {
   VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN || "pachapp-verify",
   GROUP_AI_SILENT: true
 };
-
 const PORT = process.env.PORT || 10000;
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || "";
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN || "";
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || "";
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
-
 function isFormUrlSet() {
   return CONFIG.FORM_URL && CONFIG.FORM_URL.indexOf("PASTE_YOUR") === -1 && CONFIG.FORM_URL.indexOf("http") === 0;
 }
 function formLink() {
-  if (isFormUrlSet()) { return CONFIG.FORM_URL; }
+  if (isFormUrlSet()) {
+    return CONFIG.FORM_URL;
+  }
   return "";
 }
-
 const sessions = new Map();
 const groupPaused = new Map();
-
 function getSession(phone) {
   if (!sessions.has(phone)) {
     sessions.set(phone, { asked: {}, lastDates: "", greeted: false, formSent: false, qaMode: false, details: null, guestName: "" });
@@ -49,7 +46,6 @@ function isOwner(phone) {
 function formatPrice(n) {
   return "Rs." + Number(n || 0).toLocaleString("en-IN");
 }
-
 function calcTotal(o) {
   let n = Math.max(1, Math.min(7, o.nights || 1));
   let isFull = o.bookingType === "Full Villa";
@@ -65,7 +61,9 @@ function calcTotal(o) {
   let extraTotal = extraCount * 800 * n;
   let kidsHalfTotal = (o.kidsHalf || 0) * 400 * n;
   let breakfastTotal = 0;
-  if (!isFull) { breakfastTotal = (o.breakfastCount || 0) * 100; }
+  if (!isFull) {
+    breakfastTotal = (o.breakfastCount || 0) * 100;
+  }
   let grandTotal = roomTotal + extraTotal + kidsHalfTotal + breakfastTotal;
   let advance = 0;
   if (!isFull && (o.rooms || 1) === 1 && n === 1 && (o.adults || 0) <= 2 && (o.kidsHalf || 0) === 0) {
@@ -77,7 +75,6 @@ function calcTotal(o) {
   }
   return { perNightRate: perNightRate, roomTotal: roomTotal, extraCount: extraCount, extraTotal: extraTotal, kidsHalfTotal: kidsHalfTotal, breakfastTotal: breakfastTotal, grandTotal: grandTotal, advance: advance, nights: n };
 }
-
 function parseDetails(text) {
   const lower = text.toLowerCase();
   let adults = null;
@@ -86,48 +83,92 @@ function parseDetails(text) {
   let breakfast = null;
   let dateText = "";
   let guestName = "";
-  const nameMatch = text.match(/(?:i am|my name is|this is|i'm)\s+([A-Za-z ]{2,30})/i);
+  const nameMatch = text.match(/(?:i am|my name is|this is)\s+([A-Za-z ]{2,30})/i);
   if (nameMatch) {
     guestName = nameMatch[1].trim().split(" ").slice(0, 2).join(" ");
   }
-  if (lower.indexOf("couple") !== -1) { adults = 2; }
-  if (lower.indexOf("2 couple") !== -1 || lower.indexOf("two couple") !== -1) { adults = 4; }
-  if (lower.indexOf("3 couple") !== -1) { adults = 6; }
+  if (lower.indexOf("couple") !== -1) {
+    adults = 2;
+  }
+  if (lower.indexOf("2 couple") !== -1 || lower.indexOf("two couple") !== -1) {
+    adults = 4;
+  }
+  if (lower.indexOf("3 couple") !== -1) {
+    adults = 6;
+  }
   const adultsMatch = lower.match(/(\d+)\s*adult/);
-  if (adultsMatch) { adults = parseInt(adultsMatch[1]); }
+  if (adultsMatch) {
+    adults = parseInt(adultsMatch[1]);
+  }
   const peopleMatch = lower.match(/(\d+)\s*(people|person|guest|pax)/);
-  if (peopleMatch && adults === null) { adults = parseInt(peopleMatch[1]); }
+  if (peopleMatch && adults === null) {
+    adults = parseInt(peopleMatch[1]);
+  }
   const roomsMatch = lower.match(/(\d+)\s*room/);
-  if (roomsMatch) { rooms = parseInt(roomsMatch[1]); }
-  if (lower.indexOf("no kid") !== -1 || lower.indexOf("without kid") !== -1 || lower.indexOf("0 kid") !== -1) { kids = 0; }
-  if (lower.indexOf("no breakfast") !== -1 || lower.indexOf("without breakfast") !== -1 || lower.indexOf("no food") !== -1) { breakfast = 0; }
-  if (lower.indexOf("with breakfast") !== -1 || lower.indexOf("need breakfast") !== -1) { breakfast = 1; }
+  if (roomsMatch) {
+    rooms = parseInt(roomsMatch[1]);
+  }
+  if (lower.indexOf("no kid") !== -1 || lower.indexOf("without kid") !== -1 || lower.indexOf("0 kid") !== -1) {
+    kids = 0;
+  }
+  if (lower.indexOf("no breakfast") !== -1 || lower.indexOf("without breakfast") !== -1 || lower.indexOf("no food") !== -1) {
+    breakfast = 0;
+  }
+  if (lower.indexOf("with breakfast") !== -1 || lower.indexOf("need breakfast") !== -1) {
+    breakfast = 1;
+  }
   const decMatch = lower.match(/dec(?:ember)?\s*(\d{1,2})/) || lower.match(/(\d{1,2})(?:st|nd|rd|th)?\s*dec/);
-  if (decMatch) { dateText = "Dec " + decMatch[1]; }
+  if (decMatch) {
+    dateText = "Dec " + decMatch[1];
+  }
   const janMatch = lower.match(/jan(?:uary)?\s*(\d{1,2})/) || lower.match(/(\d{1,2})(?:st|nd|rd|th)?\s*jan/);
-  if (janMatch) { dateText = "Jan " + janMatch[1]; }
-  if (lower.indexOf("tomorrow") !== -1) { dateText = "Tomorrow"; }
-  if (lower.indexOf("today") !== -1) { dateText = "Today"; }
+  if (janMatch) {
+    dateText = "Jan " + janMatch[1];
+  }
+  if (lower.indexOf("tomorrow") !== -1) {
+    dateText = "Tomorrow";
+  }
+  if (lower.indexOf("today") !== -1) {
+    dateText = "Today";
+  }
   let hasDetails = false;
-  if (dateText !== "" && (adults !== null || rooms !== null)) { hasDetails = true; }
-  if (adults !== null && rooms !== null) { hasDetails = true; }
-  if (dateText !== "" && lower.indexOf("book") !== -1) { hasDetails = true; }
-  if (guestName !== "") { hasDetails = true; }
+  if (dateText !== "" && (adults !== null || rooms !== null)) {
+    hasDetails = true;
+  }
+  if (adults !== null && rooms !== null) {
+    hasDetails = true;
+  }
+  if (dateText !== "" && lower.indexOf("book") !== -1) {
+    hasDetails = true;
+  }
+  if (guestName !== "") {
+    hasDetails = true;
+  }
   return { hasDetails: hasDetails, adults: adults, rooms: rooms, kids: kids, breakfast: breakfast, dateText: dateText, guestName: guestName };
 }
-
 function detailsSummary(d) {
   let parts = [];
-  if (d.dateText) { parts.push(d.dateText); }
-  if (d.adults !== null && d.adults !== undefined) {
-    if (d.adults === 2) { parts.push("1 couple (2 adults)"); } else { parts.push(d.adults + " adults"); }
+  if (d.dateText) {
+    parts.push(d.dateText);
   }
-  if (d.rooms !== null && d.rooms !== undefined) { parts.push(d.rooms + " room"); }
-  if (d.kids === 0) { parts.push("no kids"); }
-  if (d.breakfast === 0) { parts.push("no breakfast"); }
+  if (d.adults !== null && d.adults !== undefined) {
+    if (d.adults === 2) {
+      parts.push("1 couple (2 adults)");
+    } else {
+      parts.push(d.adults + " adults");
+    }
+  }
+  if (d.rooms !== null && d.rooms !== undefined) {
+    parts.push(d.rooms + " room");
+  }
+  if (d.kids === 0) {
+    parts.push("no kids");
+  }
+  if (d.breakfast === 0) {
+    parts.push("no breakfast");
+  }
   return parts.join(", ");
 }
-
 async function createAirtableBooking(d) {
   if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID) {
     console.log("Airtable not set");
@@ -135,7 +176,7 @@ async function createAirtableBooking(d) {
   }
   const fields = {
     "Guest Name": d.guestName || "",
-    "Phone / WhatsApp": d.phone || "",
+    "Phone / 【entity-WhatsApp¦canonical_name=WhatsApp】": d.phone || "",
     "Booking Type": d.bookingType || "Full Villa",
     "Check-in": d.checkIn || "",
     "Check-out": d.checkOut || "",
@@ -171,7 +212,6 @@ async function createAirtableBooking(d) {
   }
   return out;
 }
-
 async function sendWhatsApp(to, text) {
   if (!WHATSAPP_TOKEN || !PHONE_NUMBER_ID) {
     console.log("WhatsApp not set");
@@ -189,9 +229,10 @@ async function sendWhatsApp(to, text) {
     console.log("Send failed " + e.message);
   }
 }
-
 async function askGroq(userMsg) {
-  if (!GROQ_API_KEY) { return null; }
+  if (!GROQ_API_KEY) {
+    return null;
+  }
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -215,14 +256,14 @@ async function askGroq(userMsg) {
     return null;
   }
 }
-
 app.get("/", function(req, res) { res.send("Pachapp AI is running"); });
 app.get("/health", function(req, res) { res.json({ ok: true, formSet: isFormUrlSet(), form: isFormUrlSet() ? CONFIG.FORM_URL : "NOT SET", airtable: CONFIG.AIRTABLE_TABLE }); });
 app.get("/booking", function(req, res) {
-  if (isFormUrlSet()) { return res.redirect(CONFIG.FORM_URL); }
+  if (isFormUrlSet()) {
+    return res.redirect(CONFIG.FORM_URL);
+  }
   return res.send("Booking form link is being updated. Please message owner on +91 89436 66911 for the latest form.");
 });
-
 app.post("/booking", async function(req, res) {
   try {
     const b = req.body || {};
@@ -252,8 +293,12 @@ app.post("/booking", async function(req, res) {
       utr: b.utr || "",
       notes: b.notes || ""
     };
-    if (!data.guestName.trim()) { return res.status(400).json({ ok: false, error: "Please enter the guest name." }); }
-    if (!data.phone.trim()) { return res.status(400).json({ ok: false, error: "Please enter phone." }); }
+    if (!data.guestName.trim()) {
+      return res.status(400).json({ ok: false, error: "Please enter the guest name." });
+    }
+    if (!data.phone.trim()) {
+      return res.status(400).json({ ok: false, error: "Please enter phone." });
+    }
     const airtable = await createAirtableBooking(data);
     return res.json({ ok: true, status: data.utr ? "Confirmed" : "Pending - Waiting for Advance", grandTotal: data.grandTotal, advance: data.advanceToPay, airtable: !!airtable });
   } catch (e) {
@@ -261,15 +306,15 @@ app.post("/booking", async function(req, res) {
     return res.status(500).json({ ok: false, error: "Could not save booking" });
   }
 });
-
 app.get("/webhook", function(req, res) {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-  if (mode === "subscribe" && token === CONFIG.VERIFY_TOKEN) { return res.status(200).send(challenge); }
+  if (mode === "subscribe" && token === CONFIG.VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  }
   return res.sendStatus(403);
 });
-
 app.post("/webhook", async function(req, res) {
   res.sendStatus(200);
   try {
@@ -278,15 +323,22 @@ app.post("/webhook", async function(req, res) {
     let change = entry && entry.changes && entry.changes[0];
     let value = change && change.value;
     let msg = value && value.messages && value.messages[0];
-    if (!msg || msg.type !== "text") { return; }
+    if (!msg || msg.type !== "text") {
+      return;
+    }
     const from = msg.from;
     const text = (msg.text && msg.text.body || "").trim();
     const lower = text.toLowerCase();
-
     let isGroupMsg = false;
-    if (msg.context && msg.context.group_id) { isGroupMsg = true; }
-    if (isGroupMsg && CONFIG.GROUP_AI_SILENT && !isOwner(from)) { return; }
-    if (groupPaused.get(from) === true && !isOwner(from)) { return; }
+    if (msg.context && msg.context.group_id) {
+      isGroupMsg = true;
+    }
+    if (isGroupMsg && CONFIG.GROUP_AI_SILENT && !isOwner(from)) {
+      return;
+    }
+    if (groupPaused.get(from) === true && !isOwner(from)) {
+      return;
+    }
     if (lower === "pause ai" && isOwner(from)) {
       groupPaused.set(from, true);
       await sendWhatsApp(from, "AI paused. I will stay silent. Send RESUME AI to start again.");
@@ -297,38 +349,41 @@ app.post("/webhook", async function(req, res) {
       await sendWhatsApp(from, "AI resumed. Welcome back.");
       return;
     }
-
     let s = getSession(from);
-
     if (lower.indexOf("i am the owner") !== -1 || lower.indexOf("i am owner") !== -1 || lower.indexOf("owner testing") !== -1 || lower.indexOf("testing the ai") !== -1) {
       s = resetSession(from);
       await sendWhatsApp(from, "Okay owner, testing mode - I have reset everything, fresh start.\n\nHere is the beautiful form again to check:\n\n" + formLink() + "\n\nTell me what you want to test - for example Dec 1, 1 couple, 1 room - and I will calculate it for you. Or just say - give me the booking form.");
       return;
     }
-
     if ((lower.indexOf("ask") !== -1 && lower.indexOf("question") !== -1) || lower.indexOf("so many question") !== -1 || lower.indexOf("just asking") !== -1 || lower.indexOf("not book") !== -1 || lower.indexOf("only asking") !== -1 || lower.indexOf("just want to know") !== -1) {
       s.qaMode = true;
       await sendWhatsApp(from, "Of course, please ask me anything, I am here for you. No need to fill the form until you are ready, take your time.\n\nYou can ask me about price, rooms, dates, pool, breakfast, check-in, photos, Wayanad places, anything. What would you like to know first?");
       return;
     }
-
-    if (lower.indexOf("form") !== -1 || lower.indexOf("booking form") !== -1 || lower.indexOf("form please") !== -1 || lower.indexOf("send form") !== -1 || lower.indexOf("give form") !== -1) {
+    if (lower.indexOf("form") !== -1) {
       s.qaMode = false;
       let sum = "";
-      if (s.details) { sum = "I have your details - " + detailsSummary(s.details) + ". "; }
+      if (s.details) {
+        sum = "I have your details - " + detailsSummary(s.details) + ". ";
+      }
       let namePart = "Hi, ";
-      if (s.guestName) { namePart = "Hi " + s.guestName + ", "; }
+      if (s.guestName) {
+        namePart = "Hi " + s.guestName + ", ";
+      }
       await sendWhatsApp(from, namePart + "here you go - " + sum + "this is the Pachapp Pool Villa booking form. You can edit it right on the form itself - change dates, adults, rooms, it will calculate the total for you. Please fill it when you are ready.\n\n" + formLink() + "\n\nPachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included. Welcome!");
       s.formSent = true;
       return;
     }
-
     let isBookingIntent = lower.indexOf("book now") !== -1 || lower.indexOf("want book") !== -1 || lower.indexOf("want to book") !== -1 || lower.indexOf("pay and book") !== -1 || lower.indexOf("book straight") !== -1 || lower.indexOf("can book") !== -1 || lower.indexOf("book your room") !== -1 || lower.indexOf("i want book") !== -1 || lower.indexOf("book room") !== -1 || lower.indexOf("book it") !== -1 || lower.indexOf("book for") !== -1 || lower.indexOf("i want to book") !== -1 || lower.indexOf("book my") !== -1 || lower.indexOf("confirm my booking") !== -1;
     if (isBookingIntent) {
       s.qaMode = false;
-      if (text.length > 5) { s.lastDates = text; }
+      if (text.length > 5) {
+        s.lastDates = text;
+      }
       let sum = "";
-      if (s.details) { sum = "Got it - " + detailsSummary(s.details) + ". "; }
+      if (s.details) {
+        sum = "Got it - " + detailsSummary(s.details) + ". ";
+      }
       if (s.details && s.details.adults !== null) {
         const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: s.details.adults, kidsHalf: 0, rooms: s.details.rooms || 1, breakfastCount: 0 });
         await sendWhatsApp(from, "Welcome back, so lovely that you have been here before. Yes, you can book straight away, no need to wait. " + sum + "For 1 night, Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + ". Here is the form to confirm - you can edit it on the form itself:\n\n" + formLink() + "\n\nIf you want a different date or more rooms, just tell me, I will recalculate.");
@@ -339,25 +394,29 @@ app.post("/webhook", async function(req, res) {
       s.formSent = true;
       return;
     }
-
     const parsed = parseDetails(text);
-    if (parsed.guestName) { s.guestName = parsed.guestName; }
+    if (parsed.guestName) {
+      s.guestName = parsed.guestName;
+    }
     if (parsed.hasDetails) {
       if (parsed.adults !== null || parsed.rooms !== null || parsed.dateText) {
         let old = s.details || {};
         s.details = { adults: parsed.adults !== null ? parsed.adults : old.adults, rooms: parsed.rooms !== null ? parsed.rooms : old.rooms, kids: parsed.kids !== null ? parsed.kids : old.kids, breakfast: parsed.breakfast !== null ? parsed.breakfast : old.breakfast, dateText: parsed.dateText || old.dateText || "" };
       }
-      if (parsed.dateText) { s.lastDates = parsed.dateText; }
+      if (parsed.dateText) {
+        s.lastDates = parsed.dateText;
+      }
       let adults = (s.details && s.details.adults) || 2;
       let rooms = (s.details && s.details.rooms) || 1;
       const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: adults, kidsHalf: 0, rooms: rooms, breakfastCount: 0 });
       let sum = detailsSummary(s.details);
       let namePart = "Perfect, ";
-      if (s.guestName) { namePart = "Thanks " + s.guestName + ", "; }
+      if (s.guestName) {
+        namePart = "Thanks " + s.guestName + ", ";
+      }
       await sendWhatsApp(from, namePart + "got it - " + sum + ".\n\nFor 1 night: Total " + formatPrice(c.grandTotal) + ", Advance " + formatPrice(c.advance) + " (1 room, 1 night, 2 adults, no kids, no breakfast - if that is your plan).\n\nShall I share the booking form to confirm? Just say - give me the booking form, or Book Now - and I will send it right away.");
       return;
     }
-
     if (lower.indexOf("given my details") !== -1 || lower.indexOf("given details") !== -1 || lower.indexOf("i have given") !== -1 || lower.indexOf("i gave") !== -1 || lower.indexOf("already told") !== -1) {
       if (s.details) {
         const c = calcTotal({ bookingType: "Rooms", nights: 1, adults: s.details.adults || 2, kidsHalf: 0, rooms: s.details.rooms || 1, breakfastCount: 0 });
@@ -368,22 +427,18 @@ app.post("/webhook", async function(req, res) {
       await sendWhatsApp(from, "Thanks so much, I noted it. Can you tell me once again - date, how many adults, how many rooms? For example: Dec 1, 1 couple, 1 room, no kids, no breakfast. I will remember it this time and calculate for you.");
       return;
     }
-
     if (lower.indexOf("qr") !== -1 || lower.indexOf("pay") !== -1 || lower.indexOf("upi") !== -1 || lower.indexOf("advance") !== -1 || lower.indexOf("payment") !== -1 || lower.indexOf("utr") !== -1) {
       await sendWhatsApp(from, "To pay, please open the booking form and tap Pay Advance. The original QR code is inside the form - 【entity-PhonePe¦canonical_name=PhonePe】, UDAYABHANU RAMACHANDRAN. Pay the advance, enter your UTR, then tap I Have Paid - Confirm My Booking.\n\nWithout UTR, your booking stays as Pending - Waiting for Advance. With UTR, it becomes Confirmed.\n\nHere is the form again:\n\n" + formLink());
       return;
     }
-
     if (lower.indexOf("photo") !== -1 || lower.indexOf("pic") !== -1 || lower.indexOf("image") !== -1 || lower.indexOf("video") !== -1) {
       await sendWhatsApp(from, "Of course, I would love to show you. Photos and videos are in the booking form and on our page.\n\nTell me which view you want - pool view, room inside, full villa, or Wayanad surroundings - and I will share that one. Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.");
       return;
     }
-
     if (lower.indexOf("price") !== -1 || lower.indexOf("rate") !== -1 || lower.indexOf("cost") !== -1 || lower.indexOf("how much") !== -1 || lower.indexOf("charge") !== -1 || lower.indexOf("tariff") !== -1) {
       await sendWhatsApp(from, "Sure, happy to explain clearly:\n\nFull Villa - Weekday " + formatPrice(6400) + " / night, Weekend Fri Sat Sun " + formatPrice(8000) + " / night\nRooms - " + formatPrice(1600) + " per room per night\nExtra Adult - " + formatPrice(800) + " per night (above 8 adults)\nKids 0-6 Free, Kids 6-12 Half Price " + formatPrice(400) + " per kid per night\nBreakfast - Full Villa Free, Rooms " + formatPrice(100) + " each\nDolby Atmos included. Live music only when owner is at the villa.\n\nTell me your dates and guests, I will calculate your exact total. No need to fill the form yet.");
       return;
     }
-
     if (lower.indexOf("room") !== -1 || lower.indexOf("villa") !== -1 || lower.indexOf("pool") !== -1 || lower.indexOf("how many") !== -1 || lower.indexOf("capacity") !== -1 || lower.indexOf("people") !== -1) {
       if (s.details) {
         await sendWhatsApp(from, "You already shared - " + detailsSummary(s.details) + ". I remember. Do you want me to share the form to confirm that? Just say - give me the booking form.");
@@ -392,34 +447,31 @@ app.post("/webhook", async function(req, res) {
       await sendWhatsApp(from, "Pachapp Pool Villa has 4 rooms in the whole villa, with a private pool. You can book Full Villa (whole villa) or Rooms (1 to 4 rooms). Dolby Atmos included, so evenings are beautiful here.\n\nTell me how many adults, kids, and dates you have, I will tell you how many rooms you need and your total. For example: Dec 1, 1 couple, 1 room, no kids, no breakfast.");
       return;
     }
-
     if (lower.indexOf("breakfast") !== -1 || lower.indexOf("food") !== -1 || lower.indexOf("meal") !== -1 || lower.indexOf("eat") !== -1) {
       await sendWhatsApp(from, "Breakfast is Free for Full Villa. For Rooms, it is " + formatPrice(100) + " each. It is simple, fresh, Kerala style.\n\nTell me if you want breakfast and for how many people, I will add it to your total for you.");
       return;
     }
-
     if (lower.indexOf("check") !== -1 || lower.indexOf("time") !== -1 || lower.indexOf("arrive") !== -1) {
       await sendWhatsApp(from, "Check-in / Check-out times are shown in the booking form, so you can see them clearly there.\n\nTell me your dates and I will check availability for you. What dates are you thinking of?");
       return;
     }
-
     if (lower.indexOf("available") !== -1 || lower.indexOf("dec") !== -1 || lower.indexOf("jan") !== -1 || lower.indexOf("feb") !== -1 || lower.indexOf("date") !== -1 || lower.indexOf("december") !== -1 || lower.indexOf("january") !== -1) {
       if (s.lastDates && s.asked && s.asked.dates) {
         await sendWhatsApp(from, "You already shared " + s.lastDates + ". I remember it, I will not ask again. Do you want me to calculate total for those dates? Just tell me how many adults and kids.");
         return;
       }
-      if (!s.asked) { s.asked = {}; }
+      if (!s.asked) {
+        s.asked = {};
+      }
       s.asked.dates = true;
       s.lastDates = text;
       await sendWhatsApp(from, "Thanks for sharing your dates - " + text + ". I have noted it, thank you.\n\nNow tell me how many adults and kids, and I will calculate your total for you right away.");
       return;
     }
-
     if (lower.indexOf("music") !== -1 || lower.indexOf("dj") !== -1 || lower.indexOf("live") !== -1) {
       await sendWhatsApp(from, "Live music is only when the owner is at the villa - it is a special, intimate evening then. Dolby Atmos is always included, so music and movies sound beautiful here.\n\nWhat else would you like to know?");
       return;
     }
-
     if (lower === "hi" || lower === "hello" || lower === "hey" || lower === "hii" || lower.indexOf("hi ") === 0 || lower.indexOf("hello ") === 0) {
       if (!s.greeted) {
         s.greeted = true;
@@ -430,7 +482,6 @@ app.post("/webhook", async function(req, res) {
         return;
       }
     }
-
     if (!s.greeted) {
       s.greeted = true;
       await sendWhatsApp(from, "Hi, welcome to Pachapp Pool Villa, Lucky Hill, Meppadi, Wayanad. Dolby Atmos included.\n\nYou can ask me anything - price, rooms, dates, photos, Wayanad places. Or say Book Now when you are ready. What would you like to know?");
@@ -448,5 +499,4 @@ app.post("/webhook", async function(req, res) {
     console.log("Webhook error " + e.message);
   }
 });
-
 app.listen(PORT, function() { console.log("Pachapp AI running on " + PORT); });
