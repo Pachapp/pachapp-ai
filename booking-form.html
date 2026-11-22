@@ -23,9 +23,10 @@ textarea{min-height:70px;resize:vertical}
 .tick{position:absolute;top:6px;right:8px;background:#22c55e;color:#fff;width:22px;height:22px;border-radius:50%;font-size:14px;line-height:22px;display:none}
 .stay-card.sel .tick{display:block}
 .arrows{width:30px;height:30px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto}
-.rooms-box{background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
-.rooms-box label{color:#222}
-.rooms-box input{background:#fff;color:#000;border-color:#9ccc9c}
+.rooms-box{background:#000;color:#fff;border:1px solid #222;border-radius:14px;padding:14px}
+.rooms-box label{color:#fff}
+.rooms-box select{background:#2563eb;color:#fff;border:1px solid #1d4ed8;border-radius:10px;padding:12px;font-size:15px;font-weight:700;width:100%;appearance:none}
+.rooms-box .hint{font-size:12px;color:#aaa}
 .breakfast-box{background:#1f7a1f;border-radius:12px;padding:12px}
 .breakfast-box label{color:#fff}
 .breakfast-box select{background:#000;color:#fff}
@@ -64,10 +65,12 @@ textarea{min-height:70px;resize:vertical}
 </div>
 </div>
 <div class="card rooms-box">
-<label>Rooms - auto from Adults</label><input id="rooms" type="number" min="1" max="4" value="1" readonly>
-<div style="font-size:12px;color:#333">Rooms = ceil(Adults / 2), max 4. Kids do not change Rooms.</div>
-<label>Adults</label><input id="adults" type="number" min="1" max="20" value="2">
-<div class="row"><div><label>Kids 0-6 FREE</label><input id="kids06" type="number" min="0" value="0"></div><div><label>Kids 6-12 Rs.400</label><input id="kids612" type="number" min="0" value="0"></div></div>
+<label>Rooms - auto from Adults</label>
+<select id="rooms" disabled><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+<div class="hint">Rooms = ceil(Adults / 2), max 4. Kids do not change Rooms.</div>
+<label>Adults</label>
+<select id="adults"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+<div class="row"><div><label>Kids 0-6 FREE</label><select id="kids06"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div><div><label>Kids 6-12 Rs.400</label><select id="kids612"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div></div>
 </div>
 <div class="card breakfast-box"><label>Breakfast? Rooms Rs.100/head/night, Full Villa FREE</label><select id="breakfast"><option value="no">No</option><option value="yes">Yes</option></select></div>
 <div class="card"><label>Notes</label><textarea id="notes" placeholder="Any special request? e.g. early check-in, extra mattress, cake..."></textarea></div>
@@ -87,7 +90,7 @@ textarea{min-height:70px;resize:vertical}
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
 <button class="btn btn-wa" onclick="sendWA()">Send Booking on WhatsApp</button>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v5 - Exact Saved - Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v6 - Rooms black + blue dropdowns - Pachapp Bookings Form</div>
 </div>
 <script>
 var curStay='Rooms';var payOn=false;
@@ -109,7 +112,7 @@ document.getElementById('checkout').textContent=co;
 var perFull=6400,dayType='Weekday';
 if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
 var rooms=Math.min(4,Math.max(1,Math.ceil(adults/2)));
-document.getElementById('rooms').value=rooms;
+document.getElementById('rooms').value=String(rooms);
 var included=stay==='Full Villa'?8:rooms*2;
 var extraAdults=Math.max(0,adults-included);
 var roomTotal=(stay==='Full Villa'?perFull:rooms*1600)*nights;
@@ -134,7 +137,7 @@ document.getElementById('statusVal').textContent=utr?'Confirmed':'Pending';
 var notes=document.getElementById('notes').value.trim();
 document.getElementById('notesInTotal').style.display=notes?'block':'none';
 document.getElementById('notesVal').textContent=notes;
-return {total:total,adv:adv,co:coISO,coShow:co};
+return {total:total,adv:adv,co:coISO};
 }
 document.querySelectorAll('input,select,textarea').forEach(function(el){el.addEventListener('input',calc);el.addEventListener('change',calc)});
 document.getElementById('checkin').value=new Date().toISOString().slice(0,10);
