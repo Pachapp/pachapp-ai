@@ -84,7 +84,7 @@ textarea{min-height:70px;resize:vertical}
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
 <button class="btn btn-wa" onclick="sendWA()">Send Booking on WhatsApp</button>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v3 - Stay cards - Saved as Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v4 - Rooms fix - Saved as Pachapp Bookings Form</div>
 </div>
 <script>
 var curStay='Rooms';
@@ -103,7 +103,7 @@ if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=o.toISOString().slice(
 document.getElementById('checkout').textContent=co;
 var perFull=6400,dayType='Weekday';
 if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
-var rooms=stay==='Full Villa'?4:Math.min(4,Math.max(1,Math.ceil(adults/2)));
+var rooms=Math.min(4,Math.max(1,Math.ceil(adults/2)));
 document.getElementById('rooms').value=rooms;
 var included=stay==='Full Villa'?8:rooms*2;
 var extraAdults=Math.max(0,adults-included);
