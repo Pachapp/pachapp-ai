@@ -31,8 +31,11 @@ textarea{min-height:70px;resize:vertical}
 .breakfast-box select{background:#000;color:#fff}
 .red-bold{color:#ff4d4d;font-weight:800}
 .checkout{color:#ff4d4d;font-weight:800;font-size:18px}
-.switch{display:flex;align-items:center;justify-content:space-between;background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
-.switch input{width:52px;height:28px;accent-color:#22c55e}
+.switch-row{display:flex;align-items:center;justify-content:space-between;background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
+.switch{position:relative;width:58px;height:30px;background:#bbb;border-radius:20px;cursor:pointer;flex-shrink:0}
+.switch.on{background:#22c55e}
+.knob{position:absolute;top:3px;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;transition:.2s}
+.switch.on .knob{left:31px}
 .grand{display:none;background:#fff;color:#000;border-radius:6px;padding:16px;margin-top:12px;border:2px solid #fff}
 .grand.show{display:block}
 .line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #ddd;font-size:15px}
@@ -68,7 +71,7 @@ textarea{min-height:70px;resize:vertical}
 </div>
 <div class="card breakfast-box"><label>Breakfast? Rooms Rs.100/head/night, Full Villa FREE</label><select id="breakfast"><option value="no">No</option><option value="yes">Yes</option></select></div>
 <div class="card"><label>Notes</label><textarea id="notes" placeholder="Any special request? e.g. early check-in, extra mattress, cake..."></textarea></div>
-<div class="card switch"><span><b>Pay Advance</b><br><span style="font-size:12px">Show Grand Total</span></span><input id="pay" type="checkbox"></div>
+<div class="card switch-row"><span><b>Pay Advance</b><br><span style="font-size:12px">Show Grand Total</span></span><div id="paySwitch" class="switch" onclick="togglePay()"><div class="knob"></div></div></div>
 <div id="grand" class="grand">
 <h3>Grand Total</h3>
 <div class="line"><span id="roomLabel">Room</span><span id="roomVal">Rs.0</span></div>
@@ -84,12 +87,14 @@ textarea{min-height:70px;resize:vertical}
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
 <button class="btn btn-wa" onclick="sendWA()">Send Booking on WhatsApp</button>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v4 - Rooms fix - Saved as Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v5 - Exact Saved - Pachapp Bookings Form</div>
 </div>
 <script>
-var curStay='Rooms';
+var curStay='Rooms';var payOn=false;
 function setStay(s){curStay=s;document.getElementById('stayFull').classList.toggle('sel',s==='Full Villa');document.getElementById('stayRooms').classList.toggle('sel',s==='Rooms');calc();}
+function togglePay(){payOn=!payOn;document.getElementById('paySwitch').classList.toggle('on',payOn);document.getElementById('grand').classList.toggle('show',payOn);calc();}
 function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN')}
+function fmtDate(d){var dd=String(d.getDate()).padStart(2,'0');var mm=String(d.getMonth()+1).padStart(2,'0');return dd+'/'+mm+'/'+d.getFullYear();}
 function calc(){
 var ci=document.getElementById('checkin').value;
 var nights=Math.min(7,Math.max(1,parseInt(document.getElementById('nights').value)||1));
@@ -98,8 +103,8 @@ var stay=curStay;
 var adults=parseInt(document.getElementById('adults').value)||0;
 var k612=parseInt(document.getElementById('kids612').value)||0;
 var bf=document.getElementById('breakfast').value==='yes';
-var d=new Date(ci);var co='—';
-if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=o.toISOString().slice(0,10)}
+var d=new Date(ci);var co='—';var coISO='';
+if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=fmtDate(o);coISO=o.toISOString().slice(0,10)}
 document.getElementById('checkout').textContent=co;
 var perFull=6400,dayType='Weekday';
 if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
@@ -129,10 +134,9 @@ document.getElementById('statusVal').textContent=utr?'Confirmed':'Pending';
 var notes=document.getElementById('notes').value.trim();
 document.getElementById('notesInTotal').style.display=notes?'block':'none';
 document.getElementById('notesVal').textContent=notes;
-return {total:total,adv:adv,co:co};
+return {total:total,adv:adv,co:coISO,coShow:co};
 }
 document.querySelectorAll('input,select,textarea').forEach(function(el){el.addEventListener('input',calc);el.addEventListener('change',calc)});
-document.getElementById('pay').addEventListener('change',function(){document.getElementById('grand').classList.toggle('show',this.checked);calc()});
 document.getElementById('checkin').value=new Date().toISOString().slice(0,10);
 calc();
 function sendWA(){
