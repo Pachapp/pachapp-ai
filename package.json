@@ -5,10 +5,6 @@
   "scripts": {
     "start": "node pachapp-ai-cloud.js"
   },
-  "dependencies": {
-    "groq-sdk": "0.9.0",
-    "airtable": "0.12.2"
-  },
   "engines": {
     "node": "20.x"
   }
