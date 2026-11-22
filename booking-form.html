@@ -15,7 +15,6 @@ label{display:block;font-size:13px;color:#ccc;margin:10px 0 5px}
 input,select,textarea{width:100%;background:#1c1c1c;color:#fff;border:1px solid #333;border-radius:10px;padding:11px;font-size:15px}
 textarea{min-height:70px;resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* Nights stepper - big for mobile */
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{width:52px;height:52px;min-width:52px;background:#2563eb;color:#fff;border:0;border-radius:12px;font-size:26px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .stepper input{height:52px;text-align:center;font-size:20px;font-weight:800;background:#1c1c1c;color:#fff}
@@ -50,10 +49,11 @@ textarea{min-height:70px;resize:vertical}
 .total{font-size:22px;font-weight:800}
 .qr-box{background:#fff;border-radius:12px;padding:12px;text-align:center;margin-top:12px}
 .qr-box img{width:100%;max-width:320px;height:auto;display:block;margin:0 auto}
-.btn{width:100%;background:#22c55e;color:#000;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:800;margin-top:12px;cursor:pointer}
 .small{font-size:12px;color:#aaa;text-align:center;margin-top:8px}
 .status{font-size:13px;padding:10px;border-radius:10px;background:#111;color:#fff;margin-top:10px;display:none}
 .status.show{display:block}
+.confirmed{color:#16a34a;font-weight:800}
+.pending{color:#ea580c;font-weight:800}
 </style>
 </head>
 <body>
@@ -62,7 +62,7 @@ textarea{min-height:70px;resize:vertical}
 <div class="address">Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</div>
 <div class="card">
 <label>Guest Name</label><input id="name" placeholder="Full name">
-<label>Phone - Guest WhatsApp number</label><input id="phone" placeholder="e.g. 9961917169 or 91 9961917169" inputmode="tel">
+<label>Phone</label><input id="phone" placeholder="e.g. 9961917169" inputmode="tel">
 <div class="row"><div><label>Check-in</label><input id="checkin" type="date"></div><div><label class="red-bold">Nights (1-7)</label><div class="stepper"><button type="button" onclick="stepNights(-1)">−</button><input id="nights" type="number" min="1" max="7" value="1" inputmode="numeric"><button type="button" onclick="stepNights(1)">+</button></div></div></div>
 <label class="red-bold">Check-out (auto)</label><div id="checkout" class="checkout">—</div>
 <label>Stay Type - tap to choose</label>
@@ -92,21 +92,19 @@ textarea{min-height:70px;resize:vertical}
 <div class="line total"><span>Grand Total</span><span id="totalVal">Rs.0</span></div>
 <div class="line"><span>Advance to Pay</span><span id="advVal">Rs.0</span></div>
 <div class="line"><span>Balance</span><span id="balVal">Rs.0</span></div>
-<div class="line"><span>Status</span><span id="statusVal">Pending</span></div>
+<div class="line"><span>Status</span><span id="statusVal" class="pending">Pending</span></div>
 <div id="notesInTotal" style="display:none;padding:10px 0;border-top:1px dashed #ddd;margin-top:8px"><b>Notes:</b> <span id="notesVal"></span></div>
 <label>UTR (after payment)</label><input id="utr" placeholder="Enter UTR or leave blank" style="background:#fff;color:#000">
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
-<div class="card confirm-row" style="margin-top:12px"><span><b>Booking Confirmation</b><br><span style="font-size:12px">Send to Guest WhatsApp + Pachapp Airtable</span></span><div id="confirmSwitch" class="switch" onclick="toggleConfirm()"><div class="knob"></div></div></div>
+<div class="card confirm-row" style="margin-top:12px"><span><b>Booking Confirmation</b><br><span style="font-size:12px">Old style - No WhatsApp popup, only Status + Airtable</span></span><div id="confirmSwitch" class="switch" onclick="toggleConfirm()"><div class="knob"></div></div></div>
 <div id="confirmStatus" class="status"></div>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v7 - Nights big + Rooms manual + Confirmation switch - Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v8 - Old style Confirmation - Pachapp Bookings Form</div>
 </div>
 <script>
-// ---- AIRTABLE - fill these 3 in GitHub, then redeploy ----
 var AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
 var AIRTABLE_BASE_ID = "YOUR_AIRTABLE_BASE_ID";
 var AIRTABLE_TABLE = "Bookings";
-// ----------------------------------------------------------
 var curStay='Rooms';var payOn=false;var confirmOn=false;var lastAdults=2;
 function setStay(s){curStay=s;document.getElementById('stayFull').classList.toggle('sel',s==='Full Villa');document.getElementById('stayRooms').classList.toggle('sel',s==='Rooms');calc();}
 function stepNights(d){var el=document.getElementById('nights');var v=Math.min(7,Math.max(1,(parseInt(el.value)||1)+d));el.value=v;calc();}
@@ -114,8 +112,17 @@ function togglePay(){payOn=!payOn;document.getElementById('paySwitch').classList
 function toggleConfirm(){
   confirmOn=!confirmOn;
   document.getElementById('confirmSwitch').classList.toggle('on',confirmOn);
-  if(!confirmOn){document.getElementById('confirmStatus').classList.remove('show');return;}
-  sendConfirmation();
+  var st=document.getElementById('confirmStatus');
+  if(!confirmOn){st.classList.remove('show');calc();return;}
+  var r=calc();
+  var utr=document.getElementById('utr').value.trim();
+  // OLD STYLE ONLY - no WhatsApp popup
+  if(utr){st.textContent='Booking Confirmed ✅ - UTR: '+utr;st.style.background='#dcfce7';st.style.color='#166534';}
+  else{st.textContent='Pending - Waiting for Advance / UTR. Booking NOT confirmed yet.';st.style.background='#ffedd5';st.style.color='#9a3412';}
+  st.classList.add('show');
+  calc();
+  // Airtable in background only, no popup
+  if(AIRTABLE_API_KEY!=="YOUR_AIRTABLE_API_KEY"){sendToAirtable(r);}
 }
 function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN')}
 function fmtDate(d){var dd=String(d.getDate()).padStart(2,'0');var mm=String(d.getMonth()+1).padStart(2,'0');return dd+'/'+mm+'/'+d.getFullYear();}
@@ -132,7 +139,6 @@ if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=fmtDate(o);coISO=o.toI
 document.getElementById('checkout').textContent=co;
 var perFull=6400,dayType='Weekday';
 if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
-// Rooms: auto only when Adults changed, else keep manual value
 var roomsEl=document.getElementById('rooms');
 if(adults!==lastAdults){var autoRooms=Math.min(4,Math.max(1,Math.ceil(adults/2)));roomsEl.value=String(autoRooms);lastAdults=adults;}
 var rooms=parseInt(roomsEl.value)||1;
@@ -156,35 +162,17 @@ document.getElementById('bfVal').textContent=fmt(bfTotal);
 document.getElementById('totalVal').textContent=fmt(total);
 document.getElementById('advVal').textContent=fmt(adv);
 document.getElementById('balVal').textContent=fmt(total-adv);
-document.getElementById('statusVal').textContent=utr?'Confirmed':'Pending';
+var stEl=document.getElementById('statusVal');
+stEl.textContent=utr?'Confirmed':'Pending';
+stEl.className=utr?'confirmed':'pending';
 var notes=document.getElementById('notes').value.trim();
 document.getElementById('notesInTotal').style.display=notes?'block':'none';
 document.getElementById('notesVal').textContent=notes;
-return {total:total,adv:adv,co:coISO,coShow:co,rooms:rooms,totalVal:total,dayType:dayType,nights:nights};
+return {total:total,adv:adv,co:coISO,rooms:rooms,nights:nights};
 }
-function cleanPhone(p){var d=p.replace(/\D/g,'');if(d.length===10)return '91'+d;if(d.length===12&&d.startsWith('91'))return d;if(d.length===11&&d.startsWith('0'))return '91'+d.slice(1);return d;}
-function sendConfirmation(){
-var r=calc();
-var name=document.getElementById('name').value.trim();
-var phone=document.getElementById('phone').value.trim();
-var st=document.getElementById('confirmStatus');
-if(!name||!phone){st.textContent='Please enter Guest Name and Phone first, then turn Confirmation ON again.';st.classList.add('show');confirmOn=false;document.getElementById('confirmSwitch').classList.remove('on');return;}
-var guestPhone=cleanPhone(phone);
-var msg='Pachapp Booking Confirmed ✅\nName: '+name+'\nCheck-in: '+document.getElementById('checkin').value+'\nNights: '+r.nights+'\nCheck-out: '+r.co+'\nStay: '+curStay+'\nRooms: '+r.rooms+'\nAdults: '+document.getElementById('adults').value+'\nKids 0-6: '+document.getElementById('kids06').value+'\nKids 6-12: '+document.getElementById('kids612').value+'\nBreakfast: '+document.getElementById('breakfast').value+'\nNotes: '+document.getElementById('notes').value+'\nTotal: Rs.'+r.total+'\nAdvance: Rs.'+r.adv+'\nUTR: '+document.getElementById('utr').value+'\nPachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad';
-st.textContent='Sending to Guest WhatsApp + Airtable...';
-st.classList.add('show');
-// 1. Guest WhatsApp
-window.open('https://wa.me/'+guestPhone+'?text='+encodeURIComponent(msg),'_blank');
-// 2. Airtable
-var fields={Name:name,Phone:phone,Checkin:document.getElementById('checkin').value,Checkout:r.co,Nights:r.nights,Stay:curStay,Rooms:r.rooms,Adults:parseInt(document.getElementById('adults').value)||0,Kids06:parseInt(document.getElementById('kids06').value)||0,Kids612:parseInt(document.getElementById('kids612').value)||0,Breakfast:document.getElementById('breakfast').value,Notes:document.getElementById('notes').value,Total:r.total,Advance:r.adv,UTR:document.getElementById('utr').value,Status:document.getElementById('utr').value.trim()?'Confirmed':'Pending'};
-if(AIRTABLE_API_KEY==="YOUR_AIRTABLE_API_KEY"){
-  st.textContent='【entity-WhatsApp¦canonical_name=WhatsApp】 opened for guest. Airtable not sent yet - fill AIRTABLE_API_KEY / BASE_ID / TABLE in GitHub file at top, then redeploy.';
-  return;
-}
-fetch('https://api.airtable.com/v0/'+AIRTABLE_BASE_ID+'/'+encodeURIComponent(AIRTABLE_TABLE),{method:'POST',headers:{'Authorization':'Bearer '+AIRTABLE_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})})
-.then(function(res){if(!res.ok)throw new Error('Airtable '+res.status);return res.json();})
-.then(function(){st.textContent='Done ✅ Confirmation sent to Guest WhatsApp + Pachapp Airtable.';})
-.catch(function(e){st.textContent='WhatsApp opened. Airtable failed: '+e.message+' - check API Key / Base ID / Table name.';});
+function sendToAirtable(r){
+var fields={Name:document.getElementById('name').value,Phone:document.getElementById('phone').value,Checkin:document.getElementById('checkin').value,Checkout:r.co,Nights:r.nights,Stay:curStay,Rooms:r.rooms,Adults:parseInt(document.getElementById('adults').value)||0,Kids06:parseInt(document.getElementById('kids06').value)||0,Kids612:parseInt(document.getElementById('kids612').value)||0,Breakfast:document.getElementById('breakfast').value,Notes:document.getElementById('notes').value,Total:r.total,Advance:r.adv,UTR:document.getElementById('utr').value,Status:document.getElementById('utr').value.trim()?'Confirmed':'Pending'};
+fetch('https://api.airtable.com/v0/'+AIRTABLE_BASE_ID+'/'+encodeURIComponent(AIRTABLE_TABLE),{method:'POST',headers:{'Authorization':'Bearer '+AIRTABLE_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})}).catch(function(){});
 }
 document.querySelectorAll('input,select,textarea').forEach(function(el){el.addEventListener('input',calc);el.addEventListener('change',calc)});
 document.getElementById('checkin').value=new Date().toISOString().slice(0,10);
