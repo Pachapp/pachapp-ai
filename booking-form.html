@@ -52,7 +52,6 @@ textarea{min-height:70px;resize:vertical}
 .small{font-size:12px;color:#aaa;text-align:center;margin-top:8px}
 .status{font-size:13px;padding:10px;border-radius:10px;background:#111;color:#fff;margin-top:10px;display:none}
 .status.show{display:block}
-.confirmed{color:#16a34a;font-weight:800}
 .pending{color:#ea580c;font-weight:800}
 </style>
 </head>
@@ -92,14 +91,14 @@ textarea{min-height:70px;resize:vertical}
 <div class="line total"><span>Grand Total</span><span id="totalVal">Rs.0</span></div>
 <div class="line"><span>Advance to Pay</span><span id="advVal">Rs.0</span></div>
 <div class="line"><span>Balance</span><span id="balVal">Rs.0</span></div>
-<div class="line"><span>Status</span><span id="statusVal" class="pending">Pending</span></div>
+<div class="line"><span>Status</span><span id="statusVal" class="pending">Pending - Waiting for Pachapp to verify</span></div>
 <div id="notesInTotal" style="display:none;padding:10px 0;border-top:1px dashed #ddd;margin-top:8px"><b>Notes:</b> <span id="notesVal"></span></div>
 <label>UTR (after payment)</label><input id="utr" placeholder="Enter UTR or leave blank" style="background:#fff;color:#000">
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
-<div class="card confirm-row" style="margin-top:12px"><span><b>Booking Confirmation</b><br><span style="font-size:12px">Old style - No WhatsApp popup, only Status + Airtable</span></span><div id="confirmSwitch" class="switch" onclick="toggleConfirm()"><div class="knob"></div></div></div>
+<div class="card confirm-row" style="margin-top:12px"><span><b>Send for Verification</b><br><span style="font-size:12px">Send to Pachapp - You will get Confirmed WhatsApp after Pachapp checks</span></span><div id="confirmSwitch" class="switch" onclick="toggleConfirm()"><div class="knob"></div></div></div>
 <div id="confirmStatus" class="status"></div>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v8 - Old style Confirmation - Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v9 - Guest only Pending, Owner only Confirmed - Pachapp Bookings Form</div>
 </div>
 <script>
 var AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
@@ -116,12 +115,11 @@ function toggleConfirm(){
   if(!confirmOn){st.classList.remove('show');calc();return;}
   var r=calc();
   var utr=document.getElementById('utr').value.trim();
-  // OLD STYLE ONLY - no WhatsApp popup
-  if(utr){st.textContent='Booking Confirmed ✅ - UTR: '+utr;st.style.background='#dcfce7';st.style.color='#166534';}
-  else{st.textContent='Pending - Waiting for Advance / UTR. Booking NOT confirmed yet.';st.style.background='#ffedd5';st.style.color='#9a3412';}
+  // GUEST ONLY PENDING - never Confirmed here
+  if(utr){st.textContent='Sent to Pachapp ✅ UTR received. Status: Pending - Waiting for Pachapp to verify payment. You will get Confirmed WhatsApp after Pachapp checks.';st.style.background='#ffedd5';st.style.color='#9a3412';}
+  else{st.textContent='Sent to Pachapp. Status: Pending - Waiting for Advance / UTR.';st.style.background='#ffedd5';st.style.color='#9a3412';}
   st.classList.add('show');
   calc();
-  // Airtable in background only, no popup
   if(AIRTABLE_API_KEY!=="YOUR_AIRTABLE_API_KEY"){sendToAirtable(r);}
 }
 function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN')}
@@ -153,7 +151,6 @@ var adv=0;
 if(stay==='Rooms'&&rooms===1&&nights===1&&adults<=2)adv=1600;
 else if(total<=10000)adv=2000;
 else adv=Math.round(total*0.20);
-var utr=document.getElementById('utr').value.trim();
 document.getElementById('roomLabel').textContent=stay==='Full Villa'?('Full Villa - '+dayType+' x '+nights+' Night'):('Rooms x '+rooms+' x '+nights+' Night');
 document.getElementById('roomVal').textContent=fmt(roomTotal);
 document.getElementById('extraVal').textContent=fmt(extraTotal);
@@ -163,15 +160,15 @@ document.getElementById('totalVal').textContent=fmt(total);
 document.getElementById('advVal').textContent=fmt(adv);
 document.getElementById('balVal').textContent=fmt(total-adv);
 var stEl=document.getElementById('statusVal');
-stEl.textContent=utr?'Confirmed':'Pending';
-stEl.className=utr?'confirmed':'pending';
+stEl.textContent='Pending - Waiting for Pachapp to verify';
+stEl.className='pending';
 var notes=document.getElementById('notes').value.trim();
 document.getElementById('notesInTotal').style.display=notes?'block':'none';
 document.getElementById('notesVal').textContent=notes;
 return {total:total,adv:adv,co:coISO,rooms:rooms,nights:nights};
 }
 function sendToAirtable(r){
-var fields={Name:document.getElementById('name').value,Phone:document.getElementById('phone').value,Checkin:document.getElementById('checkin').value,Checkout:r.co,Nights:r.nights,Stay:curStay,Rooms:r.rooms,Adults:parseInt(document.getElementById('adults').value)||0,Kids06:parseInt(document.getElementById('kids06').value)||0,Kids612:parseInt(document.getElementById('kids612').value)||0,Breakfast:document.getElementById('breakfast').value,Notes:document.getElementById('notes').value,Total:r.total,Advance:r.adv,UTR:document.getElementById('utr').value,Status:document.getElementById('utr').value.trim()?'Confirmed':'Pending'};
+var fields={Name:document.getElementById('name').value,Phone:document.getElementById('phone').value,Checkin:document.getElementById('checkin').value,Checkout:r.co,Nights:r.nights,Stay:curStay,Rooms:r.rooms,Adults:parseInt(document.getElementById('adults').value)||0,Kids06:parseInt(document.getElementById('kids06').value)||0,Kids612:parseInt(document.getElementById('kids612').value)||0,Breakfast:document.getElementById('breakfast').value,Notes:document.getElementById('notes').value,Total:r.total,Advance:r.adv,UTR:document.getElementById('utr').value,Status:'Pending - Waiting for Verification'};
 fetch('https://api.airtable.com/v0/'+AIRTABLE_BASE_ID+'/'+encodeURIComponent(AIRTABLE_TABLE),{method:'POST',headers:{'Authorization':'Bearer '+AIRTABLE_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})}).catch(function(){});
 }
 document.querySelectorAll('input,select,textarea').forEach(function(el){el.addEventListener('input',calc);el.addEventListener('change',calc)});
