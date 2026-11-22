@@ -15,6 +15,10 @@ label{display:block;font-size:13px;color:#ccc;margin:10px 0 5px}
 input,select,textarea{width:100%;background:#1c1c1c;color:#fff;border:1px solid #333;border-radius:10px;padding:11px;font-size:15px}
 textarea{min-height:70px;resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* Nights stepper - big for mobile */
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:52px;height:52px;min-width:52px;background:#2563eb;color:#fff;border:0;border-radius:12px;font-size:26px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.stepper input{height:52px;text-align:center;font-size:20px;font-weight:800;background:#1c1c1c;color:#fff}
 .stay-row{display:grid;grid-template-columns:1fr 30px 1fr;gap:6px;align-items:center;margin-top:8px}
 .stay-card{border-radius:12px;padding:18px 10px;text-align:center;font-weight:800;font-size:16px;cursor:pointer;border:3px solid transparent;position:relative}
 .stay-full{background:#fff;color:#000}
@@ -25,18 +29,21 @@ textarea{min-height:70px;resize:vertical}
 .arrows{width:30px;height:30px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto}
 .rooms-box{background:#000;color:#fff;border:1px solid #222;border-radius:14px;padding:14px}
 .rooms-box label{color:#fff}
-.rooms-box select{background:#2563eb;color:#fff;border:1px solid #1d4ed8;border-radius:10px;padding:12px;font-size:15px;font-weight:700;width:100%;appearance:none}
+.rooms-box select{background:#2563eb;color:#fff;border:1px solid #1d4ed8;border-radius:10px;padding:12px;font-size:15px;font-weight:700;width:100%}
 .rooms-box .hint{font-size:12px;color:#aaa}
 .breakfast-box{background:#1f7a1f;border-radius:12px;padding:12px}
 .breakfast-box label{color:#fff}
 .breakfast-box select{background:#000;color:#fff}
 .red-bold{color:#ff4d4d;font-weight:800}
 .checkout{color:#ff4d4d;font-weight:800;font-size:18px}
-.switch-row{display:flex;align-items:center;justify-content:space-between;background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
-.switch{position:relative;width:58px;height:30px;background:#bbb;border-radius:20px;cursor:pointer;flex-shrink:0}
+.switch-row{display:flex;align-items:center;justify-content:space-between;background:#d6f5d6;color:#000;border-radius:12px;padding:14px}
+.switch{position:relative;width:68px;min-width:68px;height:36px;background:#bbb;border-radius:20px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
 .switch.on{background:#22c55e}
-.knob{position:absolute;top:3px;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;transition:.2s}
-.switch.on .knob{left:31px}
+.knob{position:absolute;top:3px;left:3px;width:30px;height:30px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.switch.on .knob{left:35px}
+.confirm-row{display:flex;align-items:center;justify-content:space-between;background:#2563eb;color:#fff;border-radius:12px;padding:14px}
+.confirm-row .switch{background:#1e3a8a}
+.confirm-row .switch.on{background:#22c55e}
 .grand{display:none;background:#fff;color:#000;border-radius:6px;padding:16px;margin-top:12px;border:2px solid #fff}
 .grand.show{display:block}
 .line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #ddd;font-size:15px}
@@ -44,8 +51,9 @@ textarea{min-height:70px;resize:vertical}
 .qr-box{background:#fff;border-radius:12px;padding:12px;text-align:center;margin-top:12px}
 .qr-box img{width:100%;max-width:320px;height:auto;display:block;margin:0 auto}
 .btn{width:100%;background:#22c55e;color:#000;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:800;margin-top:12px;cursor:pointer}
-.btn-wa{background:#25D366}
 .small{font-size:12px;color:#aaa;text-align:center;margin-top:8px}
+.status{font-size:13px;padding:10px;border-radius:10px;background:#111;color:#fff;margin-top:10px;display:none}
+.status.show{display:block}
 </style>
 </head>
 <body>
@@ -54,8 +62,8 @@ textarea{min-height:70px;resize:vertical}
 <div class="address">Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</div>
 <div class="card">
 <label>Guest Name</label><input id="name" placeholder="Full name">
-<label>Phone</label><input id="phone" placeholder="Phone number">
-<div class="row"><div><label>Check-in</label><input id="checkin" type="date"></div><div><label class="red-bold">Nights (1-7)</label><input id="nights" type="number" min="1" max="7" value="1"></div></div>
+<label>Phone - Guest WhatsApp number</label><input id="phone" placeholder="e.g. 9961917169 or 91 9961917169" inputmode="tel">
+<div class="row"><div><label>Check-in</label><input id="checkin" type="date"></div><div><label class="red-bold">Nights (1-7)</label><div class="stepper"><button type="button" onclick="stepNights(-1)">−</button><input id="nights" type="number" min="1" max="7" value="1" inputmode="numeric"><button type="button" onclick="stepNights(1)">+</button></div></div></div>
 <label class="red-bold">Check-out (auto)</label><div id="checkout" class="checkout">—</div>
 <label>Stay Type - tap to choose</label>
 <div class="stay-row">
@@ -65,9 +73,9 @@ textarea{min-height:70px;resize:vertical}
 </div>
 </div>
 <div class="card rooms-box">
-<label>Rooms - auto from Adults</label>
-<select id="rooms" disabled><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
-<div class="hint">Rooms = ceil(Adults / 2), max 4. Kids do not change Rooms.</div>
+<label>Rooms - auto from Adults, you can change manually also</label>
+<select id="rooms"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+<div class="hint">Auto: Rooms = ceil(Adults / 2), max 4. You can tap and change Rooms manually. Kids do not change Rooms.</div>
 <label>Adults</label>
 <select id="adults"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
 <div class="row"><div><label>Kids 0-6 FREE</label><select id="kids06"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div><div><label>Kids 6-12 Rs.400</label><select id="kids612"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div></div>
@@ -88,14 +96,27 @@ textarea{min-height:70px;resize:vertical}
 <div id="notesInTotal" style="display:none;padding:10px 0;border-top:1px dashed #ddd;margin-top:8px"><b>Notes:</b> <span id="notesVal"></span></div>
 <label>UTR (after payment)</label><input id="utr" placeholder="Enter UTR or leave blank" style="background:#fff;color:#000">
 <div class="qr-box"><img src="qr.png" alt="QR" onerror="this.style.display='none'"></div>
-<button class="btn btn-wa" onclick="sendWA()">Send Booking on WhatsApp</button>
+<div class="card confirm-row" style="margin-top:12px"><span><b>Booking Confirmation</b><br><span style="font-size:12px">Send to Guest WhatsApp + Pachapp Airtable</span></span><div id="confirmSwitch" class="switch" onclick="toggleConfirm()"><div class="knob"></div></div></div>
+<div id="confirmStatus" class="status"></div>
 </div>
-<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v6 - Rooms black + blue dropdowns - Pachapp Bookings Form</div>
+<div class="small">Full Villa Weekday Rs.6400, Weekend Fri/Sat/Sun Rs.8000 • Rooms Rs.1600/room/night • Extra Adult Rs.800/night<br>Design v7 - Nights big + Rooms manual + Confirmation switch - Pachapp Bookings Form</div>
 </div>
 <script>
-var curStay='Rooms';var payOn=false;
+// ---- AIRTABLE - fill these 3 in GitHub, then redeploy ----
+var AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
+var AIRTABLE_BASE_ID = "YOUR_AIRTABLE_BASE_ID";
+var AIRTABLE_TABLE = "Bookings";
+// ----------------------------------------------------------
+var curStay='Rooms';var payOn=false;var confirmOn=false;var lastAdults=2;
 function setStay(s){curStay=s;document.getElementById('stayFull').classList.toggle('sel',s==='Full Villa');document.getElementById('stayRooms').classList.toggle('sel',s==='Rooms');calc();}
+function stepNights(d){var el=document.getElementById('nights');var v=Math.min(7,Math.max(1,(parseInt(el.value)||1)+d));el.value=v;calc();}
 function togglePay(){payOn=!payOn;document.getElementById('paySwitch').classList.toggle('on',payOn);document.getElementById('grand').classList.toggle('show',payOn);calc();}
+function toggleConfirm(){
+  confirmOn=!confirmOn;
+  document.getElementById('confirmSwitch').classList.toggle('on',confirmOn);
+  if(!confirmOn){document.getElementById('confirmStatus').classList.remove('show');return;}
+  sendConfirmation();
+}
 function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN')}
 function fmtDate(d){var dd=String(d.getDate()).padStart(2,'0');var mm=String(d.getMonth()+1).padStart(2,'0');return dd+'/'+mm+'/'+d.getFullYear();}
 function calc(){
@@ -111,8 +132,10 @@ if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=fmtDate(o);coISO=o.toI
 document.getElementById('checkout').textContent=co;
 var perFull=6400,dayType='Weekday';
 if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
-var rooms=Math.min(4,Math.max(1,Math.ceil(adults/2)));
-document.getElementById('rooms').value=String(rooms);
+// Rooms: auto only when Adults changed, else keep manual value
+var roomsEl=document.getElementById('rooms');
+if(adults!==lastAdults){var autoRooms=Math.min(4,Math.max(1,Math.ceil(adults/2)));roomsEl.value=String(autoRooms);lastAdults=adults;}
+var rooms=parseInt(roomsEl.value)||1;
 var included=stay==='Full Villa'?8:rooms*2;
 var extraAdults=Math.max(0,adults-included);
 var roomTotal=(stay==='Full Villa'?perFull:rooms*1600)*nights;
@@ -137,16 +160,35 @@ document.getElementById('statusVal').textContent=utr?'Confirmed':'Pending';
 var notes=document.getElementById('notes').value.trim();
 document.getElementById('notesInTotal').style.display=notes?'block':'none';
 document.getElementById('notesVal').textContent=notes;
-return {total:total,adv:adv,co:coISO};
+return {total:total,adv:adv,co:coISO,coShow:co,rooms:rooms,totalVal:total,dayType:dayType,nights:nights};
+}
+function cleanPhone(p){var d=p.replace(/\D/g,'');if(d.length===10)return '91'+d;if(d.length===12&&d.startsWith('91'))return d;if(d.length===11&&d.startsWith('0'))return '91'+d.slice(1);return d;}
+function sendConfirmation(){
+var r=calc();
+var name=document.getElementById('name').value.trim();
+var phone=document.getElementById('phone').value.trim();
+var st=document.getElementById('confirmStatus');
+if(!name||!phone){st.textContent='Please enter Guest Name and Phone first, then turn Confirmation ON again.';st.classList.add('show');confirmOn=false;document.getElementById('confirmSwitch').classList.remove('on');return;}
+var guestPhone=cleanPhone(phone);
+var msg='Pachapp Booking Confirmed ✅\nName: '+name+'\nCheck-in: '+document.getElementById('checkin').value+'\nNights: '+r.nights+'\nCheck-out: '+r.co+'\nStay: '+curStay+'\nRooms: '+r.rooms+'\nAdults: '+document.getElementById('adults').value+'\nKids 0-6: '+document.getElementById('kids06').value+'\nKids 6-12: '+document.getElementById('kids612').value+'\nBreakfast: '+document.getElementById('breakfast').value+'\nNotes: '+document.getElementById('notes').value+'\nTotal: Rs.'+r.total+'\nAdvance: Rs.'+r.adv+'\nUTR: '+document.getElementById('utr').value+'\nPachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad';
+st.textContent='Sending to Guest WhatsApp + Airtable...';
+st.classList.add('show');
+// 1. Guest WhatsApp
+window.open('https://wa.me/'+guestPhone+'?text='+encodeURIComponent(msg),'_blank');
+// 2. Airtable
+var fields={Name:name,Phone:phone,Checkin:document.getElementById('checkin').value,Checkout:r.co,Nights:r.nights,Stay:curStay,Rooms:r.rooms,Adults:parseInt(document.getElementById('adults').value)||0,Kids06:parseInt(document.getElementById('kids06').value)||0,Kids612:parseInt(document.getElementById('kids612').value)||0,Breakfast:document.getElementById('breakfast').value,Notes:document.getElementById('notes').value,Total:r.total,Advance:r.adv,UTR:document.getElementById('utr').value,Status:document.getElementById('utr').value.trim()?'Confirmed':'Pending'};
+if(AIRTABLE_API_KEY==="YOUR_AIRTABLE_API_KEY"){
+  st.textContent='【entity-WhatsApp¦canonical_name=WhatsApp】 opened for guest. Airtable not sent yet - fill AIRTABLE_API_KEY / BASE_ID / TABLE in GitHub file at top, then redeploy.';
+  return;
+}
+fetch('https://api.airtable.com/v0/'+AIRTABLE_BASE_ID+'/'+encodeURIComponent(AIRTABLE_TABLE),{method:'POST',headers:{'Authorization':'Bearer '+AIRTABLE_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})})
+.then(function(res){if(!res.ok)throw new Error('Airtable '+res.status);return res.json();})
+.then(function(){st.textContent='Done ✅ Confirmation sent to Guest WhatsApp + Pachapp Airtable.';})
+.catch(function(e){st.textContent='WhatsApp opened. Airtable failed: '+e.message+' - check API Key / Base ID / Table name.';});
 }
 document.querySelectorAll('input,select,textarea').forEach(function(el){el.addEventListener('input',calc);el.addEventListener('change',calc)});
 document.getElementById('checkin').value=new Date().toISOString().slice(0,10);
 calc();
-function sendWA(){
-var r=calc();
-var msg='Pachapp Booking%0AName: '+encodeURIComponent(document.getElementById('name').value)+'%0ACheck-in: '+document.getElementById('checkin').value+'%0ANights: '+document.getElementById('nights').value+'%0ACheck-out: '+r.co+'%0AStay: '+curStay+'%0ATotal: '+r.total+'%0AAdvance: '+r.adv+'%0ANotes: '+encodeURIComponent(document.getElementById('notes').value)+'%0AUTR: '+encodeURIComponent(document.getElementById('utr').value);
-window.open('https://wa.me/918943666911?text='+msg,'_blank');
-}
 </script>
 </body>
 </html>
