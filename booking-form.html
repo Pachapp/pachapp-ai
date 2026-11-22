@@ -15,17 +15,25 @@ label{display:block;font-size:13px;color:#ccc;margin:10px 0 5px}
 input,select,textarea{width:100%;background:#1c1c1c;color:#fff;border:1px solid #333;border-radius:10px;padding:11px;font-size:15px}
 textarea{min-height:70px;resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pill-full{background:#fff;color:#000}
-.pill-rooms{background:#2a2a2a}
+.stay-row{display:grid;grid-template-columns:1fr 28px 1fr;gap:6px;align-items:center;margin-top:8px}
+.stay-card{border-radius:12px;padding:16px 10px;text-align:center;font-weight:800;font-size:16px;cursor:pointer;border:2px solid transparent;position:relative}
+.stay-full{background:#fff;color:#000}
+.stay-rooms{background:#2a2a2a;color:#fff}
+.stay-card.sel{border-color:#22c55e}
+.tick{position:absolute;top:6px;right:8px;background:#22c55e;color:#fff;width:22px;height:22px;border-radius:50%;font-size:14px;line-height:22px;display:none}
+.stay-card.sel .tick{display:block}
+.arrows{width:28px;height:28px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto}
 .rooms-box{background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
 .rooms-box label{color:#222}
-.rooms-box input,.rooms-box select{background:#fff;color:#000;border-color:#9ccc9c}
+.rooms-box input{background:#fff;color:#000;border-color:#9ccc9c}
 .breakfast-box{background:#1f7a1f;border-radius:12px;padding:12px}
 .breakfast-box label{color:#fff}
-.checkout{color:#ff4d4d;font-weight:800}
+.breakfast-box select{background:#000;color:#fff}
+.red-bold{color:#ff4d4d;font-weight:800}
+.checkout{color:#ff4d4d;font-weight:800;font-size:18px}
 .switch{display:flex;align-items:center;justify-content:space-between;background:#d6f5d6;color:#000;border-radius:12px;padding:12px}
 .switch input{width:52px;height:28px;accent-color:#22c55e}
-.grand{display:none;background:#fff;color:#000;border-radius:14px;padding:16px;margin-top:12px}
+.grand{display:none;background:#fff;color:#000;border-radius:6px;padding:16px;margin-top:12px;border:2px solid #fff}
 .grand.show{display:block}
 .grand h3{margin:0 0 10px}
 .line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #ddd;font-size:15px}
@@ -46,14 +54,19 @@ textarea{min-height:70px;resize:vertical}
 <div class="card">
 <label>Guest Name</label><input id="name" placeholder="Full name">
 <label>Phone</label><input id="phone" placeholder="Phone number">
-<div class="row"><div><label>Check-in</label><input id="checkin" type="date"></div><div><label>Nights (1-7)</label><input id="nights" type="number" min="1" max="7" value="1"></div></div>
-<label>Check-out (auto)</label><div id="checkout" class="checkout">—</div>
-<label>Stay Type</label><select id="stay"><option value="Rooms">Rooms</option><option value="Full Villa">Full Villa</option></select>
+<div class="row"><div><label>Check-in</label><input id="checkin" type="date"></div><div><label class="red-bold">Nights (1-7)</label><input id="nights" type="number" min="1" max="7" value="1"></div></div>
+<label class="red-bold">Check-out (auto)</label><div id="checkout" class="checkout">—</div>
+<label>Stay Type</label>
+<div class="stay-row">
+<div id="stayFull" class="stay-card stay-full" onclick="setStay('Full Villa')">Full Villa<span class="tick">✓</span></div>
+<div class="arrows">⇄</div>
+<div id="stayRooms" class="stay-card stay-rooms sel" onclick="setStay('Rooms')">Rooms<span class="tick">✓</span></div>
+</div>
 </div>
 
 <div class="card rooms-box">
 <label>Rooms - auto from Adults</label><input id="rooms" type="number" min="1" max="4" value="1" readonly>
-<div class="small" style="color:#333;text-align:left">Rooms = ceil(Adults / 2), max 4. Kids do not change Rooms.</div>
+<div style="font-size:12px;color:#333">Rooms = ceil(Adults / 2), max 4. Kids do not change Rooms.</div>
 <label>Adults</label><input id="adults" type="number" min="1" max="20" value="2">
 <div class="row"><div><label>Kids 0-6 FREE</label><input id="kids06" type="number" min="0" value="0"></div><div><label>Kids 6-12 Rs.400</label><input id="kids612" type="number" min="0" value="0"></div></div>
 </div>
@@ -75,7 +88,7 @@ textarea{min-height:70px;resize:vertical}
 <div class="line"><span>Balance</span><span id="balVal">Rs.0</span></div>
 <div class="line"><span>Status</span><span id="statusVal">Pending</span></div>
 <div id="notesInTotal" style="display:none;padding:10px 0;border-top:1px dashed #ddd;margin-top:8px"><b>Notes:</b> <span id="notesVal"></span></div>
-<label>UTR (after payment)</label><input id="utr" placeholder="Enter UTR or leave blank">
+<label>UTR (after payment)</label><input id="utr" placeholder="Enter UTR or leave blank" style="background:#fff;color:#000">
 <div class="qr-box"><img id="qrImg" src="qr.png" alt="QR" onerror="this.style.display='none';document.getElementById('qrPh').style.display='block'"><div id="qrPh" class="qr-placeholder">Add your real QR as qr.png in GitHub to show QR only here</div></div>
 <button class="btn btn-wa" onclick="sendWA()">Send Booking on WhatsApp</button>
 </div>
@@ -84,12 +97,14 @@ textarea{min-height:70px;resize:vertical}
 </div>
 
 <script>
+var curStay='Rooms';
+function setStay(s){curStay=s;document.getElementById('stayFull').classList.toggle('sel',s==='Full Villa');document.getElementById('stayRooms').classList.toggle('sel',s==='Rooms');calc();}
 function fmt(n){return 'Rs.'+Number(n).toLocaleString('en-IN')}
 function calc(){
 var ci=document.getElementById('checkin').value;
 var nights=Math.min(7,Math.max(1,parseInt(document.getElementById('nights').value)||1));
 document.getElementById('nights').value=nights;
-var stay=document.getElementById('stay').value;
+var stay=curStay;
 var adults=parseInt(document.getElementById('adults').value)||0;
 var k06=parseInt(document.getElementById('kids06').value)||0;
 var k612=parseInt(document.getElementById('kids612').value)||0;
@@ -98,8 +113,8 @@ var d=new Date(ci);
 var co='—';
 if(ci){var o=new Date(d);o.setDate(o.getDate()+nights);co=o.toISOString().slice(0,10)}
 document.getElementById('checkout').textContent=co;
-var isWeekend=false,perFull=6400,dayType='Weekday';
-if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){isWeekend=true;perFull=8000;dayType='Weekend'}}
+var perFull=6400,dayType='Weekday';
+if(ci){var wd=d.getDay();if(wd===5||wd===6||wd===0){perFull=8000;dayType='Weekend'}}
 var rooms=stay==='Full Villa'?4:Math.min(4,Math.max(1,Math.ceil(adults/2)));
 document.getElementById('rooms').value=rooms;
 var included=stay==='Full Villa'?8:rooms*2;
@@ -134,7 +149,7 @@ document.getElementById('checkin').value=new Date().toISOString().slice(0,10);
 calc();
 function sendWA(){
 var r=calc();
-var msg='Pachapp Booking%0AName: '+encodeURIComponent(document.getElementById('name').value)+'%0APhone: '+encodeURIComponent(document.getElementById('phone').value)+'%0ACheck-in: '+document.getElementById('checkin').value+'%0ANights: '+document.getElementById('nights').value+'%0ACheck-out: '+r.co+'%0AStay: '+document.getElementById('stay').value+'%0ARooms: '+document.getElementById('rooms').value+'%0AAdults: '+document.getElementById('adults').value+'%0AKids 0-6: '+document.getElementById('kids06').value+'%0AKids 6-12: '+document.getElementById('kids612').value+'%0ABreakfast: '+document.getElementById('breakfast').value+'%0ANotes: '+encodeURIComponent(document.getElementById('notes').value)+'%0ATotal: '+r.total+'%0AAdvance: '+r.adv+'%0AUTR: '+encodeURIComponent(document.getElementById('utr').value);
+var msg='Pachapp Booking%0AName: '+encodeURIComponent(document.getElementById('name').value)+'%0APhone: '+encodeURIComponent(document.getElementById('phone').value)+'%0ACheck-in: '+document.getElementById('checkin').value+'%0ANights: '+document.getElementById('nights').value+'%0ACheck-out: '+r.co+'%0AStay: '+curStay+'%0ARooms: '+document.getElementById('rooms').value+'%0AAdults: '+document.getElementById('adults').value+'%0AKids 0-6: '+document.getElementById('kids06').value+'%0AKids 6-12: '+document.getElementById('kids612').value+'%0ABreakfast: '+document.getElementById('breakfast').value+'%0ANotes: '+encodeURIComponent(document.getElementById('notes').value)+'%0ATotal: '+r.total+'%0AAdvance: '+r.adv+'%0AUTR: '+encodeURIComponent(document.getElementById('utr').value);
 window.open('https://wa.me/918943666911?text='+msg,'_blank');
 }
 </script>
