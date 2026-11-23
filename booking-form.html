@@ -80,12 +80,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .qr-wrap img{width:320px;height:320px;max-width:92%;object-fit:contain;border-radius:16px;padding:10px;background:rgba(255,255,255,.92)}
 .pay-sub2{text-align:center;color:#555;font-size:14.5px;margin-bottom:26px;font-weight:200;letter-spacing:.02em}
 .confirm-spacer{height:10px}
-/* BEAUTIFUL RUNNING LETTER / MARQUEE - SAME STYLE, NEW WORDS ADDED */
 .marquee-wrap{overflow:hidden;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:13px 0;margin:34px 0 22px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18)}
 .marquee-track{display:flex;width:max-content;animation:marquee 24s linear infinite}
 .marquee-track span{white-space:nowrap;font-size:14px;font-weight:300;letter-spacing:.14em;line-height:1.6;background:linear-gradient(90deg,#FFE9A8,#FFB3C1,#A8D4FF,#B8FFD0,#FFE9A8);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 14px}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-/* CONFIRM BOOKING - SMALLER + BREATHING NON-SEEN TO SEEN */
 .submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:12px 16px 14px;font-family:'Great Vibes','Pinyon Script','Brush Script MT','Segoe Script',cursive;font-size:32px;font-weight:400;letter-spacing:.04em;line-height:1.3;text-transform:none;cursor:pointer;margin-top:34px;transition:transform .15s}
 .submit:active{transform:scale(.98)}
 .confirm-text{display:inline-block;animation:breathe 3.8s ease-in-out infinite}
@@ -135,12 +133,22 @@ let payAdvanceOn=false;
 const FESTIVALS=new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
 function fmt(n){return 'Rs.'+n.toLocaleString('en-IN')}
 function getDayType(s){if(!s)return 'Weekday';if(FESTIVALS.has(s))return 'Festival';const d=new Date(s+'T12:00:00'),day=d.getDay();if(day===5||day===6||day===0)return 'Weekend';return 'Weekday'}
+// UPGRADED ROOMS LOGIC - LOGICAL ROOMS NEEDED
+function getAutoRooms(a){return Math.max(1,Math.min(4,Math.ceil(a/2)))}
 function calc(){
   const checkIn=document.getElementById('checkIn').value,dayType=getDayType(checkIn);
   let base=0,baseLabel='';
+  let autoRooms=getAutoRooms(adults);
   if(bookingType==='Full Villa'){rooms=4;const rate=dayType==='Festival'?9600:dayType==='Weekend'?8000:6400;base=rate*nights;baseLabel='Full Villa ('+dayType+')';}
-  else{if(!roomsManual)rooms=Math.max(1,Math.min(4,Math.ceil(adults/2)));base=1600*rooms*nights;baseLabel=rooms+' Room(s) ('+dayType+')';}
-  const extraAdults=bookingType==='Full Villa'?Math.max(0,adults-8):Math.max(0,adults-rooms*2);
+  else{
+    // Private Rooms: Auto = ceil(Adults/2), Manual stays until type changes
+    if(!roomsManual) rooms=autoRooms;
+    rooms=Math.max(1,Math.min(4,rooms));
+    base=1600*rooms*nights;baseLabel=rooms+' Room(s) ('+dayType+')';
+  }
+  // Extra Adults - logical: capacity = Rooms x 2
+  const capacity=bookingType==='Full Villa'?8:rooms*2;
+  const extraAdults=Math.max(0,adults-capacity);
   const extraTotal=extraAdults*800*nights, kidsTotal=kidsHalf*300*nights, breakfastCount=adults+kidsHalf;
   let breakfastTotal=0; if(breakfast==='Yes') breakfastTotal=bookingType==='Full Villa'?0:breakfastCount*100*nights;
   const total=base+extraTotal+kidsTotal+breakfastTotal;
@@ -152,7 +160,14 @@ function calc(){
   document.getElementById('kidsHalfTotal').textContent=fmt(kidsTotal);
   document.getElementById('roomsVal').textContent=rooms;
   document.getElementById('roomsMode').textContent=bookingType==='Full Villa'?'FULL VILLA':(roomsManual?'MANUAL':'AUTO');
-  document.getElementById('roomsHint').textContent=bookingType==='Full Villa'?'Full Villa = 4 Rooms fixed.':'Rooms = Auto ceil(Adults / 2), manual 1-4 allowed. Now: '+rooms+' Room(s)';
+  // Upgraded hint - shows logical need
+  if(bookingType==='Full Villa'){document.getElementById('roomsHint').textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults';}
+  else if(!roomsManual){document.getElementById('roomsHint').textContent='Rooms = Auto ceil(Adults / 2) • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults';}
+  else{
+    if(rooms<autoRooms) document.getElementById('roomsHint').textContent='Manual: You took '+rooms+' Room(s) but need '+autoRooms+' for '+adults+' Adults • Extra '+extraAdults+' Adult(s) charged Rs.800 / night';
+    else if(rooms>autoRooms) document.getElementById('roomsHint').textContent='Manual: You took '+rooms+' Room(s) • Need '+autoRooms+' for '+adults+' Adults • Extra space, no extra charge';
+    else document.getElementById('roomsHint').textContent='Manual: '+rooms+' Room(s) = Need for '+adults+' Adults • Perfect';
+  }
   document.getElementById('bfHint').textContent=bookingType==='Full Villa'?'Full Villa: Breakfast FREE':'Rooms: Rs.100 / head / night • Breakfast count = Adults + Kids 6-12 = '+breakfastCount;
   if(checkIn){const d=new Date(checkIn+'T12:00:00');d.setDate(d.getDate()+nights);document.getElementById('checkOut').value=d.toISOString().slice(0,10);}
   document.getElementById('gtBaseLabel').textContent=baseLabel;
@@ -176,7 +191,7 @@ function calc(){
   document.getElementById('roomsPlus').disabled=bookingType==='Full Villa'||rooms>=4;
   const pill=document.getElementById('roomsPill');
   if(bookingType==='Rooms') pill.classList.add('selected-room'); else pill.classList.remove('selected-room');
-  return {total,advance};
+  return {total,advance,extraAdults,autoRooms};
 }
 function updatePayAdvanceUI(){
   const sw=document.getElementById('paySwitch'),box=document.getElementById('grandTotalBox');
@@ -198,7 +213,7 @@ document.getElementById('roomsPlus').onclick=()=>{if(bookingType==='Full Villa')
 document.getElementById('checkIn').addEventListener('change',calc);
 document.getElementById('notes').addEventListener('input',calc);
 document.getElementById('optFull').onclick=()=>{bookingType='Full Villa';rooms=4;roomsManual=false;document.getElementById('optFull').className='booking-opt selected';document.getElementById('optRooms').className='booking-opt unselected';calc();};
-document.getElementById('optRooms').onclick=()=>{bookingType='Rooms';roomsManual=false;rooms=Math.ceil(adults/2);document.getElementById('optRooms').className='booking-opt selected';document.getElementById('optFull').className='booking-opt unselected';calc();};
+document.getElementById('optRooms').onclick=()=>{bookingType='Rooms';roomsManual=false;rooms=getAutoRooms(adults);document.getElementById('optRooms').className='booking-opt selected';document.getElementById('optFull').className='booking-opt unselected';calc();};
 document.getElementById('bfYes').onclick=()=>{breakfast='Yes';document.getElementById('bfYes').className='bf-opt bf-yes selected-yes';document.getElementById('bfNo').className='bf-opt bf-no';calc();};
 document.getElementById('bfNo').onclick=()=>{breakfast='No';document.getElementById('bfNo').className='bf-opt bf-no selected-no';document.getElementById('bfYes').className='bf-opt bf-yes';calc();};
 document.getElementById('submitBtn').onclick=()=>{
