@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pachapp Pool Villa — Booking Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#05050A;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,"Helvetica Neue",Arial,sans-serif;font-weight:200;letter-spacing:.03em;line-height:1.65;font-stretch:105%;padding:18px 14px 40px;min-height:100vh;
@@ -78,12 +79,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .qr-wrap img{width:320px;height:320px;max-width:92%;object-fit:contain;border-radius:16px;padding:10px;background:rgba(255,255,255,.92)}
 .pay-sub2{text-align:center;color:#555;font-size:13px;margin-bottom:26px;font-weight:200;letter-spacing:.02em}
 .confirm-spacer{height:10px}
-/* BEAUTIFUL RUNNING LETTER / MARQUEE */
+/* BEAUTIFUL RUNNING LETTER / MARQUEE - DO NOT CHANGE */
 .marquee-wrap{overflow:hidden;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:13px 0;margin:34px 0 22px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18)}
 .marquee-track{display:flex;width:max-content;animation:marquee 24s linear infinite}
 .marquee-track span{white-space:nowrap;font-size:14px;font-weight:300;letter-spacing:.14em;line-height:1.6;background:linear-gradient(90deg,#FFE9A8,#FFB3C1,#A8D4FF,#B8FFD0,#FFE9A8);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 14px}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:20px;font-size:17px;font-weight:400;letter-spacing:.04em;line-height:1.6;cursor:pointer;margin-top:34px;transition:transform .15s}
+/* CONFIRM BOOKING - STYLISH SIGNATURE CURSIVE */
+.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:14px 18px 18px;font-family:'Great Vibes','Pinyon Script','Brush Script MT','Segoe Script',cursive;font-size:38px;font-weight:400;letter-spacing:.04em;line-height:1.3;text-transform:none;cursor:pointer;margin-top:34px;transition:transform .15s;text-shadow:0 2px 10px rgba(0,0,0,.30)}
 .submit:active{transform:scale(.98)}
 .status{margin-top:24px;text-align:center;font-weight:300;font-size:14px;letter-spacing:.02em;line-height:1.65;min-height:22px}
 </style></head>
@@ -122,7 +124,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <input id="utr" class="field" style="background:rgba(255,255,255,.92);color:#000;border:1px solid #CCC" placeholder="Enter UTR after payment">
 <div class="hint" style="color:#333">Pachapp will verify after checking bank.</div></div>
 <div class="marquee-wrap"><div class="marquee-track"><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span></div></div>
-<button id="submitBtn" class="submit">CONFIRM BOOKING →</button><div id="statusMsg" class="status"></div>
+<button id="submitBtn" class="submit">Confirm Booking →</button><div id="statusMsg" class="status"></div>
 </div>
 <script>
 let nights=1,adults=2,kidsFree=0,kidsHalf=0,bookingType='Full Villa',breakfast='Yes',rooms=4,roomsManual=false;
