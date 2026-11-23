@@ -15,7 +15,6 @@ label{display:block;font-weight:300;font-size:13px;letter-spacing:.10em;text-tra
 .field:focus{border-color:rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(255,255,255,.7)}
 .field::placeholder{color:rgba(255,255,255,.55);font-weight:200}
 textarea.field{min-height:110px;resize:vertical;line-height:1.65}
-/* CHECK-IN FIX - SAME WIDTH AS ALL OTHERS */
 #checkIn{width:100% !important;max-width:100% !important;padding:15px !important;padding-right:15px !important;box-sizing:border-box !important;-webkit-appearance:none;appearance:none;min-height:52px;overflow:hidden}
 input[type="date"]{-webkit-appearance:none;appearance:none}
 input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer}
@@ -59,28 +58,34 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .bf-no{background:transparent;color:#fff}
 .bf-opt.selected-yes{background:#34C759;color:#fff;box-shadow:0 4px 16px rgba(52,199,89,.35)}
 .bf-opt.selected-no{background:rgba(255,255,255,.92);color:#000;box-shadow:0 4px 16px rgba(0,0,0,.25)}
-.pay-box{background:rgba(200,240,200,.60);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.50);border-radius:20px;padding:18px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}
+.pay-box{background:rgba(200,240,200,.60);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.50);border-radius:20px;padding:20px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:32px}
 .pay-box .pt{color:#0B3D1F;font-size:19px;font-weight:500;letter-spacing:.03em;line-height:1.6}
-.pay-box .ps{color:#0B3D1F;font-size:13px;font-weight:300;letter-spacing:.02em;line-height:1.65;margin-top:6px}
+.pay-box .ps{color:#0B3D1F;font-size:13px;font-weight:300;letter-spacing:.02em;line-height:1.65;margin-top:8px}
 .switch{width:64px;height:34px;background:rgba(255,255,255,.92);border:none;border-radius:999px;position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:inset 0 1px 3px rgba(0,0,0,.12)}
 .switch .knob{width:30px;height:30px;border-radius:50%;position:absolute;top:2px;transition:left .3s cubic-bezier(.25,.1,.25,1);box-shadow:0 3px 10px rgba(0,0,0,.28);background:#fff}
 .switch.off{background:#E9E9EA}
 .switch.off .knob{left:2px}
 .switch.on{background:#34C759}
 .switch.on .knob{left:32px}
-.gt-box{background:rgba(255,255,255,.70);backdrop-filter:blur(30px);color:#000;border:1px solid rgba(255,255,255,.65);border-radius:20px;padding:20px 18px;margin-top:16px}
+.gt-box{background:rgba(255,255,255,.70);backdrop-filter:blur(30px);color:#000;border:1px solid rgba(255,255,255,.65);border-radius:20px;padding:24px 18px;margin-top:28px}
 .gt-head{display:flex;justify-content:space-between;font-weight:500;font-size:19px;letter-spacing:.03em;line-height:1.6}
-.gt-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed rgba(0,0,0,.15);font-size:15px;font-weight:200;letter-spacing:.02em;line-height:1.65}
+.gt-row{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px dashed rgba(0,0,0,.15);font-size:15px;font-weight:200;letter-spacing:.02em;line-height:1.65}
 .gt-row b{font-weight:400}
-.gt-total{display:flex;justify-content:space-between;font-size:20px;font-weight:500;letter-spacing:.02em;padding:14px 0 6px}
-.gt-adv{display:flex;justify-content:space-between;font-size:17px;font-weight:500;padding:6px 0}
-.gt-note{font-size:12px;color:#555;margin:8px 0 14px;line-height:1.65;font-weight:200}
-.qr-wrap{text-align:center;margin:10px 0}
+.gt-total{display:flex;justify-content:space-between;font-size:20px;font-weight:500;letter-spacing:.02em;padding:18px 0 8px}
+.gt-adv{display:flex;justify-content:space-between;font-size:17px;font-weight:500;padding:8px 0}
+.gt-note{font-size:12px;color:#555;margin:12px 0 18px;line-height:1.65;font-weight:200}
+.qr-wrap{text-align:center;margin:22px 0}
 .qr-wrap img{width:320px;height:320px;max-width:92%;object-fit:contain;border-radius:16px;padding:10px;background:rgba(255,255,255,.92)}
-.pay-sub2{text-align:center;color:#555;font-size:13px;margin-bottom:14px;font-weight:200;letter-spacing:.02em}
-.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:18px;font-size:17px;font-weight:400;letter-spacing:.04em;line-height:1.6;cursor:pointer;margin-top:18px;transition:transform .15s}
+.pay-sub2{text-align:center;color:#555;font-size:13px;margin-bottom:26px;font-weight:200;letter-spacing:.02em}
+.confirm-spacer{height:10px}
+/* BEAUTIFUL RUNNING LETTER / MARQUEE */
+.marquee-wrap{overflow:hidden;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:13px 0;margin:34px 0 22px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18)}
+.marquee-track{display:flex;width:max-content;animation:marquee 24s linear infinite}
+.marquee-track span{white-space:nowrap;font-size:14px;font-weight:300;letter-spacing:.14em;line-height:1.6;background:linear-gradient(90deg,#FFE9A8,#FFB3C1,#A8D4FF,#B8FFD0,#FFE9A8);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 14px}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:20px;font-size:17px;font-weight:400;letter-spacing:.04em;line-height:1.6;cursor:pointer;margin-top:34px;transition:transform .15s}
 .submit:active{transform:scale(.98)}
-.status{margin-top:14px;text-align:center;font-weight:300;font-size:14px;letter-spacing:.02em;line-height:1.65;min-height:22px}
+.status{margin-top:24px;text-align:center;font-weight:300;font-size:14px;letter-spacing:.02em;line-height:1.65;min-height:22px}
 </style></head>
 <body><div class="wrap">
 <div class="logo-box"><img src="Pachapp_1.png" alt="PACHAPP"></div>
@@ -102,7 +107,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <label>Notes</label><textarea id="notes" class="field" placeholder="Any special request? (optional)"></textarea>
 <div class="pay-box"><div><div class="pt">PAY ADVANCE</div><div class="ps">Turn ON to show Grand Total & payment details</div></div><div id="paySwitch" class="switch off" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div></div>
 <div id="grandTotalBox" class="gt-box" style="display:none"><div class="gt-head"><span>GRAND TOTAL</span><span>▲</span></div>
-<div style="margin-top:14px"><div class="gt-row"><span id="gtBaseLabel">Full Villa</span><b id="gtBase">Rs.6,400</b></div>
+<div style="margin-top:18px"><div class="gt-row"><span id="gtBaseLabel">Full Villa</span><b id="gtBase">Rs.6,400</b></div>
 <div class="gt-row"><span>Extra Adult (Rs.800 / night)</span><b id="gtExtra">Rs.0</b></div>
 <div class="gt-row"><span>Kids 6-12 Half Price (Rs.400 / night)</span><b id="gtKids">Rs.0</b></div>
 <div class="gt-row"><span>Breakfast</span><b id="gtBreakfast">Rs.0</b></div>
@@ -112,10 +117,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <div class="gt-row"><span>Notes</span><b id="gtNotes" style="font-weight:300;text-align:right;max-width:60%">—</b></div></div>
 <div class="qr-wrap"><img src="qr.png" alt="Scan to Pay"></div>
 <div class="pay-sub2">Scan QR • Pay advance • Enter UTR below</div>
-<label style="color:#000;margin-top:6px">UTR / Transaction ID *</label>
+<div class="confirm-spacer"></div>
+<label style="color:#000;margin-top:14px">UTR / Transaction ID *</label>
 <input id="utr" class="field" style="background:rgba(255,255,255,.92);color:#000;border:1px solid #CCC" placeholder="Enter UTR after payment">
-<div class="hint" style="color:#333">Status: Pending - Waiting for Pachapp to verify. Only Pachapp confirms after checking bank.</div></div>
-<button id="submitBtn" class="submit">CONFIRM BOOKING → PENDING</button><div id="statusMsg" class="status"></div>
+<div class="hint" style="color:#333">Pachapp will verify after checking bank.</div></div>
+<div class="marquee-wrap"><div class="marquee-track"><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span></div></div>
+<button id="submitBtn" class="submit">CONFIRM BOOKING →</button><div id="statusMsg" class="status"></div>
 </div>
 <script>
 let nights=1,adults=2,kidsFree=0,kidsHalf=0,bookingType='Full Villa',breakfast='Yes',rooms=4,roomsManual=false;
@@ -193,7 +200,7 @@ document.getElementById('submitBtn').onclick=()=>{
   if(!name||!phone||!checkIn){msg.textContent='Please fill Guest Name, Phone and Check-in.';msg.style.color='#FF3B30';return;}
   if(!payAdvanceOn){msg.textContent='Please turn Pay Advance ON (slide right) to see Grand Total & pay.';msg.style.color='#FF3B30';return;}
   if(!utr){msg.textContent='Please pay advance & enter UTR.';msg.style.color='#FF3B30';return;}
-  const r=calc();msg.textContent='Booking saved as Pending - Waiting for Pachapp to verify • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#2E9A5A';
+  const r=calc();msg.textContent='Booking saved • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#2E9A5A';
 };
 calc();updatePayAdvanceUI();
 </script></body></html>
