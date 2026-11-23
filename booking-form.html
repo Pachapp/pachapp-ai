@@ -136,24 +136,33 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <script>
 let nights=1,adults=2,kidsFree=0,kidsHalf=0,bookingType='Full Villa',breakfast='Yes',rooms=4,roomsManual=false;
 let payAdvanceOn=false;
-// PRICING — 4 TYPES, APPLIED TO EVERY NIGHT
-// Weekday Mon-Fri = 6400 (20% less than Weekend) | Weekend Sat-Sun = 8000 | Holiday = 8000 | Festival = 9600 (20% more than Weekend)
-const FESTIVALS=new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
-const HOLIDAYS=new Set(['2026-01-26','2026-03-03','2026-03-26','2026-04-03','2026-05-27','2026-06-26','2026-09-14','2026-10-02','2026-11-08','2027-01-26','2026-02-15','2026-03-04','2026-04-06','2026-05-28']);
+// PRICING — Weekday 6400 / Weekend 8000 / Festival & Holiday 9600 (+20% over Weekend)
+// Friday = Weekday. Weekend = Sat-Sun only. Every night checked separately.
+const FESTIVALS=new Set([
+ // 2026 — Festivals
+ '2026-01-01','2026-01-14','2026-01-15','2026-02-15','2026-03-04','2026-03-19','2026-03-20','2026-03-26','2026-03-31','2026-04-03','2026-04-05','2026-04-14','2026-04-19','2026-04-29','2026-05-27','2026-05-31','2026-06-26','2026-08-26','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-09-04','2026-09-14','2026-10-11','2026-10-20','2026-11-08','2026-11-09','2026-11-24','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31',
+ // 2027 — Festivals
+ '2027-01-01','2027-01-14','2027-01-15','2027-02-06','2027-03-22','2027-03-27','2027-04-14','2027-04-18','2027-05-01','2027-05-16','2027-06-16','2027-08-15','2027-08-20','2027-08-21','2027-08-22','2027-09-24','2027-10-09','2027-10-29','2027-10-30','2027-11-13','2027-12-24','2027-12-25','2027-12-26','2027-12-27','2027-12-28','2027-12-29','2027-12-30','2027-12-31'
+]);
+const HOLIDAYS=new Set([
+ // 2026 — National / State Holidays — also +20% = 9600
+ '2026-01-26','2026-05-01','2026-08-15','2026-10-02','2026-04-03','2026-04-14','2026-03-20','2026-05-27','2026-06-26','2026-08-26','2026-11-24','2026-12-25',
+ // 2027 — National / State Holidays
+ '2027-01-26','2027-05-01','2027-08-15','2027-10-02','2027-03-22','2027-05-16','2027-06-16','2027-11-13','2027-12-25'
+]);
 function fmt(n){return 'Rs.'+n.toLocaleString('en-IN')}
 function getDayType(s){
   if(!s) return 'Weekday';
   if(FESTIVALS.has(s)) return 'Festival';
   if(HOLIDAYS.has(s)) return 'Holiday';
   const d=new Date(s+'T12:00:00'), day=d.getDay();
-  // Weekend = Sat (6) + Sun (0) ONLY. Fri (5) = Weekday
   if(day===6||day===0) return 'Weekend';
-  return 'Weekday'; // Mon-Fri
+  return 'Weekday';
 }
 function rateFor(s){
   const t=getDayType(s);
-  if(t==='Festival') return 9600;
-  if(t==='Weekend'||t==='Holiday') return 8000;
+  if(t==='Festival'||t==='Holiday') return 9600; // +20% over Weekend
+  if(t==='Weekend') return 8000;
   return 6400; // Weekday = 8000 x 0.8
 }
 function dateStrPlus(checkIn, add){
@@ -204,7 +213,7 @@ function calc(){
   const overCapacity = bookingType==='Rooms' ? (rooms < autoRooms) : (adults > 8);
   if(bookingType==='Full Villa'){
     if(adults>8) hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • '+extraAdults+' Adult(s) OVER capacity — Extra charged';
-    else hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • Weekday 6400 / Weekend 8000 / Holiday 8000 / Festival 9600';
+    else hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • Weekday 6400 / Weekend 8000 / Festival & Holiday 9600 (+20%)';
   } else if(!roomsManual){
     hintEl.textContent='Rooms = Auto ceil(Adults / 2) • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults';
   } else {
