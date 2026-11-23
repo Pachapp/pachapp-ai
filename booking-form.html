@@ -6,46 +6,47 @@
 <title>Pachapp Pool Villa - Booking Form</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f6f2e8;color:#222}
-.wrap{max-width:540px;margin:0 auto;padding:16px 14px 40px}
-.card{background:#fff;border-radius:16px;padding:20px 18px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.logo-wrap{text-align:center;margin-bottom:4px}
-.logo-wrap img{width:230px;max-width:85%;height:auto}
-.addr{text-align:center;font-size:13px;color:#666;margin:0 0 16px;line-height:1.4}
-label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
-input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:15px;background:#fff}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f3d22;color:#222}
+.wrap{max-width:560px;margin:0 auto;padding:16px 12px 40px}
+.card{background:#fdf6e3;border:3px solid #c9a227;border-radius:20px;padding:0 0 20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.logo-wrap{text-align:center;background:#0f3d22;padding:22px 16px 10px;border-bottom:4px solid #c9a227}
+.logo-wrap img{width:240px;max-width:88%;height:auto;background:#fff;border-radius:12px;padding:8px}
+.addr{text-align:center;font-size:13px;color:#ffeaa7;margin:10px 0 8px;line-height:1.4;font-weight:700}
+.inner{padding:4px 18px 0}
+label{display:block;font-size:13px;font-weight:800;margin:14px 0 6px;color:#0f3d22}
+input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:2px solid #1e4d2b;border-radius:10px;font-size:15px;background:#fffdf5;color:#222}
 textarea{min-height:70px;resize:vertical}
 .stepper{display:flex;align-items:center;gap:12px}
-.stepper button{width:56px;height:56px;border-radius:50%;border:1px solid #1a7a3a;background:#eaf7ee;font-size:30px;line-height:1;cursor:pointer;flex-shrink:0}
-.stepper .val{flex:1;text-align:center;font-size:22px;font-weight:800;background:#f8f8f8;border-radius:10px;padding:14px 0}
-.hint{font-size:12px;color:#777;margin-top:5px;line-height:1.4}
+.stepper button{width:58px;height:58px;border-radius:50%;border:2px solid #c9a227;background:#0f3d22;color:#fff;font-size:32px;line-height:1;cursor:pointer;flex-shrink:0}
+.stepper .val{flex:1;text-align:center;font-size:22px;font-weight:900;background:#f5c518;color:#0f3d22;border:2px solid #0f3d22;border-radius:10px;padding:14px 0}
+.hint{font-size:12px;color:#6b5a1a;margin-top:5px;line-height:1.4}
 .radio-row{display:flex;gap:10px}
-.radio-row label{flex:1;border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center;font-weight:700;cursor:pointer;margin:0}
+.radio-row label{flex:1;border:2px solid #0f3d22;border-radius:10px;padding:12px;text-align:center;font-weight:800;cursor:pointer;margin:0;background:#fff}
 .radio-row input{display:none}
-.radio-row input:checked + span{color:#1a7a3a}
-.radio-row label:has(input:checked){border-color:#1a7a3a;background:#eaf7ee}
-.summary{background:#fff8e1;border:1px solid #f0d98c;border-radius:12px;padding:14px;margin-top:18px}
-.summary h3{margin:0 0 10px;font-size:16px}
+.radio-row input:checked + span{color:#fff}
+.radio-row label:has(input:checked){background:#0f3d22;color:#fff;border-color:#c9a227}
+.summary{background:#0f3d22;color:#fff;border:2px solid #c9a227;border-radius:14px;padding:14px;margin-top:18px}
+.summary h3{margin:0 0 10px;font-size:17px;color:#f5c518}
 .sum-line{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
-.sum-line.total{font-size:20px;font-weight:800;border-top:1px dashed #d9c26a;margin-top:8px;padding-top:10px}
-.sum-line.adv{font-weight:700;color:#1a7a3a}
-.notes-in-total{background:#fff;border:1px solid #e8d88a;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:10px;white-space:pre-wrap}
-.pay{text-align:center;margin-top:18px}
-.pay img{width:190px;height:190px;object-fit:contain;background:#fff;border:8px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.12);border-radius:12px}
-.pay p{margin:8px 0 0;font-size:14px;font-weight:700}
-.btn{width:100%;padding:16px;border:0;border-radius:12px;background:#1a7a3a;color:#fff;font-size:17px;font-weight:800;cursor:pointer;margin-top:16px}
+.sum-line.total{font-size:21px;font-weight:900;border-top:2px dashed #c9a227;margin-top:8px;padding-top:10px;color:#f5c518}
+.sum-line.adv{font-weight:800;color:#7dff9a}
+.notes-in-total{background:#fff;color:#222;border:2px solid #c9a227;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:10px;white-space:pre-wrap}
+.pay{text-align:center;margin-top:18px;background:#eaf5ec;border:2px solid #1e4d2b;border-radius:14px;padding:14px}
+.pay img{width:190px;height:190px;object-fit:contain;background:#fff;border:4px solid #c9a227;border-radius:12px}
+.pay p{margin:8px 0 0;font-size:14px;font-weight:800;color:#0f3d22}
+.btn{width:100%;padding:16px;border:3px solid #0f3d22;border-radius:12px;background:#c9a227;color:#0f3d22;font-size:18px;font-weight:900;cursor:pointer;margin-top:16px;box-shadow:0 3px 0 #0f3d22}
 .btn:disabled{opacity:.6}
-.msg{text-align:center;font-weight:700;margin-top:12px;font-size:14px;line-height:1.5}
-.msg.ok{color:#1a7a3a}
+.msg{text-align:center;font-weight:800;margin-top:12px;font-size:14px;line-height:1.5}
+.msg.ok{color:#0f7a2e}
 .msg.err{color:#c00}
-.small{font-size:12px;color:#888;text-align:center;margin-top:10px}
+.small{font-size:12px;color:#6b5a1a;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="card">
-<div class="logo-wrap"><img src="Pachapp_1.png" alt="Pachapp"></div>
-<p class="addr">Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</p>
+<div class="logo-wrap"><img src="Pachapp_1.png" alt="Pachapp"><p class="addr">Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</p></div>
+<div class="inner">
 
 <label for="name">Guest Name *</label>
 <input id="name" type="text" placeholder="Full name" autocomplete="name">
@@ -119,17 +120,16 @@ textarea{min-height:70px;resize:vertical}
 <div class="small">After you send, booking stays as Pending - Waiting for Pachapp to verify. Pachapp will confirm after checking payment.</div>
 </div>
 </div>
+</div>
 
 <script>
 var AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
 var AIRTABLE_BASE_ID = "YOUR_AIRTABLE_BASE_ID";
 var AIRTABLE_TABLE = "Bookings";
-
 var FESTIVALS = new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
 var nights = 1;
 var rooms = 4;
 var roomsManual = false;
-
 function fmt(n){ return 'Rs.' + Number(n||0).toLocaleString('en-IN'); }
 function pad(n){ return String(n).padStart(2,'0'); }
 function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -225,14 +225,12 @@ document.getElementById('breakfast').addEventListener('change', update);
 document.getElementById('notes').addEventListener('input', update);
 document.querySelectorAll('input[name="stay"]').forEach(function(el){ el.addEventListener('change', function(){ roomsManual=false; update(); }); });
 update();
-
 function normalizePhone(raw){
   var p = String(raw||'').replace(/[^0-9]/g,'');
   if(p.length===10) p = '91'+p;
   if(p.startsWith('0') && p.length===11) p = '91'+p.slice(1);
   return p;
 }
-
 document.getElementById('submitBtn').onclick = async function(){
   var btn = document.getElementById('submitBtn');
   var msg = document.getElementById('msg');
