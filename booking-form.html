@@ -35,7 +35,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .step-val{font-size:20px;font-weight:300;letter-spacing:.03em;line-height:1.6;text-align:center;flex:1}
 .step-val small{font-size:14px;font-weight:300;opacity:.9}
 .hint{font-size:14.5px;font-weight:200;letter-spacing:.02em;line-height:1.7;margin-top:10px;color:rgba(255,255,255,.78);transition:color .25s}
-/* RED WHEN ABOVE LOGIC */
 .hint.over{color:#FF3B30 !important;font-weight:400}
 .booking-row{display:flex;gap:0;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;backdrop-filter:blur(18px)}
 .booking-opt{flex:1;padding:14px 8px;border-radius:10px;text-align:center;cursor:pointer;transition:all .25s cubic-bezier(.25,.1,.25,1);position:relative}
@@ -55,7 +54,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .rooms-pill .rbtn:active{transform:scale(.90)}
 .rooms-pill .rbtn:disabled{opacity:.4}
 .rooms-pill .rval{font-size:22px;font-weight:400;letter-spacing:.02em;min-width:28px;text-align:center}
-/* RED WHEN ABOVE LOGIC - Rooms pill turns red */
 .rooms-pill.over-capacity{background:rgba(255,59,48,.22) !important;border:1.5px solid #FF3B30 !important;color:#FF3B30 !important}
 .rooms-pill.over-capacity .lbl{color:#FF3B30}
 .rooms-pill.over-capacity .lbl .green-tick{color:#FF3B30}
@@ -138,19 +136,56 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <script>
 let nights=1,adults=2,kidsFree=0,kidsHalf=0,bookingType='Full Villa',breakfast='Yes',rooms=4,roomsManual=false;
 let payAdvanceOn=false;
-const FESTIVALS=new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
+// PRICING — 4 TYPES, APPLIED TO EVERY NIGHT
+// Weekday Mon-Fri = 6400 (20% less than Weekend) | Weekend Sat-Sun = 8000 | Holiday = 8000 | Festival = 9600 (20% more than Weekend)
+const FESTIVALS=new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
+const HOLIDAYS=new Set(['2026-01-26','2026-03-03','2026-03-26','2026-04-03','2026-05-27','2026-06-26','2026-09-14','2026-10-02','2026-11-08','2027-01-26','2026-02-15','2026-03-04','2026-04-06','2026-05-28']);
 function fmt(n){return 'Rs.'+n.toLocaleString('en-IN')}
-function getDayType(s){if(!s)return 'Weekday';if(FESTIVALS.has(s))return 'Festival';const d=new Date(s+'T12:00:00'),day=d.getDay();if(day===5||day===6||day===0)return 'Weekend';return 'Weekday'}
+function getDayType(s){
+  if(!s) return 'Weekday';
+  if(FESTIVALS.has(s)) return 'Festival';
+  if(HOLIDAYS.has(s)) return 'Holiday';
+  const d=new Date(s+'T12:00:00'), day=d.getDay();
+  // Weekend = Sat (6) + Sun (0) ONLY. Fri (5) = Weekday
+  if(day===6||day===0) return 'Weekend';
+  return 'Weekday'; // Mon-Fri
+}
+function rateFor(s){
+  const t=getDayType(s);
+  if(t==='Festival') return 9600;
+  if(t==='Weekend'||t==='Holiday') return 8000;
+  return 6400; // Weekday = 8000 x 0.8
+}
+function dateStrPlus(checkIn, add){
+  const d=new Date(checkIn+'T12:00:00'); d.setDate(d.getDate()+add); return d.toISOString().slice(0,10);
+}
+function calcFullVillaBase(checkIn, nights){
+  if(!checkIn) return {base:6400*nights, breakdown:'Weekday'};
+  let base=0, counts={Weekday:0,Weekend:0,Holiday:0,Festival:0};
+  for(let i=0;i<nights;i++){
+    const s=dateStrPlus(checkIn,i), t=getDayType(s);
+    counts[t]++; base+=rateFor(s);
+  }
+  let parts=[];
+  if(counts.Weekday) parts.push(counts.Weekday+' Weekday');
+  if(counts.Weekend) parts.push(counts.Weekend+' Weekend');
+  if(counts.Holiday) parts.push(counts.Holiday+' Holiday');
+  if(counts.Festival) parts.push(counts.Festival+' Festival');
+  return {base, breakdown: parts.join(' + ')};
+}
 function getAutoRooms(a){return Math.max(1,Math.min(4,Math.ceil(a/2)))}
 function calc(){
-  const checkIn=document.getElementById('checkIn').value,dayType=getDayType(checkIn);
+  const checkIn=document.getElementById('checkIn').value;
   let base=0,baseLabel='';
   let autoRooms=getAutoRooms(adults);
-  if(bookingType==='Full Villa'){rooms=4;const rate=dayType==='Festival'?9600:dayType==='Weekend'?8000:6400;base=rate*nights;baseLabel='Full Villa ('+dayType+')';}
-  else{
+  if(bookingType==='Full Villa'){
+    rooms=4;
+    const r=calcFullVillaBase(checkIn, nights);
+    base=r.base; baseLabel='Full Villa ('+r.breakdown+')';
+  } else {
     if(!roomsManual) rooms=autoRooms;
     rooms=Math.max(1,Math.min(4,rooms));
-    base=1600*rooms*nights;baseLabel=rooms+' Room(s) ('+dayType+')';
+    base=1600*rooms*nights; baseLabel=rooms+' Room(s) × Rs.1600';
   }
   const capacity=bookingType==='Full Villa'?8:rooms*2;
   const extraAdults=Math.max(0,adults-capacity);
@@ -166,11 +201,10 @@ function calc(){
   document.getElementById('roomsVal').textContent=rooms;
   document.getElementById('roomsMode').textContent=bookingType==='Full Villa'?'FULL VILLA':(roomsManual?'MANUAL':'AUTO');
   const hintEl=document.getElementById('roomsHint'), pillEl=document.getElementById('roomsPill');
-  // RED WHEN ABOVE LOGIC: Rooms taken < Need, or Adults > Capacity
   const overCapacity = bookingType==='Rooms' ? (rooms < autoRooms) : (adults > 8);
   if(bookingType==='Full Villa'){
     if(adults>8) hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • '+extraAdults+' Adult(s) OVER capacity — Extra charged';
-    else hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults';
+    else hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • Weekday 6400 / Weekend 8000 / Holiday 8000 / Festival 9600';
   } else if(!roomsManual){
     hintEl.textContent='Rooms = Auto ceil(Adults / 2) • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults';
   } else {
@@ -181,7 +215,7 @@ function calc(){
   if(overCapacity){ hintEl.classList.add('over'); pillEl.classList.add('over-capacity'); }
   else { hintEl.classList.remove('over'); pillEl.classList.remove('over-capacity'); }
   document.getElementById('bfHint').textContent=bookingType==='Full Villa'?'Full Villa: Breakfast FREE':'Rooms: Rs.100 / head / night • Breakfast count = Adults + Kids 6-12 = '+breakfastCount;
-  if(checkIn){const d=new Date(checkIn+'T12:00:00');d.setDate(d.getDate()+nights);document.getElementById('checkOut').value=d.toISOString().slice(0,10);}
+  if(checkIn){document.getElementById('checkOut').value=dateStrPlus(checkIn, nights);}
   document.getElementById('gtBaseLabel').textContent=baseLabel;
   document.getElementById('gtBase').textContent=fmt(base);
   document.getElementById('gtExtra').textContent=fmt(extraTotal);
