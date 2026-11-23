@@ -1,191 +1,37 @@
-// Pachapp — 【entity-WhatsApp Cloud API¦canonical_name=WhatsApp】 — FIXED NOT REPLYING VERSION
-// No Baileys, No QR, No Chrome. Logs every webhook.
-const 【entity-express¦canonical_name=express】 = require('【entity-express¦canonical_name=express】');
-const fs = require('fs');
-const path = require('path');
-const app = 【entity-express¦canonical_name=express】();
-app.use(【entity-express¦canonical_name=express】.json());
+const express = require('express');
+const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 10000;
-
 const OWNER_NUMBER = '918943666911';
 const VILLA_NAME = 'Pachapp Pool Villa';
-const WEBSITE = 'www.pachapp.green';
 const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
-const NEARBY_LINK = 'https://pachapp.green/here-around/';
 const FORM_URL = process.env.FORM_URL || 'https://pachapp.green/booking-form.html';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '';
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'pachapp-verify-123';
-
-console.log('BOOT: has_token=' + !!WHATSAPP_TOKEN + ' has_phone_id=' + !!WHATSAPP_PHONE_ID + ' verify=' + VERIFY_TOKEN + ' form=' + FORM_URL);
-
-// ===== PRICING — SAME AS FORM =====
-const FESTIVALS = new Set([
-  '2026-01-01','2026-01-14','2026-01-15','2026-02-15','2026-03-04','2026-03-19','2026-03-20','2026-03-26','2026-03-31','2026-04-03','2026-04-05','2026-04-14','2026-04-19','2026-04-29','2026-05-27','2026-05-31','2026-06-26','2026-08-26','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-09-04','2026-09-14','2026-10-11','2026-10-20','2026-11-08','2026-11-09','2026-11-24','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31',
-  '2027-01-01','2027-01-14','2027-01-15','2027-02-06','2027-03-22','2027-03-27','2027-04-14','2027-04-18','2027-05-01','2027-05-16','2027-06-16','2027-08-15','2027-08-20','2027-08-21','2027-08-22','2027-09-24','2027-10-09','2027-10-29','2027-10-30','2027-11-13','2027-12-24','2027-12-25','2027-12-26','2027-12-27','2027-12-28','2027-12-29','2027-12-30','2027-12-31'
-]);
-const HOLIDAYS = new Set([
-  '2026-01-26','2026-05-01','2026-08-15','2026-10-02','2026-04-03','2026-04-14','2026-03-20','2026-05-27','2026-06-26','2026-08-26','2026-11-24','2026-12-25',
-  '2027-01-26','2027-05-01','2027-08-15','2027-10-02','2027-03-22','2027-05-16','2027-06-16','2027-11-13','2027-12-25'
-]);
-function fmt(n){ return 'Rs.' + Number(n).toLocaleString('en-IN'); }
-function getDayType(s){
-  if(!s) return 'Weekday';
-  if(FESTIVALS.has(s)) return 'Festival';
-  if(HOLIDAYS.has(s)) return 'Holiday';
-  const d=new Date(s+'T12:00:00'); const day=d.getDay();
-  if(day===6||day===0) return 'Weekend';
-  return 'Weekday';
-}
-function rateFor(s){ const t=getDayType(s); if(t==='Festival'||t==='Holiday') return 9600; if(t==='Weekend') return 8000; return 6400; }
-function dateStrPlus(checkIn,add){ const d=new Date(checkIn+'T12:00:00'); d.setDate(d.getDate()+add); return d.toISOString().slice(0,10); }
-function calcFullVillaBase(checkIn,nights){
-  if(!checkIn) return { base:6400*nights, breakdown:'Weekday' };
-  let base=0; const counts={Weekday:0,Weekend:0,Holiday:0,Festival:0};
-  for(let i=0;i<nights;i++){ const s=dateStrPlus(checkIn,i), t=getDayType(s); counts[t]++; base+=rateFor(s); }
-  const parts=[]; if(counts.Weekday) parts.push(counts.Weekday+' Weekday'); if(counts.Weekend) parts.push(counts.Weekend+' Weekend'); if(counts.Holiday) parts.push(counts.Holiday+' Holiday'); if(counts.Festival) parts.push(counts.Festival+' Festival');
-  return { base, breakdown: parts.join(' + ') };
-}
-function getAutoRooms(a){ return Math.max(1, Math.min(4, Math.ceil(a/2))); }
-function calcAdvance(total, bookingType, rooms, nights, adults){
-  if(bookingType!=='Full Villa' && rooms===1 && nights===1 && adults<=2) return 1600;
-  if(total<=10000) return 2000;
-  return Math.round(total*0.20);
-}
-function calcTotal({bookingType='Full Villa', checkIn='', nights=1, adults=2, rooms=null, kidsFree=0, kidsHalf=0, breakfast='Yes'}){
-  let autoRooms=getAutoRooms(adults);
-  if(bookingType==='Full Villa') rooms=4; else if(rooms===null) rooms=autoRooms;
-  rooms=Math.max(1, Math.min(4, rooms));
-  let base=0, baseLabel='';
-  if(bookingType==='Full Villa'){ const r=calcFullVillaBase(checkIn,nights); base=r.base; baseLabel='Full Villa ('+r.breakdown+')'; }
-  else { base=1600*rooms*nights; baseLabel=rooms+' Room(s) x Rs.1600'; }
-  const capacity=bookingType==='Full Villa'?8:rooms*2;
-  const extraAdults=Math.max(0, adults-capacity);
-  const extraTotal=extraAdults*800*nights;
-  const kidsTotal=kidsHalf*300*nights;
-  let breakfastTotal=0; if(breakfast==='Yes') breakfastTotal=bookingType==='Full Villa'?0:(adults+kidsHalf)*100*nights;
-  const total=base+extraTotal+kidsTotal+breakfastTotal;
-  const advance=calcAdvance(total, bookingType, rooms, nights, adults);
-  const overCapacity=bookingType==='Rooms'?(rooms<autoRooms):(adults>8);
-  return { base, baseLabel, rooms, autoRooms, capacity, extraAdults, extraTotal, kidsTotal, breakfastTotal, total, advance, overCapacity, checkOut: checkIn?dateStrPlus(checkIn,nights):'' };
-}
-function parseDate(text){
-  if(!text) return null; text=text.toLowerCase().trim();
-  const months={jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:4,jun:5,june:5,jul:6,july:6,aug:7,august:7,sep:8,sept:8,september:8,oct:9,october:9,nov:10,november:10,dec:11,december:11};
-  let m;
-  m=text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
-  m=text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); if(m){ let y=parseInt(m[3]); if(y<100) y+=2000; return new Date(y,parseInt(m[2])-1,parseInt(m[1])); }
-  m=text.match(/(\d{1,2})[\/\-](\d{1,2})\b/); if(m){ const now=new Date(); let y=now.getFullYear(); let d=new Date(y,parseInt(m[2])-1,parseInt(m[1])); if(d<now) d=new Date(y+1,parseInt(m[2])-1,parseInt(m[1])); return d; }
-  m=text.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)/); if(m && months[m[2]]!==undefined){ const now=new Date(); let y=now.getFullYear(); let d=new Date(y,months[m[2]],parseInt(m[1])); if(d<now) d=new Date(y+1,months[m[2]],parseInt(m[1])); return d; }
-  m=text.match(/([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/); if(m && months[m[1]]!==undefined){ const now=new Date(); let y=now.getFullYear(); let d=new Date(y,months[m[1]],parseInt(m[2])); if(d<now) d=new Date(y+1,months[m[1]],parseInt(m[2])); return d; }
-  if(text.includes('tomorrow')){ const d=new Date(); d.setDate(d.getDate()+1); return d; }
-  if(text.includes('today')) return new Date();
-  return null;
-}
-function parseBookingDetails(text){
-  const lower=(text||'').toLowerCase();
-  const d=parseDate(text); const checkIn=d?d.toISOString().slice(0,10):'';
-  let nights=1; let mN=lower.match(/(\d+)\s*night/); if(mN) nights=Math.max(1,Math.min(30,parseInt(mN[1])));
-  let adults=2; let mA=lower.match(/(\d+)\s*adult/); if(mA) adults=Math.max(1,Math.min(20,parseInt(mA[1])));
-  else { let mG=lower.match(/(\d+)\s*(guest|person|people|pax)/); if(mG) adults=Math.max(1,Math.min(20,parseInt(mG[1]))); }
-  let kidsHalf=0; let mK=lower.match(/(\d+)\s*kid/); if(mK && lower.includes('6')) kidsHalf=parseInt(mK[1]);
-  let bookingType='Full Villa'; if(lower.includes('room') && !lower.includes('full villa')) bookingType='Rooms';
-  let rooms=null; let mR=lower.match(/(\d+)\s*room/); if(mR && bookingType==='Rooms') rooms=Math.max(1,Math.min(4,parseInt(mR[1])));
-  let breakfast='Yes'; if(lower.includes('without breakfast')||lower.includes('no breakfast')) breakfast='No';
-  return { checkIn, nights, adults, kidsFree:0, kidsHalf, bookingType, rooms, breakfast };
-}
-let gq=null;
-try{ const { Groq }=require('groq-sdk'); if(process.env.GROQ_API_KEY) gq=new Groq({ apiKey: process.env.GROQ_API_KEY }); }catch(e){}
-const SYSTEM_PROMPT=`You are Pachapp Pool Villa AI Host. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16, Book: ${FORM_URL} — ALWAYS send ONLY this real form link. RULES: Answer REAL answer FIRST, then ask date/guests. NEVER give price without date. Reply in guest language. GROUP AGENTS: 1-2 lines only. DIRECT: elaborated humane. PRICING SAME AS FORM, USE CALCULATED PRICE, DO NOT RECALCULATE: FULL VILLA Weekday Mon-Fri 6400, Weekend Sat-Sun 8000, Festival & Holiday 9600, per-night Fri 6400+Sat 8000+Sun 8000=22400. Includes 4 rooms, 8 adults, Breakfast FREE. ROOMS 1600/room/night flat ALL days, Rooms=ceil(Adults/2) 1-4. Extra 800/night. Kids 0-6 FREE. Kids 6-12 300/night. Breakfast Full Villa FREE, Rooms 100/head. ADVANCE 1 Room 1 Night <=2=1600, <=10000=2000, else 20%. Owner confirms only after bank check. Guest always Pending.`;
-async function askAI(userMsg, isGroup, history, calcContext){
-  if(!gq) return null;
-  try{
-    const c=await gq.chat.completions.create({ model:'openai/gpt-oss-20b', messages:[{role:'system', content:SYSTEM_PROMPT+'\n'+(isGroup?'GROUP: 1-2 lines only.':'DIRECT: elaborated.')+'\n'+(calcContext?'\nCALCULATED PRICE (USE EXACTLY):\n'+calcContext:'')}, ...(history||[]).slice(-8), {role:'user', content:userMsg}], temperature:0.7, max_tokens:isGroup?120:600 });
-    return c.choices[0]?.message?.content||null;
-  }catch(e){ console.log('GQ error '+e.message); return null; }
-}
-function fallbackReply(text, parsed, calc){
-  if(!parsed.checkIn) return 'Welcome to Pachapp Pool Villa! 🌿🏊\n\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\n\nFull Villa: Weekday Mon-Fri Rs.6400, Weekend Sat-Sun Rs.8000, Festival & Holiday Rs.9600 — per-night, Breakfast FREE\nRooms: Rs.1600/room/night flat ALL days\n\nWhich date? How many guests?\n\nBook: '+FORM_URL;
-  let msg='For '+parsed.checkIn+' — '+calc.baseLabel+' ✨\n\n';
-  msg+=(parsed.bookingType==='Full Villa'?'Private whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults.':calc.rooms+' Room(s), Capacity '+calc.capacity+' Adults.')+'\n';
-  if(calc.overCapacity) msg+='⚠️ You need '+calc.autoRooms+' Room(s) for '+parsed.adults+' Adults — fewer rooms = Extra charged.\n';
-  msg+='Base: '+fmt(calc.base)+'\n';
-  if(calc.extraTotal>0) msg+='Extra Adult: '+fmt(calc.extraTotal)+'\n';
-  if(calc.kidsTotal>0) msg+='Kids 6-12: '+fmt(calc.kidsTotal)+'\n';
-  if(calc.breakfastTotal>0) msg+='Breakfast: '+fmt(calc.breakfastTotal)+'\n';
-  msg+='Grand Total: '+fmt(calc.total)+'\nAdvance: '+fmt(calc.advance)+'\nCheck-out: '+calc.checkOut+'\n\nBook: '+FORM_URL;
-  return msg;
-}
-let dbBase=null;
-try{ if(process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID){ const AT=require('airtable'); dbBase=new AT({apiKey:process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID); } }catch(e){}
-async function sendWhatsApp(to, text){
-  console.log('SEND TRY to '+to+' : '+text.slice(0,80));
-  if(!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID){ console.log('SEND FAIL: no token/phone_id'); return false; }
-  try{
-    const res=await fetch('https://graph.facebook.com/v21.0/'+WHATSAPP_PHONE_ID+'/messages', { method:'POST', headers:{'Authorization':'Bearer '+WHATSAPP_TOKEN,'Content-Type':'application/json'}, body: JSON.stringify({ messaging_product:'whatsapp', to, type:'text', text:{ body: text.slice(0,4000) } }) });
-    const j=await res.json(); console.log('SEND RESULT ok='+res.ok+' '+JSON.stringify(j).slice(0,300));
-    return res.ok;
-  }catch(e){ console.log('SEND ERROR '+e.message); return false; }
-}
-const chatHistories=new Map(); const pendingBookings=new Map();
-async function handleMessage(from, text, senderName){
-  console.log('HANDLE from '+from+' : '+text.slice(0,200));
-  const lower=(text||'').toLowerCase();
-  if(from===OWNER_NUMBER && (lower.trim()==='yes'||lower.trim()==='no'||lower.includes('confirm'))){
-    let tp=null, tb=null; for(const [p,b] of pendingBookings){ tp=p; tb=b; }
-    if(tb){
-      if(lower.trim()==='yes'||lower.includes('confirm')){ await sendWhatsApp(tb.phone, 'Booking CONFIRMED - Pachapp Pool Villa! 🎉\nDate: '+tb.date+'\nTotal: '+fmt(tb.total)+'\nAdvance: '+fmt(tb.advance)+' received\nMaps: '+MAPS_LINK); await sendWhatsApp(from,'Confirmed to '+tb.name); pendingBookings.delete(tp); }
-      else await sendWhatsApp(from,'Not confirmed.');
-      return;
-    }
-  }
-  const hasUTR=lower.match(/utr|transaction|ref/i)||lower.match(/\b\d{10,18}\b/);
-  if(hasUTR && (lower.includes('paid')||lower.includes('utr')||lower.includes('advance'))){
-    const m=text.match(/\b\d{10,18}\b/); const utr=m?m[0]:'Screenshot received';
-    const prev=pendingBookings.get(from); const pending={ name:senderName, phone:from, date:prev?.date||'To confirm', guests:prev?.guests||'', total:prev?.total||0, advance:prev?.advance||0, utr, status:'Pending' };
-    pendingBookings.set(from, pending);
-    await sendWhatsApp(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: '+senderName+' ('+from+')\nDate: '+pending.date+'\nUTR: '+utr+'\nAdvance: '+fmt(pending.advance)+'\nReply YES to confirm, NO to reject.');
-    await sendWhatsApp(from, 'Payment + UTR '+utr+' received ✅ Owner will verify after bank check.');
-    return;
-  }
-  if(!chatHistories.has(from)) chatHistories.set(from, []);
-  const history=chatHistories.get(from); history.push({role:'user', content:text});
-  const parsed=parseBookingDetails(text); let calc=null, calcContext='';
-  if(parsed.checkIn){ calc=calcTotal(parsed); calcContext='Check-in '+parsed.checkIn+' Nights '+parsed.nights+' Check-out '+calc.checkOut+' Type '+parsed.bookingType+' Rooms '+calc.rooms+' Adults '+parsed.adults+' Kids 6-12 '+parsed.kidsHalf+' Breakfast '+parsed.breakfast+' Base '+fmt(calc.base)+' ('+calc.baseLabel+') Total '+fmt(calc.total)+' Advance '+fmt(calc.advance); pendingBookings.set(from, {name:senderName, phone:from, date:parsed.checkIn, guests:text, total:calc.total, advance:calc.advance, status:'Enquiry'}); }
-  let reply=await askAI(text, false, history, calcContext);
-  if(!reply) reply=fallbackReply(text, parsed, calc||calcTotal(parsed));
-  history.push({role:'assistant', content:reply}); if(history.length>16) chatHistories.set(from, history.slice(-16));
-  await sendWhatsApp(from, reply);
-}
-// ===== ROUTES =====
-app.get('/health', (req,res)=>{ res.json({ status:'ok', villa:VILLA_NAME, ready:true, method:'Cloud API', has_token:!!WHATSAPP_TOKEN, has_phone_id:!!WHATSAPP_PHONE_ID, form_url:FORM_URL }); });
-app.get('/', (req,res)=>{ res.send('Pachapp AI - Cloud API - Running'); });
-app.get('/test-send', async (req,res)=>{
-  const to=req.query.to||OWNER_NUMBER; const msg=req.query.msg||'Test from Pachapp bot — if you get this, sending works ✅';
-  const ok=await sendWhatsApp(to, msg);
-  res.json({ sent: ok, to, has_token: !!WHATSAPP_TOKEN, has_phone_id: !!WHATSAPP_PHONE_ID });
-});
-app.get('/webhook', (req,res)=>{
-  console.log('WEBHOOK VERIFY try token='+req.query['hub.verify_token']);
-  if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
-  return res.sendStatus(403);
-});
-app.post('/webhook', async (req,res)=>{
-  console.log('WEBHOOK HIT '+JSON.stringify(req.body).slice(0,800));
-  try{
-    res.sendStatus(200);
-    const body=req.body; if(body.object!=='whatsapp_business_account') return;
-    for(const entry of body.entry||[]){
-      for(const change of entry.changes||[]){
-        const value=change.value||{};
-        for(const msg of value.messages||[]){
-          const from=msg.from; const text=msg.text?.body||msg.image?.caption||msg.video?.caption||'';
-          if(!text) continue;
-          const senderName=value.contacts?.find(c=>c.wa_id===from)?.profile?.name||'Guest';
-          await handleMessage(from, text, senderName);
-        }
-      }
-    }
-  }catch(e){ console.log('webhook error '+e.message); }
-});
-app.listen(PORT, ()=> console.log('Pachapp AI Ready - CLOUD API - LIVE on '+PORT));
+console.log('BOOT has_token=' + !!WHATSAPP_TOKEN + ' has_phone_id=' + !!WHATSAPP_PHONE_ID);
+const FESTIVALS = new Set(['2026-01-01','2026-01-14','2026-01-15','2026-02-15','2026-03-04','2026-03-19','2026-03-20','2026-03-26','2026-03-31','2026-04-03','2026-04-05','2026-04-14','2026-04-19','2026-04-29','2026-05-27','2026-05-31','2026-06-26','2026-08-26','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-09-04','2026-09-14','2026-10-11','2026-10-20','2026-11-08','2026-11-09','2026-11-24','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2027-01-14','2027-01-15','2027-02-06','2027-03-22','2027-03-27','2027-04-14','2027-04-18','2027-05-01','2027-05-16','2027-06-16','2027-08-15','2027-08-20','2027-08-21','2027-08-22','2027-09-24','2027-10-09','2027-10-29','2027-10-30','2027-11-13','2027-12-24','2027-12-25','2027-12-26','2027-12-27','2027-12-28','2027-12-29','2027-12-30','2027-12-31']);
+const HOLIDAYS = new Set(['2026-01-26','2026-05-01','2026-08-15','2026-10-02','2026-04-03','2026-04-14','2026-03-20','2026-05-27','2026-06-26','2026-08-26','2026-11-24','2026-12-25','2027-01-26','2027-05-01','2027-08-15','2027-10-02','2027-03-22','2027-05-16','2027-06-16','2027-11-13','2027-12-25']);
+function fmt(n) { return 'Rs.' + Number(n).toLocaleString('en-IN'); }
+function getDayType(s) { if (!s) return 'Weekday'; if (FESTIVALS.has(s)) return 'Festival'; if (HOLIDAYS.has(s)) return 'Holiday'; const d = new Date(s + 'T12:00:00'); const day = d.getDay(); if (day === 6 || day === 0) return 'Weekend'; return 'Weekday'; }
+function rateFor(s) { const t = getDayType(s); if (t === 'Festival' || t === 'Holiday') return 9600; if (t === 'Weekend') return 8000; return 6400; }
+function dateStrPlus(checkIn, add) { const d = new Date(checkIn + 'T12:00:00'); d.setDate(d.getDate() + add); return d.toISOString().slice(0, 10); }
+function calcFullVillaBase(checkIn, nights) { if (!checkIn) return { base: 6400 * nights, breakdown: 'Weekday' }; let base = 0; const counts = { Weekday: 0, Weekend: 0, Holiday: 0, Festival: 0 }; for (let i = 0; i < nights; i++) { const s = dateStrPlus(checkIn, i); const t = getDayType(s); counts[t]++; base += rateFor(s); } const parts = []; if (counts.Weekday) parts.push(counts.Weekday + ' Weekday'); if (counts.Weekend) parts.push(counts.Weekend + ' Weekend'); if (counts.Holiday) parts.push(counts.Holiday + ' Holiday'); if (counts.Festival) parts.push(counts.Festival + ' Festival'); return { base: base, breakdown: parts.join(' + ') }; }
+function getAutoRooms(a) { return Math.max(1, Math.min(4, Math.ceil(a / 2))); }
+function calcAdvance(total, bookingType, rooms, nights, adults) { if (bookingType !== 'Full Villa' && rooms === 1 && nights === 1 && adults <= 2) return 1600; if (total <= 10000) return 2000; return Math.round(total * 0.20); }
+function calcTotal(o) { const bookingType = o.bookingType || 'Full Villa'; const checkIn = o.checkIn || ''; const nights = o.nights || 1; const adults = o.adults || 2; const kidsHalf = o.kidsHalf || 0; const breakfast = o.breakfast || 'Yes'; let autoRooms = getAutoRooms(adults); let rooms = 4; if (bookingType !== 'Full Villa') { rooms = o.rooms || autoRooms; } rooms = Math.max(1, Math.min(4, rooms)); let base = 0; let baseLabel = ''; if (bookingType === 'Full Villa') { const r = calcFullVillaBase(checkIn, nights); base = r.base; baseLabel = 'Full Villa (' + r.breakdown + ')'; } else { base = 1600 * rooms * nights; baseLabel = rooms + ' Room(s) x Rs.1600'; } const capacity = bookingType === 'Full Villa' ? 8 : rooms * 2; const extraAdults = Math.max(0, adults - capacity); const extraTotal = extraAdults * 800 * nights; const kidsTotal = kidsHalf * 300 * nights; let breakfastTotal = 0; if (breakfast === 'Yes') { breakfastTotal = bookingType === 'Full Villa' ? 0 : (adults + kidsHalf) * 100 * nights; } const total = base + extraTotal + kidsTotal + breakfastTotal; const advance = calcAdvance(total, bookingType, rooms, nights, adults); const overCapacity = bookingType === 'Rooms' ? (rooms < autoRooms) : (adults > 8); return { base: base, baseLabel: baseLabel, rooms: rooms, autoRooms: autoRooms, capacity: capacity, extraAdults: extraAdults, extraTotal: extraTotal, kidsTotal: kidsTotal, breakfastTotal: breakfastTotal, total: total, advance: advance, overCapacity: overCapacity, checkOut: checkIn ? dateStrPlus(checkIn, nights) : '' }; }
+function parseDate(text) { if (!text) return null; text = text.toLowerCase().trim(); const months = { jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11 }; let m; m = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])); m = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); if (m) { let y = parseInt(m[3]); if (y < 100) y += 2000; return new Date(y, parseInt(m[2]) - 1, parseInt(m[1])); } m = text.match(/(\d{1,2})[\/\-](\d{1,2})\b/); if (m) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, parseInt(m[2]) - 1, parseInt(m[1])); if (d < now) d = new Date(y + 1, parseInt(m[2]) - 1, parseInt(m[1])); return d; } m = text.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)/); if (m && months[m[2]] !== undefined) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, months[m[2]], parseInt(m[1])); if (d < now) d = new Date(y + 1, months[m[2]], parseInt(m[1])); return d; } m = text.match(/([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/); if (m && months[m[1]] !== undefined) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, months[m[1]], parseInt(m[2])); if (d < now) d = new Date(y + 1, months[m[1]], parseInt(m[2])); return d; } if (text.includes('tomorrow')) { const d = new Date(); d.setDate(d.getDate() + 1); return d; } if (text.includes('today')) return new Date(); return null; }
+function parseBookingDetails(text) { const lower = (text || '').toLowerCase(); const d = parseDate(text); const checkIn = d ? d.toISOString().slice(0, 10) : ''; let nights = 1; const mN = lower.match(/(\d+)\s*night/); if (mN) nights = Math.max(1, Math.min(30, parseInt(mN[1]))); let adults = 2; const mA = lower.match(/(\d+)\s*adult/); if (mA) adults = Math.max(1, Math.min(20, parseInt(mA[1]))); else { const mG = lower.match(/(\d+)\s*(guest|person|people|pax)/); if (mG) adults = Math.max(1, Math.min(20, parseInt(mG[1]))); } let kidsHalf = 0; const mK = lower.match(/(\d+)\s*kid/); if (mK && lower.includes('6')) kidsHalf = parseInt(mK[1]); let bookingType = 'Full Villa'; if (lower.includes('room') && !lower.includes('full villa')) bookingType = 'Rooms'; let rooms = null; const mR = lower.match(/(\d+)\s*room/); if (mR && bookingType === 'Rooms') rooms = Math.max(1, Math.min(4, parseInt(mR[1]))); let breakfast = 'Yes'; if (lower.includes('without breakfast') || lower.includes('no breakfast')) breakfast = 'No'; return { checkIn: checkIn, nights: nights, adults: adults, kidsFree: 0, kidsHalf: kidsHalf, bookingType: bookingType, rooms: rooms, breakfast: breakfast }; }
+let gq = null; try { const GroqLib = require('groq-sdk'); if (process.env.GROQ_API_KEY) gq = new GroqLib.Groq({ apiKey: process.env.GROQ_API_KEY }); } catch (e) { console.log('Groq init fail ' + e.message); }
+const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, www.pachapp.green, Maps ' + MAPS_LINK + ', Book: ' + FORM_URL + ' - ALWAYS send ONLY this real form link. RULES: Answer REAL answer FIRST, then ask date/guests. NEVER give price without date. Reply in guest language. GROUP AGENTS: 1-2 lines only. DIRECT: elaborated humane. PRICING SAME AS FORM, USE CALCULATED PRICE, DO NOT RECALCULATE: FULL VILLA Weekday Mon-Fri 6400, Weekend Sat-Sun 8000, Festival and Holiday 9600, per-night Fri 6400+Sat 8000+Sun 8000=22400. Includes 4 rooms, 8 adults, Breakfast FREE. ROOMS 1600/room/night flat ALL days, Rooms=ceil(Adults/2) 1-4. Extra 800/night. Kids 0-6 FREE. Kids 6-12 300/night. Breakfast Full Villa FREE, Rooms 100/head. ADVANCE 1 Room 1 Night up to 2 =1600, up to 10000=2000, else 20 percent. Owner confirms only after bank check. Guest always Pending.';
+async function askAI(userMsg, isGroup, history, calcContext) { if (!gq) return null; try { const c = await gq.chat.completions.create({ model: 'openai/gpt-oss-20b', messages: [{ role: 'system', content: SYSTEM_PROMPT + ' ' + (isGroup ? 'GROUP: 1-2 lines only.' : 'DIRECT: elaborated.') + ' ' + (calcContext ? 'CALCULATED PRICE (USE EXACTLY): ' + calcContext : '') }, { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 }); return c.choices[0].message.content || null; } catch (e) { console.log('GQ error ' + e.message); return null; } }
+function fallbackReply(text, parsed, calc) { if (!parsed.checkIn) return 'Welcome to Pachapp Pool Villa!\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\nFull Villa: Weekday Mon-Fri Rs.6400, Weekend Sat-Sun Rs.8000, Festival and Holiday Rs.9600 - per-night, Breakfast FREE\nRooms: Rs.1600/room/night flat ALL days\nWhich date? How many guests?\nBook: ' + FORM_URL; let msg = 'For ' + parsed.checkIn + ' - ' + calc.baseLabel + '\n'; if (parsed.bookingType === 'Full Villa') { msg += 'Private whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults.\n'; } else { msg += calc.rooms + ' Room(s), Capacity ' + calc.capacity + ' Adults.\n'; } if (calc.overCapacity) msg += 'You need ' + calc.autoRooms + ' Room(s) for ' + parsed.adults + ' Adults - fewer rooms = Extra charged.\n'; msg += 'Base: ' + fmt(calc.base) + '\n'; if (calc.extraTotal > 0) msg += 'Extra Adult: ' + fmt(calc.extraTotal) + '\n'; if (calc.kidsTotal > 0) msg += 'Kids 6-12: ' + fmt(calc.kidsTotal) + '\n'; if (calc.breakfastTotal > 0) msg += 'Breakfast: ' + fmt(calc.breakfastTotal) + '\n'; msg += 'Grand Total: ' + fmt(calc.total) + '\nAdvance: ' + fmt(calc.advance) + '\nCheck-out: ' + calc.checkOut + '\nBook: ' + FORM_URL; return msg; }
+async function sendWhatsApp(to, text) { console.log('SEND TRY to ' + to); if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID) { console.log('SEND FAIL no token'); return false; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + WHATSAPP_PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { body: text.slice(0, 4000) } }) }); const j = await res.json(); console.log('SEND RESULT ok=' + res.ok + ' ' + JSON.stringify(j).slice(0, 300)); return res.ok; } catch (e) { console.log('SEND ERROR ' + e.message); return false; } }
+const chatHistories = new Map(); const pendingBookings = new Map();
+async function handleMessage(from, text, senderName) { console.log('HANDLE from ' + from + ' : ' + text.slice(0, 200)); const lower = (text || '').toLowerCase(); if (from === OWNER_NUMBER && (lower.trim() === 'yes' || lower.trim() === 'no' || lower.includes('confirm'))) { let tp = null; let tb = null; for (const entry of pendingBookings) { tp = entry[0]; tb = entry[1]; } if (tb) { if (lower.trim() === 'yes' || lower.includes('confirm')) { await sendWhatsApp(tb.phone, 'Booking CONFIRMED - Pachapp Pool Villa!\nDate: ' + tb.date + '\nTotal: ' + fmt(tb.total) + '\nAdvance: ' + fmt(tb.advance) + ' received\nMaps: ' + MAPS_LINK); await sendWhatsApp(from, 'Confirmed to ' + tb.name); pendingBookings.delete(tp); } else { await sendWhatsApp(from, 'Not confirmed.'); } return; } } const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/); if (hasUTR && (lower.includes('paid') || lower.includes('utr') || lower.includes('advance'))) { const m = text.match(/\b\d{10,18}\b/); const utr = m ? m[0] : 'Screenshot received'; const prev = pendingBookings.get(from); const pending = { name: senderName, phone: from, date: prev ? prev.date : 'To confirm', guests: prev ? prev.guests : '', total: prev ? prev.total : 0, advance: prev ? prev.advance : 0, utr: utr, status: 'Pending' }; pendingBookings.set(from, pending); await sendWhatsApp(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: ' + senderName + ' (' + from + ')\nDate: ' + pending.date + '\nUTR: ' + utr + '\nAdvance: ' + fmt(pending.advance) + '\nReply YES to confirm, NO to reject.'); await sendWhatsApp(from, 'Payment + UTR ' + utr + ' received. Owner will verify after bank check.'); return; } if (!chatHistories.has(from)) chatHistories.set(from, []); const history = chatHistories.get(from); history.push({ role: 'user', content: text }); const parsed = parseBookingDetails(text); let calc = null; let calcContext = ''; if (parsed.checkIn) { calc = calcTotal(parsed); calcContext = 'Check-in ' + parsed.checkIn + ' Nights ' + parsed.nights + ' Check-out ' + calc.checkOut + ' Type ' + parsed.bookingType + ' Rooms ' + calc.rooms + ' Adults ' + parsed.adults + ' Kids 6-12 ' + parsed.kidsHalf + ' Breakfast ' + parsed.breakfast + ' Base ' + fmt(calc.base) + ' (' + calc.baseLabel + ') Total ' + fmt(calc.total) + ' Advance ' + fmt(calc.advance); pendingBookings.set(from, { name: senderName, phone: from, date: parsed.checkIn, guests: text, total: calc.total, advance: calc.advance, status: 'Enquiry' }); } let reply = await askAI(text, false, history, calcContext); if (!reply) reply = fallbackReply(text, parsed, calc || calcTotal(parsed)); history.push({ role: 'assistant', content: reply }); if (history.length > 16) chatHistories.set(from, history.slice(-16)); await sendWhatsApp(from, reply); }
+app.get('/health', (req, res) => { res.json({ status: 'ok', villa: VILLA_NAME, ready: true, method: 'Cloud API', has_token: !!WHATSAPP_TOKEN, has_phone_id: !!WHATSAPP_PHONE_ID, form_url: FORM_URL }); });
+app.get('/', (req, res) => { res.send('Pachapp AI - Cloud API - Running'); });
+app.get('/test-send', async (req, res) => { const to = req.query.to || OWNER_NUMBER; const msg = req.query.msg || 'Test from Pachapp bot - if you get this, sending works'; const ok = await sendWhatsApp(to, msg); res.json({ sent: ok, to: to, has_token: !!WHATSAPP_TOKEN, has_phone_id: !!WHATSAPP_PHONE_ID }); });
+app.get('/webhook', (req, res) => { if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); return res.sendStatus(403); });
+app.post('/webhook', async (req, res) => { console.log('WEBHOOK HIT ' + JSON.stringify(req.body).slice(0, 800)); try { res.sendStatus(200); const body = req.body; if (body.object !== 'whatsapp_business_account') return; for (const entry of body.entry || []) { for (const change of entry.changes || []) { const value = change.value || {}; for (const msg of value.messages || []) { const from = msg.from; let text = ''; if (msg.text && msg.text.body) text = msg.text.body; else if (msg.image && msg.image.caption) text = msg.image.caption; else if (msg.video && msg.video.caption) text = msg.video.caption; if (!text) continue; let senderName = 'Guest'; if (value.contacts) { for (const c of value.contacts) { if (c.wa_id === from && c.profile && c.profile.name) senderName = c.profile.name; } } await handleMessage(from, text, senderName); } } } } catch (e) { console.log('webhook error ' + e.message); } });
+app.listen(PORT, function () { console.log('Pachapp AI Ready - CLOUD API - LIVE on ' + PORT); });
