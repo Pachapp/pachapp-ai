@@ -33,6 +33,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .stepper-kidshalf{background:rgba(168,212,255,.60);border-color:rgba(255,255,255,.55);color:#000;backdrop-filter:blur(22px)}
 .stepper-kidshalf .step-btn{border-color:rgba(0,0,0,.7);color:#000;background:rgba(255,255,255,.30)}
 .step-val{font-size:20px;font-weight:300;letter-spacing:.03em;line-height:1.6;text-align:center;flex:1}
+.step-val small{font-size:14px;font-weight:300;opacity:.9}
 .hint{font-size:14.5px;font-weight:200;letter-spacing:.02em;line-height:1.7;margin-top:10px;color:rgba(255,255,255,.78)}
 .booking-row{display:flex;gap:0;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;backdrop-filter:blur(18px)}
 .booking-opt{flex:1;padding:14px 8px;border-radius:10px;text-align:center;cursor:pointer;transition:all .25s cubic-bezier(.25,.1,.25,1);position:relative}
@@ -79,16 +80,16 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .qr-wrap img{width:320px;height:320px;max-width:92%;object-fit:contain;border-radius:16px;padding:10px;background:rgba(255,255,255,.92)}
 .pay-sub2{text-align:center;color:#555;font-size:14.5px;margin-bottom:26px;font-weight:200;letter-spacing:.02em}
 .confirm-spacer{height:10px}
-/* BEAUTIFUL RUNNING LETTER / MARQUEE - DO NOT CHANGE */
+/* BEAUTIFUL RUNNING LETTER / MARQUEE - SAME STYLE, NEW WORDS ADDED */
 .marquee-wrap{overflow:hidden;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:13px 0;margin:34px 0 22px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18)}
 .marquee-track{display:flex;width:max-content;animation:marquee 24s linear infinite}
 .marquee-track span{white-space:nowrap;font-size:14px;font-weight:300;letter-spacing:.14em;line-height:1.6;background:linear-gradient(90deg,#FFE9A8,#FFB3C1,#A8D4FF,#B8FFD0,#FFE9A8);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 14px}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-/* CONFIRM BOOKING - STYLISH SIGNATURE CURSIVE + SLOW BREATHING TEXT ONLY */
-.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:14px 18px 18px;font-family:'Great Vibes','Pinyon Script','Brush Script MT','Segoe Script',cursive;font-size:42px;font-weight:400;letter-spacing:.04em;line-height:1.3;text-transform:none;cursor:pointer;margin-top:34px;transition:transform .15s}
+/* CONFIRM BOOKING - SMALLER + BREATHING NON-SEEN TO SEEN */
+.submit{width:100%;background:rgba(26,122,58,.75);backdrop-filter:blur(14px);color:#fff;border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:12px 16px 14px;font-family:'Great Vibes','Pinyon Script','Brush Script MT','Segoe Script',cursive;font-size:32px;font-weight:400;letter-spacing:.04em;line-height:1.3;text-transform:none;cursor:pointer;margin-top:34px;transition:transform .15s}
 .submit:active{transform:scale(.98)}
-.confirm-text{display:inline-block;animation:breathe 3.2s ease-in-out infinite;text-shadow:0 2px 10px rgba(0,0,0,.30)}
-@keyframes breathe{0%,100%{transform:scale(1);opacity:.92;text-shadow:0 2px 10px rgba(0,0,0,.30)}50%{transform:scale(1.06);opacity:1;text-shadow:0 2px 20px rgba(255,255,255,.50),0 0 28px rgba(255,255,255,.25)}}
+.confirm-text{display:inline-block;animation:breathe 3.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.94);opacity:0;text-shadow:0 2px 10px rgba(0,0,0,.30)}50%{transform:scale(1.05);opacity:1;text-shadow:0 2px 20px rgba(255,255,255,.55),0 0 30px rgba(255,255,255,.30)}}
 .status{margin-top:24px;text-align:center;font-weight:300;font-size:15.5px;letter-spacing:.02em;line-height:1.7;min-height:22px}
 </style></head>
 <body><div class="wrap">
@@ -104,8 +105,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <div class="hint" id="roomsHint">Full Villa = 4 Rooms fixed.</div>
 <label>Adults</label><div class="stepper stepper-adults"><button class="step-btn" id="adultsMinus">−</button><div class="step-val"><span id="adultsVal">2</span> Adults</div><button class="step-btn" id="adultsPlus">+</button></div>
 <label>Kids 0-6 Free</label><div class="stepper stepper-kidsfree"><button class="step-btn" id="kidsFreeMinus">−</button><div class="step-val"><span id="kidsFreeVal">0</span> Kids • FREE</div><button class="step-btn" id="kidsFreePlus">+</button></div>
-<label>Kids 6-12 Half Price</label><div class="stepper stepper-kidshalf"><button class="step-btn" id="kidsHalfMinus">−</button><div class="step-val"><span id="kidsHalfVal">0</span> Kids • Rs.400 / night</div><button class="step-btn" id="kidsHalfPlus">+</button></div>
-<div class="hint">Extra Adult Rs.800 / night • Kids 0-6 FREE • Kids 6-12 Rs.400 / night</div>
+<label>Kids 6-12 Half Price</label><div class="stepper stepper-kidshalf"><button class="step-btn" id="kidsHalfMinus">−</button><div class="step-val"><span id="kidsHalfVal">0</span> Kids • Rs.300 / night<br><small>Total <span id="kidsHalfTotal">Rs.0</span></small></div><button class="step-btn" id="kidsHalfPlus">+</button></div>
+<div class="hint">Extra Adult Rs.800 / night • Kids 0-6 FREE • Kids 6-12 Rs.300 / night</div>
 <label>Breakfast</label><div class="bf-row"><div id="bfYes" class="bf-opt bf-yes selected-yes">YES</div><div id="bfNo" class="bf-opt bf-no">NO</div></div>
 <div class="hint" id="bfHint">Full Villa: Breakfast FREE</div>
 <label>Notes</label><textarea id="notes" class="field" placeholder="Any special request? (optional)"></textarea>
@@ -113,7 +114,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <div id="grandTotalBox" class="gt-box" style="display:none"><div class="gt-head"><span>GRAND TOTAL</span><span>▲</span></div>
 <div style="margin-top:18px"><div class="gt-row"><span id="gtBaseLabel">Full Villa</span><b id="gtBase">Rs.6,400</b></div>
 <div class="gt-row"><span>Extra Adult (Rs.800 / night)</span><b id="gtExtra">Rs.0</b></div>
-<div class="gt-row"><span>Kids 6-12 Half Price (Rs.400 / night)</span><b id="gtKids">Rs.0</b></div>
+<div class="gt-row"><span>Kids 6-12 (Rs.300 / night)</span><b id="gtKids">Rs.0</b></div>
 <div class="gt-row"><span>Breakfast</span><b id="gtBreakfast">Rs.0</b></div>
 <div class="gt-total"><span>GRAND TOTAL</span><span id="gtTotal">Rs.6,400</span></div>
 <div class="gt-adv"><span>Advance to Pay</span><span id="gtAdvance">Rs.2,000</span></div>
@@ -125,7 +126,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <label style="color:#000;margin-top:14px">UTR / Transaction ID *</label>
 <input id="utr" class="field" style="background:rgba(255,255,255,.92);color:#000;border:1px solid #CCC" placeholder="Enter UTR after payment">
 <div class="hint" style="color:#333">Pachapp will verify after checking bank.</div></div>
-<div class="marquee-wrap"><div class="marquee-track"><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span></div></div>
+<div class="marquee-wrap"><div class="marquee-track"><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; KARAOKE • DOLBY ATMOS SOUND &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span><span>WELCOME TO PACHAPP POOL VILLA &nbsp;✦&nbsp; LUCKY HILL • MEPPADI • WAYANAD &nbsp;✦&nbsp; PRIVATE POOL • PEACEFUL STAY • FAMILY COMFORT &nbsp;✦&nbsp; KARAOKE • DOLBY ATMOS SOUND &nbsp;✦&nbsp; THANK YOU FOR CHOOSING PACHAPP &nbsp;✦&nbsp;</span></div></div>
 <button id="submitBtn" class="submit"><span class="confirm-text">Confirm Booking</span></button><div id="statusMsg" class="status"></div>
 </div>
 <script>
@@ -140,7 +141,7 @@ function calc(){
   if(bookingType==='Full Villa'){rooms=4;const rate=dayType==='Festival'?9600:dayType==='Weekend'?8000:6400;base=rate*nights;baseLabel='Full Villa ('+dayType+')';}
   else{if(!roomsManual)rooms=Math.max(1,Math.min(4,Math.ceil(adults/2)));base=1600*rooms*nights;baseLabel=rooms+' Room(s) ('+dayType+')';}
   const extraAdults=bookingType==='Full Villa'?Math.max(0,adults-8):Math.max(0,adults-rooms*2);
-  const extraTotal=extraAdults*800*nights, kidsTotal=kidsHalf*400*nights, breakfastCount=adults+kidsHalf;
+  const extraTotal=extraAdults*800*nights, kidsTotal=kidsHalf*300*nights, breakfastCount=adults+kidsHalf;
   let breakfastTotal=0; if(breakfast==='Yes') breakfastTotal=bookingType==='Full Villa'?0:breakfastCount*100*nights;
   const total=base+extraTotal+kidsTotal+breakfastTotal;
   let advance=0; if(bookingType!=='Full Villa'&&rooms===1&&nights===1&&adults<=2)advance=1600; else if(total<=10000)advance=2000; else advance=Math.round(total*0.20);
@@ -148,6 +149,7 @@ function calc(){
   document.getElementById('adultsVal').textContent=adults;
   document.getElementById('kidsFreeVal').textContent=kidsFree;
   document.getElementById('kidsHalfVal').textContent=kidsHalf;
+  document.getElementById('kidsHalfTotal').textContent=fmt(kidsTotal);
   document.getElementById('roomsVal').textContent=rooms;
   document.getElementById('roomsMode').textContent=bookingType==='Full Villa'?'FULL VILLA':(roomsManual?'MANUAL':'AUTO');
   document.getElementById('roomsHint').textContent=bookingType==='Full Villa'?'Full Villa = 4 Rooms fixed.':'Rooms = Auto ceil(Adults / 2), manual 1-4 allowed. Now: '+rooms+' Room(s)';
