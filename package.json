@@ -1,1 +1,1 @@
-{"dependencies":{"@whiskeysockets/baileys":"6.7.18","airtable":"0.12.2","groq-sdk":"0.9.0","pino":"2.4.0","qrcode":"1.5.4"},"engines":{"node":"20.x"},"main":"pachapp-ai-cloud.js","name":"pachapp-ai","scripts":{"start":"node pachapp-ai-cloud.js"},"version":"1.0.0"}
+{"dependencies":{"airtable":"0.12.2","groq-sdk":"0.9.0"},"engines":{"node":"20.x"},"main":"pachapp-ai-cloud.js","name":"pachapp-ai","scripts":{"start":"node pachapp-ai-cloud.js"},"version":"1.0.0"}
