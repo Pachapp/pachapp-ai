@@ -15,8 +15,16 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .stepper{display:flex;align-items:center;justify-content:space-between;border:1px solid #333;padding:10px 14px;min-height:58px;border-radius:10px}
 .step-btn{width:42px;height:42px;border-radius:50%;border:2px solid #2563EB;background:transparent;color:#2563EB;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .step-btn:disabled{border-color:#1A2A5A;color:#1A2A5A;opacity:.6}
-.step-btn-light{border-color:#A8D4FF;color:#A8D4FF}
-.step-btn-light:disabled{border-color:#5A6A8A;color:#5A6A8A;opacity:.55}
+/* ADULTS / KIDS - FILLED WITH 3 DIFFERENT BLUES */
+.stepper-adults{background:#2563EB;border-color:#2563EB;color:#fff}
+.stepper-adults .step-btn{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
+.stepper-adults .step-btn:disabled{border-color:rgba(255,255,255,.5);color:rgba(255,255,255,.5)}
+.stepper-kidsfree{background:#60A5FA;border-color:#60A5FA;color:#fff}
+.stepper-kidsfree .step-btn{border-color:#fff;color:#fff;background:rgba(255,255,255,.12)}
+.stepper-kidsfree .step-btn:disabled{border-color:rgba(255,255,255,.5);color:rgba(255,255,255,.5)}
+.stepper-kidshalf{background:#A8D4FF;border-color:#A8D4FF;color:#000}
+.stepper-kidshalf .step-btn{border-color:#000;color:#000;background:rgba(255,255,255,.35)}
+.stepper-kidshalf .step-btn:disabled{border-color:rgba(0,0,0,.35);color:rgba(0,0,0,.35)}
 .step-val{font-size:18px;font-weight:600;text-align:center;flex:1}
 .hint{font-size:14px;margin-top:10px;line-height:1.5}
 .booking-row{display:flex;gap:12px}
@@ -38,7 +46,6 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .bf-no{background:#2B2B2B;color:#fff}
 .bf-opt.selected-yes{background:#2E9A5A;color:#fff;outline:2px solid #fff}
 .bf-opt.selected-no{background:#fff;color:#000}
-/* PAY ADVANCE - NORMAL */
 .pay-box{background:#C8F0C8;border-radius:18px;padding:18px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}
 .pay-box .pt{color:#0B3D1F;font-size:20px;font-weight:800;letter-spacing:1px}
 .pay-box .ps{color:#0B3D1F;font-size:14px;font-weight:600;margin-top:6px;line-height:1.4}
@@ -53,8 +60,7 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 .gt-adv{display:flex;justify-content:space-between;font-size:18px;font-weight:800;padding:6px 0}
 .gt-note{font-size:13px;color:#555;margin:8px 0 14px;line-height:1.5}
 .qr-wrap{text-align:center;margin:10px 0}
-.qr-wrap img{width:220px;height:220px;object-fit:contain;border:1px solid #E5E5E5;border-radius:14px;padding:8px}
-.pay-to{text-align:center;font-weight:800;font-size:18px;margin:8px 0 4px}
+.qr-wrap img{width:320px;height:320px;max-width:92%;object-fit:contain;border:1px solid #E5E5E5;border-radius:14px;padding:8px}
 .pay-sub2{text-align:center;color:#555;font-size:14px;margin-bottom:14px}
 .submit{width:100%;background:#1A7A3A;color:#fff;border:none;border-radius:14px;padding:18px;font-size:19px;font-weight:800;cursor:pointer;margin-top:18px}
 .submit:disabled{opacity:.5}
@@ -71,9 +77,9 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 <label>Booking Type</label><div class="booking-row"><div id="optFull" class="booking-opt selected"><div class="t1"><span class="check">✓</span>FULL VILLA</div><div class="t2">4 Rooms, Private</div></div><div id="optRooms" class="booking-opt unselected"><div class="t1">ROOMS</div><div class="t2">Separate Room(s)</div></div></div>
 <label>Rooms</label><div class="rooms-pill"><div class="lbl">ROOMS • <span id="roomsMode">FULL VILLA</span></div><div class="ctrl"><button class="rbtn" id="roomsMinus">−</button><div class="rval" id="roomsVal">4</div><button class="rbtn" id="roomsPlus">+</button></div></div>
 <div class="hint" id="roomsHint">Full Villa = 4 Rooms fixed.</div>
-<label>Adults</label><div class="stepper"><button class="step-btn step-btn-light" id="adultsMinus">−</button><div class="step-val"><span id="adultsVal">2</span> Adults</div><button class="step-btn step-btn-light" id="adultsPlus">+</button></div>
-<label>Kids 0-6 Free</label><div class="stepper"><button class="step-btn step-btn-light" id="kidsFreeMinus">−</button><div class="step-val"><span id="kidsFreeVal">0</span> Kids • FREE</div><button class="step-btn step-btn-light" id="kidsFreePlus">+</button></div>
-<label>Kids 6-12 Half Price</label><div class="stepper"><button class="step-btn step-btn-light" id="kidsHalfMinus">−</button><div class="step-val"><span id="kidsHalfVal">0</span> Kids • Rs.400 / night</div><button class="step-btn step-btn-light" id="kidsHalfPlus">+</button></div>
+<label>Adults</label><div class="stepper stepper-adults"><button class="step-btn" id="adultsMinus">−</button><div class="step-val"><span id="adultsVal">2</span> Adults</div><button class="step-btn" id="adultsPlus">+</button></div>
+<label>Kids 0-6 Free</label><div class="stepper stepper-kidsfree"><button class="step-btn" id="kidsFreeMinus">−</button><div class="step-val"><span id="kidsFreeVal">0</span> Kids • FREE</div><button class="step-btn" id="kidsFreePlus">+</button></div>
+<label>Kids 6-12 Half Price</label><div class="stepper stepper-kidshalf"><button class="step-btn" id="kidsHalfMinus">−</button><div class="step-val"><span id="kidsHalfVal">0</span> Kids • Rs.400 / night</div><button class="step-btn" id="kidsHalfPlus">+</button></div>
 <div class="hint">Extra Adult Rs.800 / night • Kids 0-6 FREE • Kids 6-12 Rs.400 / night</div>
 <label>Breakfast</label><div class="bf-row"><div id="bfYes" class="bf-opt bf-yes selected-yes">YES • WITH BREAKFAST</div><div id="bfNo" class="bf-opt bf-no">NO • WITHOUT</div></div>
 <div class="hint" id="bfHint">Full Villa: Breakfast FREE</div>
@@ -89,7 +95,7 @@ textarea.field{min-height:120px;resize:vertical;line-height:1.5}
 <div class="gt-note">Advance: 1 Room 1 Night Adults ≤2 = Rs.1600 • Total ≤ Rs.10000 = Rs.2000 • Else 20%</div>
 <div class="gt-row"><span>Notes</span><b id="gtNotes" style="font-weight:500;text-align:right;max-width:60%">—</b></div></div>
 <div class="qr-wrap"><img src="qr.png" alt="Scan to Pay"></div>
-<div class="pay-to">Pay to 0091 996 191 7169</div><div class="pay-sub2">Scan QR • Pay advance • Enter UTR below</div>
+<div class="pay-sub2">Scan QR • Pay advance • Enter UTR below</div>
 <label style="color:#000;margin-top:6px">UTR / Transaction ID *</label>
 <input id="utr" class="field" style="background:#fff;color:#000;border:1px solid #CCC" placeholder="Enter UTR after payment">
 <div class="hint" style="color:#333">Status: Pending - Waiting for Pachapp to verify. Only Pachapp confirms after checking bank.</div></div>
