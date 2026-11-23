@@ -6,215 +6,275 @@
 <title>Pachapp Pool Villa — Booking Form</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#000;color:#fff;font-family:'Oswald','Arial Narrow',Arial,sans-serif;padding:20px 14px 40px}
+  body{background:#000;color:#fff;font-family:'Oswald','Arial Narrow',Arial,sans-serif;padding:18px 14px 40px}
   .wrap{max-width:560px;margin:0 auto}
-  .logo-box{background:#fff;border-radius:22px;padding:22px 18px 18px;text-align:center;margin:10px auto 16px}
+  .logo-box{background:#fff;border-radius:22px;padding:22px 18px 18px;text-align:center;margin:6px auto 16px}
   .logo-box img{width:100%;max-width:420px;display:block;margin:0 auto}
-  .address{color:#fff;font-weight:700;font-size:19px;line-height:1.35;text-align:center;margin:0 0 28px;letter-spacing:.04em}
-  .divider{height:1px;background:#333;margin:0 0 28px}
-  label{display:block;color:#fff;font-weight:600;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;margin:22px 0 10px}
-
-  /* BLACK inputs - only for Name/Phone/Dates/UTR/Notes */
-  .field{width:100%;border:1px solid #333;border-radius:10px;padding:15px;background:#0a0a0a;color:#fff;font-family:inherit;font-weight:600;letter-spacing:.08em;font-size:17px;outline:none}
+  .address{color:#fff;font-weight:600;font-size:18px;line-height:1.4;text-align:center;letter-spacing:.04em;margin:0 0 28px}
+  .divider{height:1px;background:#333;margin:0 0 10px}
+  label{display:block;color:#fff;font-weight:600;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;margin:24px 0 10px}
+  .sub-label{font-size:15px;letter-spacing:1.5px}
+  /* BLACK inputs */
+  .field{width:100%;border:1px solid #333;border-radius:10px;padding:15px;background:#0A0A0A;color:#fff;font-family:inherit;font-weight:600;letter-spacing:.08em;font-size:17px;outline:none}
   .field:focus{border-color:#fff;box-shadow:0 0 0 1px #fff}
-  .field::placeholder{color:#e8e8e8;font-weight:500}
-
-  /* WHITE pill + BLUE circle - Adults / Kids */
-  .field-select{width:100%;min-height:54px;color:#000;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='14' fill='%232563EB'/%3E%3Cpath d='M9 10l5-4 5 4' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9 18l5 4 5-4' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:28px 28px;border:1px solid #fff;border-radius:999px;padding:15px 50px 15px 22px;font-size:17px;font-weight:600;letter-spacing:.08em;cursor:pointer;outline:none;appearance:none}
-  .field-select option{color:#000;background:#fff}
-  .field-select:focus{box-shadow:0 0 0 1px #fff}
-
-  /* GREEN pill - Stay / Breakfast */
-  .field-select-green{width:100%;min-height:54px;color:#fff;background-color:#1e7a3a;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(#1a7a3a,#2e9a5a);background-repeat:no-repeat;background-position:right 20px center,0 0;background-size:14px 9px,auto;border:1px solid #2e9a5a;border-radius:999px;padding:15px 44px 15px 22px;font-size:17px;font-weight:600;letter-spacing:.08em;cursor:pointer;outline:none;appearance:none}
-  .field-select-green option{color:#fff;background:#1e7a3a}
-  .field-select-green:focus{box-shadow:0 0 0 1px #fff}
-
-  /* GREY / LIGHT MINT pill + BLUE circle - Rooms / Kids 6-12 */
-  .field-select-grey{width:100%;min-height:54px;color:#000;background-color:#c8f0c8;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='14' fill='%232563EB'/%3E%3Cpath d='M9 10l5-4 5 4' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9 18l5 4 5-4' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:28px 28px;border:1px solid #8fd18f;border-radius:999px;padding:15px 50px 15px 22px;font-size:17px;font-weight:600;letter-spacing:.08em;cursor:pointer;outline:none;appearance:none}
-  .field-select-grey option{color:#000;background:#d9f2d9}
-  .field-select-grey:focus{border-color:#8fd18f;background-color:#d9f2d9;box-shadow:0 0 0 1px #8fd18f}
-
-  /* NIGHTS big -/+ */
-  .nights-row{display:flex;gap:10px}
-  .nights-btn{width:64px;background:#111;color:#fff;border:1px solid #555;border-radius:12px;font-size:32px;font-weight:800;cursor:pointer}
-  .nights-btn:active{background:#fff;color:#000}
-  #nights{text-align:center;font-size:22px;font-weight:800}
-  .hint{color:#e8e8e8;font-size:13px;margin-top:6px;letter-spacing:.04em;text-transform:none}
-  .row2{display:flex;gap:12px}.row2>div{flex:1}
-
-  /* GRAND TOTAL - green border, light green total */
-  .total-box{border:2px solid #2e9a5a;border-radius:16px;padding:18px;margin-top:28px;background:#0a0a0a}
-  .total-box h2{font-size:17px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;color:#fff}
-  .line{display:flex;justify-content:space-between;font-size:16px;padding:7px 0;border-bottom:1px dashed #333}
-  .line span:last-child{font-weight:700}
-  .grand{display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:700;padding:14px 0 4px}
-  .grand span:last-child{font-size:26px;color:#8fd18f}
-  .advance-line{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:10px 0 2px}
-  .pay-box{border:1px solid #333;border-radius:16px;padding:18px;margin-top:22px;text-align:center;background:#0a0a0a}
-  .pay-box h3{font-size:16px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
-  .pay-box img{width:220px;max-width:80%;background:#fff;padding:10px;border-radius:12px;display:block;margin:0 auto 12px}
-  .pay-number{font-size:18px;font-weight:700}
-  .pay-note{color:#e8e8e8;font-size:13px;margin-top:6px}
-  /* GREEN submit, not white */
-  button.submit{width:100%;background:#1e7a3a;color:#fff;border:1px solid #2e9a5a;border-radius:999px;padding:18px;font-size:19px;font-weight:700;letter-spacing:.05em;cursor:pointer;margin-top:22px;box-shadow:0 8px 24px rgba(46,154,90,.35)}
-  button.submit:disabled{opacity:.6}
-  #msg{text-align:center;margin-top:14px;font-size:15px;line-height:1.5;white-space:pre-line}
-  .ok{color:#8fd18f}.err{color:#ff2d2d}
-  .footer{text-align:center;color:#e8e8e8;font-size:13px;margin-top:26px;line-height:1.6}
+  .field::placeholder{color:#E8E8E8;font-weight:500}
+  textarea.field{min-height:150px;resize:vertical;line-height:1.5}
+  /* STEPPERS - Nights / Adults / Kids */
+  .stepper{display:flex;align-items:center;justify-content:space-between;background:#000;border:1px solid #333;padding:10px 14px;min-height:58px}
+  .step-btn{width:42px;height:42px;border-radius:50%;border:2px solid #2563EB;background:transparent;color:#2563EB;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .step-btn:disabled{border-color:#1A2A5A;color:#1A2A5A;opacity:.6;cursor:not-allowed}
+  .step-val{font-size:18px;font-weight:600;letter-spacing:.08em;text-align:center;flex:1}
+  .hint{color:#fff;font-size:14px;font-weight:500;letter-spacing:.02em;margin-top:10px;line-height:1.5}
+  .red-line{color:#FF2D2D;font-weight:700;font-size:16px;letter-spacing:.04em;margin-top:8px}
+  /* BOOKING TYPE - white selected, dark grey unselected */
+  .booking-row{display:flex;gap:12px}
+  .booking-opt{flex:1;padding:20px 10px;border-radius:16px;text-align:center;cursor:pointer;transition:all .15s}
+  .booking-opt.selected{background:#fff;color:#000}
+  .booking-opt.unselected{background:#2B2B2B;color:#fff}
+  .booking-opt .t1{font-size:18px;font-weight:700;letter-spacing:1.5px}
+  .booking-opt .t1 .check{color:#2E9A5A;margin-right:6px}
+  .booking-opt .t2{font-size:14px;font-weight:600;letter-spacing:1px;margin-top:8px}
+  /* ROOMS DROPDOWN - light green pill + blue circle */
+  .rooms-select{width:100%;min-height:54px;color:#000;background-color:#A8E6A8;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='17' fill='%232563EB'/%3E%3Cpath d='M12 14l6-5 6 5' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 24l6 5 6-5' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:36px 36px;border:1px solid #8FD18F;border-radius:999px;padding:15px 56px 15px 22px;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:.04em;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none}
+  .rooms-select:focus{border-color:#fff;box-shadow:0 0 0 1px #fff}
+  .rooms-select option{color:#fff;background:#2563EB;font-size:17px;font-weight:500}
+  .rooms-hint{color:#fff;font-size:14px;font-weight:600;margin-top:10px}
+  /* BREAKFAST */
+  .bf-row{display:flex;gap:12px}
+  .bf-btn{flex:1;padding:16px;border-radius:14px;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:1px;cursor:pointer;border:2px solid transparent;color:#fff}
+  .bf-yes{background:#2E9A5A}
+  .bf-no{background:#1E7A3A}
+  .bf-btn.selected{border:2px solid #fff}
+  .bf-banner{background:#1E7A3A;color:#fff;padding:14px;border-radius:12px;text-align:center;font-weight:700;font-size:15px;letter-spacing:.06em;margin-top:12px}
+  /* PAY ADVANCE - light mint */
+  .pay-box{background:#C8F0C8;border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+  .pay-box .pt{color:#0B3D1E;font-weight:700;font-size:18px;letter-spacing:1px}
+  .pay-box .ps{color:#0B3D1E;font-size:13px;font-weight:600;margin-top:4px;line-height:1.4}
+  .switch{width:64px;height:34px;background:#fff;border:2px solid #2E9A5A;border-radius:999px;position:relative;cursor:pointer;flex-shrink:0}
+  .switch .knob{position:absolute;top:2px;width:26px;height:26px;border-radius:50%;background:#8FD18F;transition:left .15s}
+  .switch.on .knob{left:4px}
+  .switch.off .knob{left:32px;background:#ccc}
+  /* GRAND TOTAL - white bar + white content */
+  .grand-bar{background:#fff;color:#000;padding:18px 20px;font-weight:700;font-size:18px;letter-spacing:1px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+  .grand-content{background:#fff;color:#000;padding:20px;display:none}
+  .grand-content.show{display:block}
+  .g-line{display:flex;justify-content:space-between;font-size:15px;padding:8px 0;border-bottom:1px dashed #ddd}
+  .g-line span:last-child{font-weight:700}
+  .g-total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;padding:14px 0 4px}
+  .g-adv{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:8px 0}
+  .qr-wrap{text-align:center;margin:18px 0 10px}
+  .qr-wrap img{width:200px;max-width:80%;background:#fff;padding:8px;border:1px solid #ddd;border-radius:12px}
+  .pay-to{font-weight:800;font-size:16px;text-align:center}
+  .pay-to-sub{font-size:13px;color:#555;text-align:center;margin-top:4px}
+  .grand-content label{color:#000}
+  .grand-content .field{background:#fff;color:#000;border:1px solid #ccc}
+  .grand-content .field::placeholder{color:#888}
+  .submit{width:100%;background:#1E7A3A;color:#fff;border:none;border-radius:12px;padding:18px;font-size:18px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-top:18px;box-shadow:0 8px 24px rgba(46,154,90,.35)}
+  .submit:disabled{opacity:.6}
+  #msg{text-align:center;margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-line;color:#000;font-weight:600}
+  .footer{text-align:center;color:#777;font-size:13px;margin-top:24px;line-height:1.6}
   .footer a{color:#fff}
-  select{color-scheme:light}
-  input[type="date"].field{color-scheme:dark}
+  .row2{display:flex;gap:12px}
+  .row2>div{flex:1}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="logo-box"><img src="Pachapp_1.png" alt="Pachapp be nowhere"></div>
-  <div class="address">Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</div>
+  <div class="address">Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad,<br>Kerala</div>
   <div class="divider"></div>
 
   <form id="bookingForm">
-    <label for="name">Your Name *</label>
-    <input id="name" class="field" type="text" placeholder="Full name" required>
-
-    <label for="phone">Phone *</label>
-    <input id="phone" class="field" type="tel" placeholder="e.g. 919876543210" required>
-
-    <label for="checkin">Check-In *</label>
-    <input id="checkin" class="field" type="date" required>
+    <label>Your Name *</label>
+    <input class="field" id="name" type="text" placeholder="Reshma" required>
+    <label>Phone *</label>
+    <input class="field" id="phone" type="tel" placeholder="e.g. 919876543210" required>
+    <label>Check-In *</label>
+    <input class="field" id="checkin" type="date" required>
 
     <label>Nights</label>
-    <div class="nights-row">
-      <button type="button" class="nights-btn" id="nightsMinus">−</button>
-      <input id="nights" class="field" type="number" min="1" max="30" value="1" readonly>
-      <button type="button" class="nights-btn" id="nightsPlus">+</button>
+    <div class="stepper">
+      <button type="button" class="step-btn" id="nightsMinus">−</button>
+      <div class="step-val" id="nightsVal">1 Night</div>
+      <button type="button" class="step-btn" id="nightsPlus">+</button>
+    </div>
+    <div class="hint">Select check-in, check-out will auto-show. Check-out = Check-in + Nights.</div>
+    <div class="red-line" id="redLine">Nights: — &nbsp;|&nbsp; Check-out: —</div>
+
+    <label>Booking Type</label>
+    <div class="booking-row">
+      <div class="booking-opt selected" id="optFull"><div class="t1"><span class="check">✓</span>FULL VILLA</div><div class="t2">WHOLE VILLA</div></div>
+      <div class="booking-opt unselected" id="optRooms"><div class="t1">ROOMS</div><div class="t2">1 TO 4 ROOMS</div></div>
     </div>
 
-    <label for="checkout">Check-Out *</label>
-    <input id="checkout" class="field" type="date" readonly>
-
-    <label for="stay">Stay</label>
-    <select id="stay" class="field-select-green">
-      <option value="Full Villa">Full Villa</option>
-      <option value="Rooms">Rooms</option>
+    <label>Rooms</label>
+    <div class="sub-label" style="margin:-4px 0 10px;color:#fff">Rooms — Auto</div>
+    <select class="rooms-select" id="roomsSelect">
+      <option value="auto">Auto (recommended)</option>
+      <option value="1">1 Room</option>
+      <option value="2">2 Rooms</option>
+      <option value="3">3 Rooms</option>
+      <option value="4">4 Rooms</option>
     </select>
-    <div class="hint" id="stayHint">Full Villa: Weekday Rs.6400 / Weekend Fri-Sat-Sun Rs.8000 / Festival Rs.9600 per night. Breakfast FREE.</div>
+    <div class="rooms-hint" id="roomsHint">Full Villa — 4 Rooms included.</div>
 
-    <div class="row2">
-      <div>
-        <label for="rooms">Rooms</label>
-        <select id="rooms" class="field-select-grey"><option>1</option><option>2</option><option>3</option><option>4</option></select>
-        <div class="hint">Auto = Adults ÷ 2. You can change manually.</div>
-      </div>
-      <div>
-        <label for="adults">Adults</label>
-        <select id="adults" class="field-select">
-          <option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
-        </select>
-      </div>
+    <label>Guests</label>
+    <div class="sub-label" style="margin:-4px 0 10px">Adults</div>
+    <div class="stepper">
+      <button type="button" class="step-btn" id="adultsMinus">−</button>
+      <div class="step-val" id="adultsVal">2 Adults</div>
+      <button type="button" class="step-btn" id="adultsPlus">+</button>
     </div>
 
     <div class="row2">
       <div>
-        <label for="kids06">Kids 0-6 (Free)</label>
-        <select id="kids06" class="field-select"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
+        <label>Kids 0-6 Free</label>
+        <div class="stepper">
+          <button type="button" class="step-btn" id="k06Minus">−</button>
+          <div class="step-val" id="k06Val">0 Kids</div>
+          <button type="button" class="step-btn" id="k06Plus">+</button>
+        </div>
       </div>
       <div>
-        <label for="kids612">Kids 6-12</label>
-        <select id="kids612" class="field-select-grey"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
-        <div class="hint">Rs.400 / kid / night</div>
+        <label>Kids 6-12 Half Price</label>
+        <div class="stepper">
+          <button type="button" class="step-btn" id="k612Minus">−</button>
+          <div class="step-val" id="k612Val">0 Kids</div>
+          <button type="button" class="step-btn" id="k612Plus">+</button>
+        </div>
       </div>
     </div>
 
-    <label for="breakfast">Breakfast Heads</label>
-    <select id="breakfast" class="field-select-green"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option></select>
-    <div class="hint" id="breakfastHint">Full Villa: FREE. Rooms: Rs.100 / head / night.</div>
-
-    <div class="total-box">
-      <h2>Grand Total</h2>
-      <div class="line"><span id="roomLabel">Full Villa</span><span id="roomCost">Rs.0</span></div>
-      <div class="line"><span>Extra Adult (Rs.800 / night)</span><span id="extraCost">Rs.0</span></div>
-      <div class="line"><span>Kids 6-12 (Rs.400 / night)</span><span id="kidsCost">Rs.0</span></div>
-      <div class="line"><span>Breakfast</span><span id="bfCost">Rs.0</span></div>
-      <div class="grand"><span>GRAND TOTAL</span><span id="grandTotal">Rs.0</span></div>
-      <div class="advance-line"><span>Advance to Pay</span><span id="advance">Rs.0</span></div>
-      <div class="hint">Advance: 1 Room 1 Night Adults ≤2 = Rs.1600 • Total ≤ Rs.10000 = Rs.2000 • Else 20%</div>
-      <label for="notes" style="margin-top:18px">Notes</label>
-      <textarea id="notes" class="field" rows="3" placeholder="Any request — late check-in, food, etc."></textarea>
+    <label>Breakfast</label>
+    <div class="bf-row">
+      <button type="button" class="bf-btn bf-yes" id="bfYes">YES</button>
+      <button type="button" class="bf-btn bf-no selected" id="bfNo">✓ &nbsp;NO</button>
     </div>
+    <div class="bf-banner" id="bfBanner">BREAKFAST INCLUDED - FREE FOR FULL VILLA</div>
 
+    <label>Notes</label>
+    <textarea class="field" id="notes" placeholder="Any special request? e.g. early check-in, extra mattress, cake..."></textarea>
+
+    <label>Pay Advance</label>
     <div class="pay-box">
-      <h3>Pay Advance</h3>
-      <img src="qr.png" alt="Scan to pay">
-      <div class="pay-number">Pay to 0091 996 191 7169</div>
-      <div class="pay-note">Scan QR • Pay advance • Enter UTR below</div>
-      <label for="utr" style="text-align:left">UTR / Transaction ID *</label>
-      <input id="utr" class="field" type="text" placeholder="Enter UTR after payment" required>
+      <div><div class="pt">PAY ADVANCE</div><div class="ps">Turn ON to show Grand Total &amp; payment details</div></div>
+      <div class="switch on" id="paySwitch"><div class="knob"></div></div>
     </div>
 
-    <button type="submit" class="submit" id="submitBtn">Send for Verification</button>
-    <div id="msg"></div>
+    <div class="grand-bar" id="grandBar"><span>GRAND TOTAL</span><span id="grandArrow">▲</span></div>
+    <div class="grand-content show" id="grandContent">
+      <div class="g-line"><span id="roomLabel">Full Villa</span><span id="roomCost">Rs.0</span></div>
+      <div class="g-line"><span>Extra Adult (Rs.800 / night)</span><span id="extraCost">Rs.0</span></div>
+      <div class="g-line"><span>Kids 6-12 Half Price (Rs.400 / night)</span><span id="kidsCost">Rs.0</span></div>
+      <div class="g-line"><span>Breakfast</span><span id="bfCost">Rs.0</span></div>
+      <div class="g-total"><span>GRAND TOTAL</span><span id="grandTotal">Rs.0</span></div>
+      <div class="g-adv"><span>Advance to Pay</span><span id="advance">Rs.0</span></div>
+      <div style="font-size:12px;color:#555;margin-top:6px">Advance: 1 Room 1 Night Adults ≤2 = Rs.1600 • Total ≤ Rs.10000 = Rs.2000 • Else 20%</div>
+      <div class="qr-wrap"><img src="qr.png" alt="Scan to pay"></div>
+      <div class="pay-to">Pay to 0091 996 191 7169</div>
+      <div class="pay-to-sub">Scan QR • Pay advance • Enter UTR below</div>
+      <label style="margin-top:16px">UTR / Transaction ID *</label>
+      <input class="field" id="utr" type="text" placeholder="Enter UTR after payment" required>
+      <button type="submit" class="submit" id="submitBtn">Send for Verification</button>
+      <div id="msg"></div>
+    </div>
   </form>
-
   <div class="footer">Pachapp Pool Villa • <a href="https://www.pachapp.green">www.pachapp.green</a><br><a href="https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16">Open in Maps</a></div>
 </div>
 
 <script>
+/* FILL ONLY THESE 2 - INSIDE QUOTES */
 const AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
 const AIRTABLE_BASE_ID = "YOUR_AIRTABLE_BASE_ID";
 const AIRTABLE_TABLE = "Bookings";
+/* FESTIVALS - 9600 */
 const FESTIVALS = new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
+let bookingType = "Full Villa";
+let nights = 1, adults = 2, kids06 = 0, kids612 = 0;
+let breakfast = "NO";
+let payOn = true, grandOpen = true;
 const $ = id => document.getElementById(id);
 const fmt = n => "Rs." + Number(n||0).toLocaleString('en-IN');
-const fmtDate = d => d.toISOString().slice(0,10);
-function parseDateInput(v){ if(!v) return null; const p=v.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
-function updateCheckout(){
-  const ci = parseDateInput($('checkin').value);
-  let n = parseInt($('nights').value)||1; if(n<1)n=1; if(n>30)n=30; $('nights').value=n;
-  if(ci){ const co=new Date(ci); co.setDate(co.getDate()+n); $('checkout').value=fmtDate(co); }
-  calc();
+const fmtDateDisplay = v => { if(!v) return "—"; const p=v.split('-'); return p[1]+"/"+p[2]+"/"+p[0]; };
+function parseDate(v){ if(!v) return null; const p=v.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function getRooms(){
+  const sel = $('roomsSelect').value;
+  if(bookingType==="Full Villa") return 4;
+  if(sel==="auto") return Math.max(1, Math.min(4, Math.ceil(adults/2)));
+  return parseInt(sel);
 }
 function calc(){
-  const nights = parseInt($('nights').value)||1;
-  const adults = parseInt($('adults').value)||0;
-  const kids06 = parseInt($('kids06').value)||0;
-  const kids612 = parseInt($('kids612').value)||0;
-  const bfHeads = parseInt($('breakfast').value)||0;
-  const rooms = parseInt($('rooms').value)||1;
-  const stay = $('stay').value;
+  const ci = parseDate($('checkin').value);
+  let checkoutStr = "—";
+  if(ci){ const co=new Date(ci); co.setDate(co.getDate()+nights); const y=co.getFullYear(), m=String(co.getMonth()+1).padStart(2,'0'), d=String(co.getDate()).padStart(2,'0'); checkoutStr = `${y}-${m}-${d}`; $('checkin').dataset.checkout = checkoutStr; }
+  $('redLine').textContent = `Nights: ${nights}  |  Check-out: ${checkoutStr==="—"?"—":fmtDateDisplay(checkoutStr)}`;
+  $('nightsVal').textContent = nights===1 ? "1 Night" : nights+" Nights";
+  $('adultsVal').textContent = adults+" Adults";
+  $('k06Val').textContent = kids06+" Kids";
+  $('k612Val').textContent = kids612+" Kids";
+  $('nightsMinus').disabled = nights<=1; $('adultsMinus').disabled = adults<=1; $('k06Minus').disabled = kids06<=0; $('k612Minus').disabled = kids612<=0;
+  const rooms = getRooms();
   let roomCost=0;
-  if(stay==="Full Villa"){
-    const ci=parseDateInput($('checkin').value);
-    for(let i=0;i<nights;i++){ let d=ci?new Date(ci):new Date(); d.setDate(d.getDate()+i); const key=fmtDate(d); const day=d.getDay(); if(FESTIVALS.has(key)) roomCost+=9600; else if(day===5||day===6||day===0) roomCost+=8000; else roomCost+=6400; }
+  if(bookingType==="Full Villa"){
+    for(let i=0;i<nights;i++){ let d=ci?new Date(ci):new Date(); d.setDate(d.getDate()+i); const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; const day=d.getDay(); if(FESTIVALS.has(key)) roomCost+=9600; else if(day===5||day===6||day===0) roomCost+=8000; else roomCost+=6400; }
     $('roomLabel').textContent="Full Villa";
-  } else { roomCost=rooms*1600*nights; $('roomLabel').textContent=rooms+" Room(s) × Rs.1600"; }
-  let included = stay==="Full Villa"?8:rooms*2;
-  let extraCost = Math.max(0,adults-included)*800*nights;
-  let kidsCost = kids612*400*nights;
-  let bfCost = stay==="Full Villa"?0:bfHeads*100*nights;
-  let total = roomCost+extraCost+kidsCost+bfCost;
-  let advance=0; if(stay==="Rooms"&&rooms===1&&nights===1&&adults<=2) advance=1600; else if(total<=10000) advance=2000; else advance=Math.round(total*0.20);
-  $('roomCost').textContent=fmt(roomCost); $('extraCost').textContent=fmt(extraCost); $('kidsCost').textContent=fmt(kidsCost); $('bfCost').textContent=fmt(bfCost); $('grandTotal').textContent=fmt(total); $('advance').textContent=fmt(advance);
-  return {roomCost,extraCost,kidsCost,bfCost,total,advance,rooms,adults,kids06,kids612,bfHeads,nights,stay};
+    $('roomsHint').textContent="Full Villa — 4 Rooms included.";
+    $('bfBanner').textContent="BREAKFAST INCLUDED - FREE FOR FULL VILLA"; $('bfBanner').style.display="block";
+  } else {
+    roomCost = rooms*1600*nights;
+    $('roomLabel').textContent = rooms+" Room(s) × Rs.1600";
+    $('roomsHint').textContent = $('roomsSelect').value==="auto" ? `Rooms Auto — ${rooms} Room(s) for ${adults} Adults.` : `Rooms — ${rooms} Room(s) selected.`;
+    if(breakfast==="YES"){ $('bfBanner').textContent=`BREAKFAST — Rs.100 / head / night • ${(adults+kids612)} heads`; $('bfBanner').style.display="block"; }
+    else { $('bfBanner').textContent="NO BREAKFAST"; $('bfBanner').style.display="block"; }
+  }
+  const included = bookingType==="Full Villa" ? 8 : rooms*2;
+  const extraAdults = Math.max(0, adults-included);
+  const extraCost = extraAdults*800*nights;
+  const kidsCost = kids612*400*nights;
+  let bfCost=0;
+  if(bookingType==="Full Villa") bfCost=0;
+  else if(breakfast==="YES") bfCost=(adults+kids612)*100*nights;
+  const total = roomCost+extraCost+kidsCost+bfCost;
+  let advance=0;
+  if(bookingType==="Rooms" && rooms===1 && nights===1 && adults<=2) advance=1600;
+  else if(total<=10000) advance=2000;
+  else advance=Math.round(total*0.20);
+  $('roomCost').textContent=fmt(roomCost); $('extraCost').textContent=fmt(extraCost); $('kidsCost').textContent=fmt(kidsCost); $('bfCost').textContent=fmt(bfCost);
+  $('grandTotal').textContent=fmt(total); $('advance').textContent=fmt(advance);
+  return {rooms,total,advance,extraAdults,checkout:checkoutStr};
 }
-$('stay').addEventListener('change', ()=>{ const s=$('stay').value; $('stayHint').textContent = s==="Full Villa" ? "Full Villa: Weekday Rs.6400 / Weekend Fri-Sat-Sun Rs.8000 / Festival Rs.9600 per night. Breakfast FREE." : "Rooms: Rs.1600 / room / night. Extra Adult Rs.800 / night. Breakfast Rs.100 / head / night."; $('breakfastHint').textContent = s==="Full Villa" ? "Full Villa: FREE." : "Rooms: Rs.100 / head / night."; calc(); });
-$('nightsMinus').onclick=()=>{ let n=parseInt($('nights').value)||1; if(n>1){ $('nights').value=n-1; updateCheckout(); } };
-$('nightsPlus').onclick=()=>{ let n=parseInt($('nights').value)||1; if(n<30){ $('nights').value=n+1; updateCheckout(); } };
-$('adults').addEventListener('change', ()=>{ const a=parseInt($('adults').value)||0; if(a>0) $('rooms').value=Math.max(1,Math.ceil(a/2)); calc(); });
-['checkin','rooms','kids06','kids612','breakfast'].forEach(id=>{ $(id).addEventListener('change', ()=>{ if(id==='checkin') updateCheckout(); else calc(); }); });
-$('nights').addEventListener('input', updateCheckout);
-(function init(){ const today=new Date(); if(!$('checkin').value) $('checkin').value=fmtDate(today); updateCheckout(); })();
+$('nightsMinus').onclick=()=>{ if(nights>1){nights--; calc();} };
+$('nightsPlus').onclick=()=>{ if(nights<30){nights++; calc();} };
+$('adultsMinus').onclick=()=>{ if(adults>1){adults--; calc();} };
+$('adultsPlus').onclick=()=>{ if(adults<20){adults++; calc();} };
+$('k06Minus').onclick=()=>{ if(kids06>0){kids06--; calc();} };
+$('k06Plus').onclick=()=>{ if(kids06<20){kids06++; calc();} };
+$('k612Minus').onclick=()=>{ if(kids612>0){kids612--; calc();} };
+$('k612Plus').onclick=()=>{ if(kids612<20){kids612++; calc();} };
+$('optFull').onclick=()=>{ bookingType="Full Villa"; $('optFull').className="booking-opt selected"; $('optFull').innerHTML='<div class="t1"><span class="check">✓</span>FULL VILLA</div><div class="t2">WHOLE VILLA</div>'; $('optRooms').className="booking-opt unselected"; $('optRooms').innerHTML='<div class="t1">ROOMS</div><div class="t2">1 TO 4 ROOMS</div>'; calc(); };
+$('optRooms').onclick=()=>{ bookingType="Rooms"; $('optRooms').className="booking-opt selected"; $('optRooms').innerHTML='<div class="t1"><span class="check">✓</span>ROOMS</div><div class="t2">1 TO 4 ROOMS</div>'; $('optFull').className="booking-opt unselected"; $('optFull').innerHTML='<div class="t1">FULL VILLA</div><div class="t2">WHOLE VILLA</div>'; calc(); };
+$('bfYes').onclick=()=>{ breakfast="YES"; $('bfYes').classList.add('selected'); $('bfNo').classList.remove('selected'); $('bfYes').textContent="✓  YES"; $('bfNo').textContent="NO"; calc(); };
+$('bfNo').onclick=()=>{ breakfast="NO"; $('bfNo').classList.add('selected'); $('bfYes').classList.remove('selected'); $('bfNo').textContent="✓  NO"; $('bfYes').textContent="YES"; calc(); };
+$('paySwitch').onclick=()=>{ payOn=!payOn; $('paySwitch').className="switch "+(payOn?"on":"off"); if(!payOn){ $('grandBar').style.display="none"; $('grandContent').classList.remove('show'); } else { $('grandBar').style.display="flex"; if(grandOpen) $('grandContent').classList.add('show'); } };
+$('grandBar').onclick=()=>{ grandOpen=!grandOpen; $('grandArrow').textContent=grandOpen?"▲":"▼"; $('grandContent').classList.toggle('show', grandOpen); };
+$('checkin').addEventListener('input', calc);
+$('roomsSelect').addEventListener('change', calc);
+(function init(){ const t=new Date(); const y=t.getFullYear(), m=String(t.getMonth()+1).padStart(2,'0'), d=String(t.getDate()).padStart(2,'0'); if(!$('checkin').value) $('checkin').value=`${y}-${m}-${d}`; calc(); })();
 $('bookingForm').addEventListener('submit', async (e)=>{
-  e.preventDefault(); const msg=$('msg'); msg.textContent=""; msg.className="";
-  const name=$('name').value.trim(), phone=$('phone').value.trim(), checkin=$('checkin').value, checkout=$('checkout').value, utr=$('utr').value.trim();
-  if(!name||!phone||!checkin||!checkout||!utr){ msg.textContent="Please fill Name, Phone, Check-in, Nights and UTR."; msg.className="err"; return; }
-  if(AIRTABLE_API_KEY==="YOUR_AIRTABLE_API_KEY"||AIRTABLE_BASE_ID==="YOUR_AIRTABLE_BASE_ID"){ msg.textContent="Form not connected yet — owner must fill Airtable Key + Base ID in GitHub."; msg.className="err"; return; }
-  const c=calc(); $('submitBtn').disabled=true; $('submitBtn').textContent="Sending...";
+  e.preventDefault();
+  const msg=$('msg'); msg.textContent="";
+  const name=$('name').value.trim(), phone=$('phone').value.trim(), checkin=$('checkin').value, utr=$('utr').value.trim();
+  if(!name||!phone||!checkin||!utr){ msg.textContent="Please fill Name, Phone, Check-in and UTR."; return; }
+  if(AIRTABLE_API_KEY==="YOUR_AIRTABLE_API_KEY"||AIRTABLE_BASE_ID==="YOUR_AIRTABLE_BASE_ID"){ msg.textContent="Form not connected yet — owner must fill Airtable Key + Base ID in 【entity-GitHub¦canonical_name=GitHub】."; return; }
+  const c=calc();
+  $('submitBtn').disabled=true; $('submitBtn').textContent="Sending...";
   try{
-    const res=await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`,{method:"POST",headers:{"Authorization":"Bearer "+AIRTABLE_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({records:[{fields:{Name:name,Phone:phone,Checkin:checkin,Checkout:checkout,Nights:c.nights,Stay:c.stay,Rooms:c.rooms,Adults:c.adults,Kids06:c.kids06,Kids612:c.kids612,Breakfast:c.bfHeads,Notes:$('notes').value.trim(),Total:c.total,Advance:c.advance,UTR:utr,Status:"Pending - Waiting for Verification"}}]})});
+    const res=await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`,{method:"POST",headers:{"Authorization":"Bearer "+AIRTABLE_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({records:[{fields:{Name:name,Phone:phone,Checkin:checkin,Checkout:c.checkout,Nights:nights,Stay:bookingType,Rooms:c.rooms,Adults:adults,Kids06:kids06,Kids612:kids612,Breakfast:breakfast,Notes:$('notes').value.trim(),Total:c.total,Advance:c.advance,UTR:utr,Status:"Pending - Waiting for Verification"}}]})});
     const data=await res.json(); if(!res.ok) throw new Error(data?.error?.message||"Airtable error");
-    msg.textContent="Sent! ✅\nStatus: Pending - Waiting for Pachapp to verify.\nOwner will verify payment and confirm you on WhatsApp.\nTotal: "+fmt(c.total)+" • Advance: "+fmt(c.advance); msg.className="ok";
-    $('bookingForm').reset(); $('nights').value=1; $('rooms').value=1; $('adults').value=2; $('stay').value="Full Villa"; const today=new Date(); $('checkin').value=fmtDate(today); updateCheckout();
-  }catch(err){ msg.textContent="Could not send: "+err.message; msg.className="err"; } finally{ $('submitBtn').disabled=false; $('submitBtn').textContent="Send for Verification"; }
+    msg.textContent=`Sent! ✅\nStatus: Pending - Waiting for Pachapp to verify.\nTotal: ${fmt(c.total)} • Advance: ${fmt(c.advance)}`;
+    $('bookingForm').reset(); nights=1; adults=2; kids06=0; kids612=0; breakfast="NO"; bookingType="Full Villa"; $('bfNo').classList.add('selected'); $('bfYes').classList.remove('selected'); $('bfNo').textContent="✓  NO"; $('bfYes').textContent="YES"; const t=new Date(); $('checkin').value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; $('optFull').click(); calc();
+  }catch(err){ msg.textContent="Could not send: "+err.message; }
+  finally{ $('submitBtn').disabled=false; $('submitBtn').textContent="Send for Verification"; }
 });
 </script>
 </body>
