@@ -6,35 +6,35 @@
 <title>Pachapp Pool Villa - Booking Form</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0f3d22;color:#222}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0e3b22;color:#222}
 .wrap{max-width:560px;margin:0 auto;padding:16px 12px 40px}
-.card{background:#fdf6e3;border:3px solid #c9a227;border-radius:20px;padding:0 0 20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
-.logo-wrap{text-align:center;background:#0f3d22;padding:22px 16px 10px;border-bottom:4px solid #c9a227}
-.logo-wrap img{width:240px;max-width:88%;height:auto;background:#fff;border-radius:12px;padding:8px}
-.addr{text-align:center;font-size:13px;color:#ffeaa7;margin:10px 0 8px;line-height:1.4;font-weight:700}
-.inner{padding:4px 18px 0}
-label{display:block;font-size:13px;font-weight:800;margin:14px 0 6px;color:#0f3d22}
-input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:2px solid #1e4d2b;border-radius:10px;font-size:15px;background:#fffdf5;color:#222}
+.card{background:#fff8dc;border:3px solid #c9a227;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.logo-wrap{text-align:center;background:#0e3b22;padding:26px 16px 12px;border-bottom:3px solid #c9a227}
+.logo-wrap img{width:290px;max-width:88%;height:auto;background:#fff;border-radius:16px;padding:18px 20px}
+.addr{text-align:center;font-size:15px;color:#e8c860;margin:12px 0 4px;line-height:1.4;font-weight:700}
+.inner{padding:6px 18px 20px;background:#fff8dc}
+label{display:block;font-size:15px;font-weight:800;margin:16px 0 7px;color:#0e3b22}
+input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:14px;border:2px solid #0e3b22;border-radius:12px;font-size:16px;background:#fff;color:#222}
 textarea{min-height:70px;resize:vertical}
 .stepper{display:flex;align-items:center;gap:12px}
-.stepper button{width:58px;height:58px;border-radius:50%;border:2px solid #c9a227;background:#0f3d22;color:#fff;font-size:32px;line-height:1;cursor:pointer;flex-shrink:0}
-.stepper .val{flex:1;text-align:center;font-size:22px;font-weight:900;background:#f5c518;color:#0f3d22;border:2px solid #0f3d22;border-radius:10px;padding:14px 0}
-.hint{font-size:12px;color:#6b5a1a;margin-top:5px;line-height:1.4}
+.stepper button{width:62px;height:62px;border-radius:50%;border:2px solid #c9a227;background:#0e3b22;color:#fff;font-size:32px;line-height:1;cursor:pointer;flex-shrink:0}
+.stepper .val{flex:1;text-align:center;font-size:26px;font-weight:800;background:#eab308;color:#0e3b22;border:2px solid #0e3b22;border-radius:12px;padding:14px 0}
+.hint{font-size:13px;color:#8a6d1a;margin-top:6px;line-height:1.4}
 .radio-row{display:flex;gap:10px}
-.radio-row label{flex:1;border:2px solid #0f3d22;border-radius:10px;padding:12px;text-align:center;font-weight:800;cursor:pointer;margin:0;background:#fff}
+.radio-row label{flex:1;border:2px solid #0e3b22;border-radius:10px;padding:12px;text-align:center;font-weight:800;cursor:pointer;margin:0;background:#fff}
 .radio-row input{display:none}
 .radio-row input:checked + span{color:#fff}
-.radio-row label:has(input:checked){background:#0f3d22;color:#fff;border-color:#c9a227}
-.summary{background:#0f3d22;color:#fff;border:2px solid #c9a227;border-radius:14px;padding:14px;margin-top:18px}
+.radio-row label:has(input:checked){background:#0e3b22;color:#fff;border-color:#c9a227}
+.summary{background:#0e3b22;color:#fff;border:2px solid #c9a227;border-radius:14px;padding:14px;margin-top:18px}
 .summary h3{margin:0 0 10px;font-size:17px;color:#f5c518}
 .sum-line{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
 .sum-line.total{font-size:21px;font-weight:900;border-top:2px dashed #c9a227;margin-top:8px;padding-top:10px;color:#f5c518}
 .sum-line.adv{font-weight:800;color:#7dff9a}
 .notes-in-total{background:#fff;color:#222;border:2px solid #c9a227;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:10px;white-space:pre-wrap}
-.pay{text-align:center;margin-top:18px;background:#eaf5ec;border:2px solid #1e4d2b;border-radius:14px;padding:14px}
+.pay{text-align:center;margin-top:18px;background:#eaf5ec;border:2px solid #0e3b22;border-radius:14px;padding:14px}
 .pay img{width:190px;height:190px;object-fit:contain;background:#fff;border:4px solid #c9a227;border-radius:12px}
-.pay p{margin:8px 0 0;font-size:14px;font-weight:800;color:#0f3d22}
-.btn{width:100%;padding:16px;border:3px solid #0f3d22;border-radius:12px;background:#c9a227;color:#0f3d22;font-size:18px;font-weight:900;cursor:pointer;margin-top:16px;box-shadow:0 3px 0 #0f3d22}
+.pay p{margin:8px 0 0;font-size:14px;font-weight:800;color:#0e3b22}
+.btn{width:100%;padding:16px;border:3px solid #0e3b22;border-radius:12px;background:#c9a227;color:#0e3b22;font-size:18px;font-weight:900;cursor:pointer;margin-top:16px;box-shadow:0 3px 0 #0e3b22}
 .btn:disabled{opacity:.6}
 .msg{text-align:center;font-weight:800;margin-top:12px;font-size:14px;line-height:1.5}
 .msg.ok{color:#0f7a2e}
@@ -47,58 +47,33 @@ textarea{min-height:70px;resize:vertical}
 <div class="card">
 <div class="logo-wrap"><img src="Pachapp_1.png" alt="Pachapp"><p class="addr">Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala</p></div>
 <div class="inner">
-
 <label for="name">Guest Name *</label>
 <input id="name" type="text" placeholder="Full name" autocomplete="name">
-
 <label for="phone">WhatsApp Number *</label>
 <input id="phone" type="tel" placeholder="10-digit or 91 + 10-digit" autocomplete="tel">
-
 <label for="checkin">Check-in Date *</label>
 <input id="checkin" type="date">
-
 <label>Nights *</label>
-<div class="stepper">
-<button type="button" id="nightsMinus">−</button>
-<div class="val" id="nightsVal">1 Night</div>
-<button type="button" id="nightsPlus">+</button>
-</div>
+<div class="stepper"><button type="button" id="nightsMinus">−</button><div class="val" id="nightsVal">1 Night</div><button type="button" id="nightsPlus">+</button></div>
 <div class="hint" id="checkoutHint">Check-out: —</div>
-
 <label for="adults">Adults</label>
 <input id="adults" type="number" min="1" max="30" value="2">
-
 <label for="kids06">Kids 0-6 (Free)</label>
 <input id="kids06" type="number" min="0" max="20" value="0">
-
 <label for="kids612">Kids 6-12 (Rs.400 / night)</label>
 <input id="kids612" type="number" min="0" max="20" value="0">
-
 <label>Stay Type</label>
-<div class="radio-row">
-<label><input type="radio" name="stay" value="Full Villa" checked><span>Full Villa</span></label>
-<label><input type="radio" name="stay" value="Rooms"><span>Rooms</span></label>
-</div>
+<div class="radio-row"><label><input type="radio" name="stay" value="Full Villa" checked><span>Full Villa</span></label><label><input type="radio" name="stay" value="Rooms"><span>Rooms</span></label></div>
 <div class="hint" id="stayHint">Full Villa: 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE</div>
-
 <label>Rooms</label>
-<div class="stepper">
-<button type="button" id="roomsMinus">−</button>
-<div class="val" id="roomsVal">4 Rooms</div>
-<button type="button" id="roomsPlus">+</button>
-</div>
+<div class="stepper"><button type="button" id="roomsMinus">−</button><div class="val" id="roomsVal">4 Rooms</div><button type="button" id="roomsPlus">+</button></div>
 <div class="hint" id="roomsHint">Auto: 4 rooms for Full Villa. Tap +/- to override manually.</div>
-
 <label><input type="checkbox" id="breakfast"> Add Breakfast? (Rooms: Rs.100 / head / night. Full Villa: FREE)</label>
-
 <label for="utr">UTR / Transaction ID (after payment)</label>
 <input id="utr" type="text" placeholder="UTR from GPay / Bank">
-
 <label for="notes">Notes</label>
 <textarea id="notes" placeholder="Any request — late check-in, extra mattress, food, etc."></textarea>
-
-<div class="summary">
-<h3>Grand Total</h3>
+<div class="summary"><h3>Grand Total</h3>
 <div class="sum-line"><span>Base Stay</span><span id="sBase">Rs.0</span></div>
 <div class="sum-line"><span>Extra Adults (Rs.800 / night)</span><span id="sExtra">Rs.0</span></div>
 <div class="sum-line"><span>Kids 6-12 (Rs.400 / night)</span><span id="sKids">Rs.0</span></div>
@@ -106,194 +81,88 @@ textarea{min-height:70px;resize:vertical}
 <div class="sum-line total"><span>Total</span><span id="sTotal">Rs.0</span></div>
 <div class="sum-line adv"><span>Advance to Pay Now</span><span id="sAdvance">Rs.0</span></div>
 <div class="sum-line"><span>Balance Before Check-in</span><span id="sBalance">Rs.0</span></div>
-<div class="notes-in-total" id="sNotes">Notes: —</div>
-</div>
-
-<div class="pay">
-<img src="qr.png" alt="Pay QR">
-<p>Pay to 0091 996 191 7169</p>
-<div class="hint">Scan QR, pay Advance, enter UTR above.</div>
-</div>
-
+<div class="notes-in-total" id="sNotes">Notes: —</div></div>
+<div class="pay"><img src="qr.png" alt="Pay QR"><p>Pay to 0091 996 191 7169</p><div class="hint">Scan QR, pay Advance, enter UTR above.</div></div>
 <button class="btn" id="submitBtn">Send for Verification</button>
 <div class="msg" id="msg"></div>
 <div class="small">After you send, booking stays as Pending - Waiting for Pachapp to verify. Pachapp will confirm after checking payment.</div>
 </div>
 </div>
 </div>
-
 <script>
 var AIRTABLE_API_KEY = "YOUR_AIRTABLE_API_KEY";
 var AIRTABLE_BASE_ID = "YOUR_AIRTABLE_BASE_ID";
 var AIRTABLE_TABLE = "Bookings";
 var FESTIVALS = new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
-var nights = 1;
-var rooms = 4;
-var roomsManual = false;
+var nights = 1; var rooms = 4; var roomsManual = false;
 function fmt(n){ return 'Rs.' + Number(n||0).toLocaleString('en-IN'); }
 function pad(n){ return String(n).padStart(2,'0'); }
 function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-function isFestivalISO(iso){ return FESTIVALS.has(iso); }
-function priceForDate(d){
-  var iso = toISO(d);
-  if(isFestivalISO(iso)) return 9600;
-  var day = d.getDay();
-  if(day===0 || day===5 || day===6) return 8000;
-  return 6400;
-}
-function getStay(){
-  var r = document.querySelector('input[name="stay"]:checked');
-  return r ? r.value : 'Full Villa';
-}
-function autoRooms(){
-  var adults = parseInt(document.getElementById('adults').value||'2',10);
-  if(getStay()==='Full Villa') return 4;
-  var a = Math.ceil(adults/2);
-  if(a<1) a=1; if(a>4) a=4;
-  return a;
-}
-function calcCheckout(){
-  var ci = document.getElementById('checkin').value;
-  if(!ci) return '';
-  var d = new Date(ci+'T00:00:00');
-  d.setDate(d.getDate()+nights);
-  return toISO(d);
-}
+function priceForDate(d){ var iso=toISO(d); if(FESTIVALS.has(iso)) return 9600; var day=d.getDay(); if(day===0||day===5||day===6) return 8000; return 6400; }
+function getStay(){ var r=document.querySelector('input[name="stay"]:checked'); return r?r.value:'Full Villa'; }
+function autoRooms(){ var adults=parseInt(document.getElementById('adults').value||'2',10); if(getStay()==='Full Villa') return 4; var a=Math.ceil(adults/2); if(a<1)a=1; if(a>4)a=4; return a; }
+function calcCheckout(){ var ci=document.getElementById('checkin').value; if(!ci) return ''; var d=new Date(ci+'T00:00:00'); d.setDate(d.getDate()+nights); return toISO(d); }
 function update(){
-  var stay = getStay();
-  document.getElementById('nightsVal').textContent = nights + (nights===1?' Night':' Nights');
-  if(!roomsManual){ rooms = autoRooms(); }
-  document.getElementById('roomsVal').textContent = rooms + (rooms===1?' Room':' Rooms');
-  var co = calcCheckout();
-  document.getElementById('checkoutHint').textContent = co ? 'Check-out: '+co : 'Check-out: —';
-  if(stay==='Full Villa'){
-    document.getElementById('stayHint').textContent = 'Full Villa: 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE';
-    document.getElementById('roomsHint').textContent = 'Auto: 4 rooms for Full Villa. Tap +/- to override manually.';
-  } else {
-    document.getElementById('stayHint').textContent = 'Rooms: Rs.1600 per room / night. Each room: 2 adults + 2 kids below 6.';
-    document.getElementById('roomsHint').textContent = 'Auto: '+autoRooms()+' room(s) from Adults (2 per room). Tap +/- to override manually.';
-  }
-  var adults = parseInt(document.getElementById('adults').value||'0',10);
-  var k06 = parseInt(document.getElementById('kids06').value||'0',10);
-  var k612 = parseInt(document.getElementById('kids612').value||'0',10);
-  var breakfastChecked = document.getElementById('breakfast').checked;
-  var ci = document.getElementById('checkin').value;
-  var base = 0;
-  if(ci){
-    var start = new Date(ci+'T00:00:00');
-    if(stay==='Full Villa'){
-      for(var i=0;i<nights;i++){ var dd=new Date(start); dd.setDate(dd.getDate()+i); base += priceForDate(dd); }
-    } else {
-      base = rooms * nights * 1600;
-    }
-  } else {
-    base = stay==='Full Villa' ? 6400*nights : rooms*nights*1600;
-  }
-  var included = stay==='Full Villa' ? 8 : rooms*2;
-  var extraAdults = Math.max(0, adults - included);
-  var extraCost = extraAdults * 800 * nights;
-  var kidsCost = k612 * 400 * nights;
-  var breakfastCost = 0;
-  if(stay!=='Full Villa' && breakfastChecked){ breakfastCost = (adults + k612) * 100 * nights; }
-  var total = base + extraCost + kidsCost + breakfastCost;
-  var advance = 0;
-  if(stay==='Rooms' && rooms===1 && nights===1){ advance = 1600; }
-  else if(total<=10000){ advance = 2000; }
-  else { advance = Math.round(total*0.20); }
-  if(total===0) advance = 0;
-  var balance = Math.max(0, total - advance);
-  document.getElementById('sBase').textContent = fmt(base);
-  document.getElementById('sExtra').textContent = fmt(extraCost) + (extraAdults>0 ? ' ('+extraAdults+' extra)' : '');
-  document.getElementById('sKids').textContent = fmt(kidsCost);
-  document.getElementById('sBreakfast').textContent = fmt(breakfastCost) + (stay==='Full Villa' ? ' (FREE)' : '');
-  document.getElementById('sTotal').textContent = fmt(total);
-  document.getElementById('sAdvance').textContent = fmt(advance);
-  document.getElementById('sBalance').textContent = fmt(balance);
-  var notes = document.getElementById('notes').value.trim();
-  document.getElementById('sNotes').textContent = 'Notes: ' + (notes || '—');
-  return {base:base,extraCost:extraCost,kidsCost:kidsCost,breakfastCost:breakfastCost,total:total,advance:advance,balance:balance,extraAdults:extraAdults};
+  var stay=getStay();
+  document.getElementById('nightsVal').textContent=nights+(nights===1?' Night':' Nights');
+  if(!roomsManual){ rooms=autoRooms(); }
+  document.getElementById('roomsVal').textContent=rooms+(rooms===1?' Room':' Rooms');
+  var co=calcCheckout(); document.getElementById('checkoutHint').textContent=co?'Check-out: '+co:'Check-out: —';
+  if(stay==='Full Villa'){ document.getElementById('stayHint').textContent='Full Villa: 4 rooms, 8 adults + 8 kids below 6, Breakfast FREE'; document.getElementById('roomsHint').textContent='Auto: 4 rooms for Full Villa. Tap +/- to override manually.'; }
+  else{ document.getElementById('stayHint').textContent='Rooms: Rs.1600 per room / night. Each room: 2 adults + 2 kids below 6.'; document.getElementById('roomsHint').textContent='Auto: '+autoRooms()+' room(s) from Adults (2 per room). Tap +/- to override manually.'; }
+  var adults=parseInt(document.getElementById('adults').value||'0',10);
+  var k06=parseInt(document.getElementById('kids06').value||'0',10);
+  var k612=parseInt(document.getElementById('kids612').value||'0',10);
+  var breakfastChecked=document.getElementById('breakfast').checked;
+  var ci=document.getElementById('checkin').value; var base=0;
+  if(ci){ var start=new Date(ci+'T00:00:00'); if(stay==='Full Villa'){ for(var i=0;i<nights;i++){ var dd=new Date(start); dd.setDate(dd.getDate()+i); base+=priceForDate(dd); } } else { base=rooms*nights*1600; } }
+  else{ base=stay==='Full Villa'?6400*nights:rooms*nights*1600; }
+  var included=stay==='Full Villa'?8:rooms*2; var extraAdults=Math.max(0,adults-included); var extraCost=extraAdults*800*nights; var kidsCost=k612*400*nights; var breakfastCost=0;
+  if(stay!=='Full Villa'&&breakfastChecked){ breakfastCost=(adults+k612)*100*nights; }
+  var total=base+extraCost+kidsCost+breakfastCost; var advance=0;
+  if(stay==='Rooms'&&rooms===1&&nights===1){ advance=1600; } else if(total<=10000){ advance=2000; } else{ advance=Math.round(total*0.20); }
+  if(total===0) advance=0; var balance=Math.max(0,total-advance);
+  document.getElementById('sBase').textContent=fmt(base);
+  document.getElementById('sExtra').textContent=fmt(extraCost)+(extraAdults>0?' ('+extraAdults+' extra)':'');
+  document.getElementById('sKids').textContent=fmt(kidsCost);
+  document.getElementById('sBreakfast').textContent=fmt(breakfastCost)+(stay==='Full Villa'?' (FREE)':'');
+  document.getElementById('sTotal').textContent=fmt(total);
+  document.getElementById('sAdvance').textContent=fmt(advance);
+  document.getElementById('sBalance').textContent=fmt(balance);
+  var notes=document.getElementById('notes').value.trim(); document.getElementById('sNotes').textContent='Notes: '+(notes||'—');
+  return {total:total,advance:advance,balance:balance};
 }
-document.getElementById('nightsMinus').onclick = function(){ if(nights>1) nights--; update(); };
-document.getElementById('nightsPlus').onclick = function(){ if(nights<30) nights++; update(); };
-document.getElementById('roomsMinus').onclick = function(){ roomsManual=true; if(rooms>1) rooms--; update(); };
-document.getElementById('roomsPlus').onclick = function(){ roomsManual=true; if(rooms<4) rooms++; update(); };
-document.getElementById('checkin').addEventListener('change', update);
-document.getElementById('adults').addEventListener('input', update);
-document.getElementById('kids06').addEventListener('input', update);
-document.getElementById('kids612').addEventListener('input', update);
-document.getElementById('breakfast').addEventListener('change', update);
-document.getElementById('notes').addEventListener('input', update);
-document.querySelectorAll('input[name="stay"]').forEach(function(el){ el.addEventListener('change', function(){ roomsManual=false; update(); }); });
+document.getElementById('nightsMinus').onclick=function(){ if(nights>1) nights--; update(); };
+document.getElementById('nightsPlus').onclick=function(){ if(nights<30) nights++; update(); };
+document.getElementById('roomsMinus').onclick=function(){ roomsManual=true; if(rooms>1) rooms--; update(); };
+document.getElementById('roomsPlus').onclick=function(){ roomsManual=true; if(rooms<4) rooms++; update(); };
+document.getElementById('checkin').addEventListener('change',update);
+document.getElementById('adults').addEventListener('input',update);
+document.getElementById('kids06').addEventListener('input',update);
+document.getElementById('kids612').addEventListener('input',update);
+document.getElementById('breakfast').addEventListener('change',update);
+document.getElementById('notes').addEventListener('input',update);
+document.querySelectorAll('input[name="stay"]').forEach(function(el){ el.addEventListener('change',function(){ roomsManual=false; update(); }); });
 update();
-function normalizePhone(raw){
-  var p = String(raw||'').replace(/[^0-9]/g,'');
-  if(p.length===10) p = '91'+p;
-  if(p.startsWith('0') && p.length===11) p = '91'+p.slice(1);
-  return p;
-}
-document.getElementById('submitBtn').onclick = async function(){
-  var btn = document.getElementById('submitBtn');
-  var msg = document.getElementById('msg');
-  msg.className='msg'; msg.textContent='';
-  var name = document.getElementById('name').value.trim();
-  var phoneRaw = document.getElementById('phone').value.trim();
-  var checkin = document.getElementById('checkin').value;
-  var adults = parseInt(document.getElementById('adults').value||'0',10);
-  var k06 = parseInt(document.getElementById('kids06').value||'0',10);
-  var k612 = parseInt(document.getElementById('kids612').value||'0',10);
-  var utr = document.getElementById('utr').value.trim();
-  var notes = document.getElementById('notes').value.trim();
-  var stay = getStay();
-  var breakfastChecked = document.getElementById('breakfast').checked;
+function normalizePhone(raw){ var p=String(raw||'').replace(/[^0-9]/g,''); if(p.length===10) p='91'+p; if(p.startsWith('0')&&p.length===11) p='91'+p.slice(1); return p; }
+document.getElementById('submitBtn').onclick=async function(){
+  var btn=document.getElementById('submitBtn'); var msg=document.getElementById('msg'); msg.className='msg'; msg.textContent='';
+  var name=document.getElementById('name').value.trim(); var phoneRaw=document.getElementById('phone').value.trim(); var checkin=document.getElementById('checkin').value;
+  var adults=parseInt(document.getElementById('adults').value||'0',10); var k06=parseInt(document.getElementById('kids06').value||'0',10); var k612=parseInt(document.getElementById('kids612').value||'0',10);
+  var utr=document.getElementById('utr').value.trim(); var notes=document.getElementById('notes').value.trim(); var stay=getStay(); var breakfastChecked=document.getElementById('breakfast').checked;
   if(!name){ msg.className='msg err'; msg.textContent='Please enter Guest Name.'; return; }
-  if(!phoneRaw || normalizePhone(phoneRaw).length<12){ msg.className='msg err'; msg.textContent='Please enter a valid WhatsApp number (10-digit).'; return; }
+  if(!phoneRaw||normalizePhone(phoneRaw).length<12){ msg.className='msg err'; msg.textContent='Please enter a valid WhatsApp number (10-digit).'; return; }
   if(!checkin){ msg.className='msg err'; msg.textContent='Please pick Check-in Date.'; return; }
-  if(AIRTABLE_API_KEY==='YOUR_AIRTABLE_API_KEY' || AIRTABLE_BASE_ID==='YOUR_AIRTABLE_BASE_ID'){
-    msg.className='msg err'; msg.textContent='Form not connected yet — owner needs to add Airtable Token + Base ID in 【entity-GitHub¦canonical_name=GitHub】, then Deploy.'; return;
-  }
-  var calc = update();
-  var checkout = calcCheckout();
-  var phone = normalizePhone(phoneRaw);
-  var kidsTotal = k06 + k612;
-  var fields = {
-    Name: name,
-    Phone: phone,
-    Checkin: checkin,
-    Checkout: checkout,
-    Nights: nights,
-    Adults: adults,
-    Kids: kidsTotal,
-    Stay: stay,
-    Rooms: rooms,
-    Total: calc.total,
-    Advance: calc.advance,
-    Balance: calc.balance,
-    UTR: utr,
-    Status: 'Pending - Waiting for Verification',
-    Notes: notes,
-    Breakfast: breakfastChecked ? 'Yes' : 'No'
-  };
-  btn.disabled = true; btn.textContent = 'Sending...';
+  if(AIRTABLE_API_KEY==='YOUR_AIRTABLE_API_KEY'||AIRTABLE_BASE_ID==='YOUR_AIRTABLE_BASE_ID'){ msg.className='msg err'; msg.textContent='Form not connected yet — owner needs to add Airtable Token + Base ID in GitHub, then Deploy.'; return; }
+  var calc=update(); var checkout=calcCheckout(); var phone=normalizePhone(phoneRaw); var kidsTotal=k06+k612;
+  var fields={Name:name,Phone:phone,Checkin:checkin,Checkout:checkout,Nights:nights,Adults:adults,Kids:kidsTotal,Stay:stay,Rooms:rooms,Total:calc.total,Advance:calc.advance,Balance:calc.balance,UTR:utr,Status:'Pending - Waiting for Verification',Notes:notes,Breakfast:breakfastChecked?'Yes':'No'};
+  btn.disabled=true; btn.textContent='Sending...';
   try{
-    var res = await fetch('https://api.airtable.com/v0/'+encodeURIComponent(AIRTABLE_BASE_ID)+'/'+encodeURIComponent(AIRTABLE_TABLE), {
-      method:'POST',
-      headers:{ 'Authorization':'Bearer '+AIRTABLE_API_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ fields: fields })
-    });
-    var data = await res.json().catch(function(){ return {}; });
-    if(!res.ok){
-      msg.className='msg err';
-      msg.textContent = 'Could not send. ' + (data && data.error && data.error.message ? data.error.message : 'Please try again.');
-      btn.disabled=false; btn.textContent='Send for Verification';
-      return;
-    }
-    msg.className='msg ok';
-    msg.textContent = 'Sent! Your booking is Pending - Waiting for Pachapp to verify. Pachapp will confirm after checking payment.';
-    btn.disabled=false; btn.textContent='Send for Verification';
-  }catch(e){
-    msg.className='msg err'; msg.textContent='Network error. Please try again.';
-    btn.disabled=false; btn.textContent='Send for Verification';
-  }
+    var res=await fetch('https://api.airtable.com/v0/'+encodeURIComponent(AIRTABLE_BASE_ID)+'/'+encodeURIComponent(AIRTABLE_TABLE),{method:'POST',headers:{'Authorization':'Bearer '+AIRTABLE_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({fields:fields})});
+    var data=await res.json().catch(function(){ return {}; });
+    if(!res.ok){ msg.className='msg err'; msg.textContent='Could not send. '+(data&&data.error&&data.error.message?data.error.message:'Please try again.'); btn.disabled=false; btn.textContent='Send for Verification'; return; }
+    msg.className='msg ok'; msg.textContent='Sent! Your booking is Pending - Waiting for Pachapp to verify. Pachapp will confirm after checking payment.'; btn.disabled=false; btn.textContent='Send for Verification';
+  }catch(e){ msg.className='msg err'; msg.textContent='Network error. Please try again.'; btn.disabled=false; btn.textContent='Send for Verification'; }
 };
 </script>
 </body>
