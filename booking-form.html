@@ -34,7 +34,9 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .stepper-kidshalf .step-btn{border-color:rgba(0,0,0,.7);color:#000;background:rgba(255,255,255,.30)}
 .step-val{font-size:20px;font-weight:300;letter-spacing:.03em;line-height:1.6;text-align:center;flex:1}
 .step-val small{font-size:14px;font-weight:300;opacity:.9}
-.hint{font-size:14.5px;font-weight:200;letter-spacing:.02em;line-height:1.7;margin-top:10px;color:rgba(255,255,255,.78)}
+.hint{font-size:14.5px;font-weight:200;letter-spacing:.02em;line-height:1.7;margin-top:10px;color:rgba(255,255,255,.78);transition:color .25s}
+/* RED WHEN ABOVE LOGIC */
+.hint.over{color:#FF3B30 !important;font-weight:400}
 .booking-row{display:flex;gap:0;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;backdrop-filter:blur(18px)}
 .booking-opt{flex:1;padding:14px 8px;border-radius:10px;text-align:center;cursor:pointer;transition:all .25s cubic-bezier(.25,.1,.25,1);position:relative}
 .booking-opt.selected{background:rgba(255,255,255,.92);color:#000;box-shadow:0 4px 16px rgba(0,0,0,.25)}
@@ -44,7 +46,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .booking-opt .t1 .check{color:#34C759;font-size:20px;font-weight:500;display:none}
 .booking-opt.selected .t1 .check{display:inline}
 .booking-opt .t2{font-size:13.5px;font-weight:200;letter-spacing:.02em;line-height:1.6;margin-top:4px;opacity:.85}
-.rooms-pill{background:rgba(168,230,168,.60);backdrop-filter:blur(22px);color:#000;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:16px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+.rooms-pill{background:rgba(168,230,168,.60);backdrop-filter:blur(22px);color:#000;border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:16px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:all .25s}
 .rooms-pill .lbl{font-weight:400;font-size:16px;letter-spacing:.03em;line-height:1.6;display:flex;align-items:center;gap:6px}
 .rooms-pill .lbl .green-tick{color:#1A7A3A;font-weight:500;font-size:19px;display:none}
 .rooms-pill.selected-room .lbl .green-tick{display:inline}
@@ -53,6 +55,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 .rooms-pill .rbtn:active{transform:scale(.90)}
 .rooms-pill .rbtn:disabled{opacity:.4}
 .rooms-pill .rval{font-size:22px;font-weight:400;letter-spacing:.02em;min-width:28px;text-align:center}
+/* RED WHEN ABOVE LOGIC - Rooms pill turns red */
+.rooms-pill.over-capacity{background:rgba(255,59,48,.22) !important;border:1.5px solid #FF3B30 !important;color:#FF3B30 !important}
+.rooms-pill.over-capacity .lbl{color:#FF3B30}
+.rooms-pill.over-capacity .lbl .green-tick{color:#FF3B30}
+.rooms-pill.over-capacity .rval{color:#FF3B30;font-weight:500}
+.rooms-pill.over-capacity .rbtn{border-color:#FF3B30 !important;color:#FF3B30 !important;background:rgba(255,255,255,.92)}
 .bf-row{display:flex;gap:0;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;backdrop-filter:blur(18px)}
 .bf-opt{flex:1;padding:16px 10px;border-radius:10px;text-align:center;cursor:pointer;font-weight:400;font-size:19px;letter-spacing:.03em;line-height:1.6;transition:all .25s}
 .bf-opt:active{transform:scale(.97)}
@@ -133,7 +141,6 @@ let payAdvanceOn=false;
 const FESTIVALS=new Set(['2026-01-01','2026-01-02','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-10-02','2026-10-20','2026-10-21','2026-04-14','2026-05-01','2026-08-15']);
 function fmt(n){return 'Rs.'+n.toLocaleString('en-IN')}
 function getDayType(s){if(!s)return 'Weekday';if(FESTIVALS.has(s))return 'Festival';const d=new Date(s+'T12:00:00'),day=d.getDay();if(day===5||day===6||day===0)return 'Weekend';return 'Weekday'}
-// UPGRADED ROOMS LOGIC - LOGICAL ROOMS NEEDED
 function getAutoRooms(a){return Math.max(1,Math.min(4,Math.ceil(a/2)))}
 function calc(){
   const checkIn=document.getElementById('checkIn').value,dayType=getDayType(checkIn);
@@ -141,12 +148,10 @@ function calc(){
   let autoRooms=getAutoRooms(adults);
   if(bookingType==='Full Villa'){rooms=4;const rate=dayType==='Festival'?9600:dayType==='Weekend'?8000:6400;base=rate*nights;baseLabel='Full Villa ('+dayType+')';}
   else{
-    // Private Rooms: Auto = ceil(Adults/2), Manual stays until type changes
     if(!roomsManual) rooms=autoRooms;
     rooms=Math.max(1,Math.min(4,rooms));
     base=1600*rooms*nights;baseLabel=rooms+' Room(s) ('+dayType+')';
   }
-  // Extra Adults - logical: capacity = Rooms x 2
   const capacity=bookingType==='Full Villa'?8:rooms*2;
   const extraAdults=Math.max(0,adults-capacity);
   const extraTotal=extraAdults*800*nights, kidsTotal=kidsHalf*300*nights, breakfastCount=adults+kidsHalf;
@@ -160,14 +165,21 @@ function calc(){
   document.getElementById('kidsHalfTotal').textContent=fmt(kidsTotal);
   document.getElementById('roomsVal').textContent=rooms;
   document.getElementById('roomsMode').textContent=bookingType==='Full Villa'?'FULL VILLA':(roomsManual?'MANUAL':'AUTO');
-  // Upgraded hint - shows logical need
-  if(bookingType==='Full Villa'){document.getElementById('roomsHint').textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults';}
-  else if(!roomsManual){document.getElementById('roomsHint').textContent='Rooms = Auto ceil(Adults / 2) • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults';}
-  else{
-    if(rooms<autoRooms) document.getElementById('roomsHint').textContent='Manual: You took '+rooms+' Room(s) but need '+autoRooms+' for '+adults+' Adults • Extra '+extraAdults+' Adult(s) charged Rs.800 / night';
-    else if(rooms>autoRooms) document.getElementById('roomsHint').textContent='Manual: You took '+rooms+' Room(s) • Need '+autoRooms+' for '+adults+' Adults • Extra space, no extra charge';
-    else document.getElementById('roomsHint').textContent='Manual: '+rooms+' Room(s) = Need for '+adults+' Adults • Perfect';
+  const hintEl=document.getElementById('roomsHint'), pillEl=document.getElementById('roomsPill');
+  // RED WHEN ABOVE LOGIC: Rooms taken < Need, or Adults > Capacity
+  const overCapacity = bookingType==='Rooms' ? (rooms < autoRooms) : (adults > 8);
+  if(bookingType==='Full Villa'){
+    if(adults>8) hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults • '+extraAdults+' Adult(s) OVER capacity — Extra charged';
+    else hintEl.textContent='Full Villa = 4 Rooms fixed • Capacity 8 Adults';
+  } else if(!roomsManual){
+    hintEl.textContent='Rooms = Auto ceil(Adults / 2) • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults';
+  } else {
+    if(rooms<autoRooms) hintEl.textContent='Rooms = Manual • Need '+autoRooms+' Room(s) for '+adults+' Adults • Capacity '+capacity+' Adults • '+extraAdults+' Adult(s) OVER — Extra Rs.800 / night';
+    else if(rooms>autoRooms) hintEl.textContent='Manual: You took '+rooms+' Room(s) • Need '+autoRooms+' for '+adults+' Adults • Extra space, no extra charge';
+    else hintEl.textContent='Manual: '+rooms+' Room(s) = Need for '+adults+' Adults • Perfect';
   }
+  if(overCapacity){ hintEl.classList.add('over'); pillEl.classList.add('over-capacity'); }
+  else { hintEl.classList.remove('over'); pillEl.classList.remove('over-capacity'); }
   document.getElementById('bfHint').textContent=bookingType==='Full Villa'?'Full Villa: Breakfast FREE':'Rooms: Rs.100 / head / night • Breakfast count = Adults + Kids 6-12 = '+breakfastCount;
   if(checkIn){const d=new Date(checkIn+'T12:00:00');d.setDate(d.getDate()+nights);document.getElementById('checkOut').value=d.toISOString().slice(0,10);}
   document.getElementById('gtBaseLabel').textContent=baseLabel;
@@ -189,8 +201,7 @@ function calc(){
   document.getElementById('kidsHalfPlus').disabled=kidsHalf>=20;
   document.getElementById('roomsMinus').disabled=bookingType==='Full Villa'||rooms<=1;
   document.getElementById('roomsPlus').disabled=bookingType==='Full Villa'||rooms>=4;
-  const pill=document.getElementById('roomsPill');
-  if(bookingType==='Rooms') pill.classList.add('selected-room'); else pill.classList.remove('selected-room');
+  if(bookingType==='Rooms') pillEl.classList.add('selected-room'); else pillEl.classList.remove('selected-room');
   return {total,advance,extraAdults,autoRooms};
 }
 function updatePayAdvanceUI(){
