@@ -152,4 +152,27 @@ async function askAI(userMsg, isGroup, history) {
     const c = await gq.chat.completions.create({ model: 'openai/gpt-oss-20b', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 });
     return c.choices[0].message.content || null;
   } catch (e) { console.log('GQ error ' + e.message); return null; }
+}// --- FIX parseDate jan26: understand jan26, jan26 2027, 26jan2027, with year ---
+function parseDate(text) {
+  if (!text) return null;
+  const orig = text.toLowerCase().trim();
+  const months = { jan:0, january:0, feb:1, february:1, mar:2, march:2, apr:3, april:3, may:4, jun:5, june:5, jul:6, july:6, aug:7, august:7, sep:8, sept:8, september:8, oct:9, october:9, nov:10, november:10, dec:11, december:11 };
+  let m;
+  m = orig.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  m = orig.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) { let y=parseInt(m[3]); if (y<100) y+=2000; return new Date(y, parseInt(m[2])-1, parseInt(m[1])); }
+  m = orig.match(/([a-z]+)\s*(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(\d{4})/);
+  if (m && months[m[1]]!==undefined) return new Date(parseInt(m[3]), months[m[1]], parseInt(m[2]));
+  m = orig.match(/(\d{1,2})(?:st|nd|rd|th)?\s*([a-z]+)\s*,?\s*(\d{4})/);
+  if (m && months[m[2]]!==undefined) return new Date(parseInt(m[3]), months[m[2]], parseInt(m[1]));
+  m = orig.match(/(\d{1,2})[\/\-](\d{1,2})\b/);
+  if (m) { const now=new Date(); let y=now.getFullYear(); let d=new Date(y, parseInt(m[2])-1, parseInt(m[1])); if (d<now) d=new Date(y+1, parseInt(m[2])-1, parseInt(m[1])); return d; }
+  m = orig.match(/(\d{1,2})(?:st|nd|rd|th)?\s*([a-z]+)/);
+  if (m && months[m[2]]!==undefined) { const now=new Date(); let y=now.getFullYear(); let d=new Date(y, months[m[2]], parseInt(m[1])); if (d<now) d=new Date(y+1, months[m[2]], parseInt(m[1])); return d; }
+  m = orig.match(/([a-z]+)\s*(\d{1,2})(?:st|nd|rd|th)?/);
+  if (m && months[m[1]]!==undefined) { const now=new Date(); let y=now.getFullYear(); let d=new Date(y, months[m[1]], parseInt(m[2])); if (d<now) d=new Date(y+1, months[m[1]], parseInt(m[2])); return d; }
+  if (orig.includes('tomorrow')) { const d=new Date(); d.setDate(d.getDate()+1); return d; }
+  if (orig.includes('today')) return new Date();
+  return null;
 }
