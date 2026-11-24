@@ -175,4 +175,23 @@ function parseDate(text) {
   if (orig.includes('tomorrow')) { const d=new Date(); d.setDate(d.getDate()+1); return d; }
   if (orig.includes('today')) return new Date();
   return null;
+}// --- FIX Table Bookings: code said Booking, Airtable says Bookings ---
+async function saveToDB(booking) {
+  try {
+    let base = dbBase;
+    if (!base) {
+      try {
+        const AT2 = require('airtable');
+        const key2 = process.env.AIRTABLE_API_KEY || process.env.AIRTABLE_TOKEN;
+        const baseId2 = process.env.AIRTABLE_BASE_ID;
+        if (key2 && baseId2) base = new AT2({ apiKey: key2 }).base(baseId2);
+      } catch (e2) { console.log('Airtable re-init fail: ' + e2.message); }
+    }
+    if (!base) { console.log('Airtable not set, cannot save'); return false; }
+    const tableName = process.env.AIRTABLE_TABLE || 'Bookings';
+    const existing = await base(tableName).select({ filterByFormula: "AND({Date}='" + booking.date + "', {Phone}='" + booking.phone + "', {Name}='" + booking.name + "')" }).firstPage();
+    if (existing && existing.length > 0) return true;
+    await base(tableName).create([{ fields: { Name: booking.name || 'Guest', Phone: booking.phone || '', Date: booking.date || '', Guests: booking.guests || '', Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending', UTR: booking.utr || '', Source: 'WA AI' } }]);
+    return true;
+  } catch (e) { console.log('Airtable save fail: ' + e.message); return false; }
 }
