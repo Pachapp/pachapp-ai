@@ -1,5 +1,5 @@
 const express = require('express');
-const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
+const axios = require('axios');
 const app = express();
 app.use(express.json());
 
@@ -69,7 +69,7 @@ function fmt(d){ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short
 async function checkAvailability(checkin, checkout){
   try{
     const url = 'https://api.airtable.com/v0/' + AIRTABLE_BASE_ID + '/' + AIRTABLE_TABLE_ID;
-    const res = await 【entity-axios¦canonical_name=axios】.get(url, {headers:{Authorization:'Bearer ' + AIRTABLE_API_KEY}, params:{pageSize:100}});
+    const res = await axios.get(url, {headers:{Authorization:'Bearer ' + AIRTABLE_API_KEY}, params:{pageSize:100}});
     const records = res.data.records || [];
     for(const r of records){
       const f = r.fields || {};
@@ -84,19 +84,19 @@ async function checkAvailability(checkin, checkout){
 }
 
 async function sendText(to, body){
-  await 【entity-axios¦canonical_name=axios】.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'text', text:{body:body}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
+  await axios.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'text', text:{body:body}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
 }
 async function sendImage(to, link, caption){
-  await 【entity-axios¦canonical_name=axios】.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'image', image:{link:link, caption:caption||''}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
+  await axios.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'image', image:{link:link, caption:caption||''}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
 }
 
 function getAmenitiesAnswer(text){
   const t = text.toLowerCase();
   if(t.includes('how many') && (t.includes('guest') || t.includes('people') || t.includes('person') || t.includes('max') || t.includes('capacity'))) return MAX_GUESTS + '.';
   if(t.includes('bathroom') || t.includes('toilet') || t.includes('washroom')) return 'Total 7 bathrooms. Each room has attached bathroom.';
-  if(t.includes('bed') || t.includes('room') && t.includes('king')) return ROOMS_INFO;
-  if(t.includes('towel') || t.includes('linen') || t.includes('toiletries') || t.includes('bed sheet')) return 'Bed linen, towels, toiletries provided. Pool towels not provided.';
-  if(t.includes('extra') && (t.includes('mattress') || t.includes('person') || t.includes('charge'))) return 'Extra mattress / extra person charge applies. Please ask host for rate.';
+  if(t.includes('bed')) return ROOMS_INFO;
+  if(t.includes('towel') || t.includes('linen') || t.includes('toiletries')) return 'Bed linen, towels, toiletries provided. Pool towels not provided.';
+  if(t.includes('extra') && (t.includes('mattress') || t.includes('person'))) return 'Extra mattress / extra person charge applies. Please ask host for rate.';
   if(t.includes('kitchen') || t.includes('stove') || t.includes('fridge') || t.includes('kettle') || t.includes('utensil')) return 'Private Kitchen Yes - Stove, fridge, utensils, kettle. Kettle in kitchen, not in room.';
   if(t.includes('breakfast') || t.includes('dinner') || t.includes('food') || t.includes('tea') || t.includes('coffee')) return 'Food: ' + FOOD_INFO;
   if(t.includes('pool') && (t.includes('deep') || t.includes('depth') || t.includes('120') || t.includes('kid') || t.includes('child'))) return POOL_INFO;
@@ -106,7 +106,7 @@ function getAmenitiesAnswer(text){
   if(t.includes('first aid') || t.includes('fire') || t.includes('safety')) return 'First aid kit Yes, Fire extinguisher Yes, CCTV Yes.';
   if(t.includes('library') || t.includes('art gallery') || t.includes('photography') || t.includes('meeting hall') || t.includes('meeting')) return 'Library (books inside villa), Art Gallery (Photography inside villa), Meeting hall inside villa for 20-40 people.';
   if(t.includes('smoking') || t.includes('smoke') || t.includes('alcohol') || t.includes('drink') || t.includes('party') || t.includes('dj')) return RULES;
-  if(t.includes('early') || t.includes('late') && t.includes('check')) return 'Early check-in / Late check-out charge applies.';
+  if(t.includes('early') || (t.includes('late') && t.includes('check'))) return 'Early check-in / Late check-out charge applies.';
   if(t.includes('pet') || t.includes('dog') || t.includes('cat')) return 'Pet friendly - Pet charge Rs 1000.';
   if(t.includes('parking') || t.includes('car') || t.includes('vehicle')) return 'Free parking for 6 cars.';
   if(t.includes('near') || t.includes('nearby') || t.includes('distance') || t.includes('town') || t.includes('shop') || t.includes('view') || t.includes('tea plantation') || t.includes('mountain')) return NEARBY;
