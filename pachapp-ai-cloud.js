@@ -232,6 +232,7 @@ function isVacancyAsk(text){
   return false;
 }
 function todayIST(){ const ist = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); ist.setHours(0,0,0,0); return ist; }
+function fmt(d){ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
 
 async function checkAvailability(checkin, checkout){
   try{
@@ -450,6 +451,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V31 Wise Host'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V32 Wise Host Fixed'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
