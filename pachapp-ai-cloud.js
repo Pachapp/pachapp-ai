@@ -318,7 +318,10 @@ function getAmenitiesAnswer(text){
   if(t.includes('game') || t.includes('chess') || t.includes('ludo') || t.includes('carrom') || t.includes('badminton')) return 'Games at Pachapp: ' + GAMES + '.';
   if(t.includes('barbecue') || t.includes('barbeque') || t.includes('bbq') || t.includes('grill')) return PAID_BARBECUE + ' Grill closing: 11 PM.';
   if(t.includes('campfire') || t.includes('camp fire') || t.includes('bonfire')) return PAID_CAMPFIRE + ' Campfire time: 7 PM to 11 PM.';
-  if(t.includes('music') || t.includes('keyboard') || t.includes('guitar') || t.includes('tabla') || t.includes('instrument') || t.includes('roland')) return MUSIC_RENT + ' Music time: 7 PM to 11 PM.';
+  if(t.includes('live music') || t.includes('live') || t.includes('composer') || t.includes('owner') || t.includes('singer') || t.includes('singing') || t.includes('concert') || t.includes('performance') || t.includes('show')){
+    return 'Owner is a Music Composer. Live Music can be arranged on request - Please ask host for live music / performance details and charges. Instruments also available for rent: ' + MUSIC_RENT + ' Music time: 7 PM to 11 PM.';
+  }
+  if(t.includes('music') || t.includes('keyboard') || t.includes('guitar') || t.includes('tabla') || t.includes('instrument') || t.includes('roland')) return MUSIC_RENT + ' Music time: 7 PM to 11 PM. Owner is a Music Composer - Live Music can be arranged on request, please ask host.';
   if(t.includes('timing') || t.includes('time') || t.includes('open') || t.includes('close') || t.includes('start')) return TIMINGS;
   if(t.includes('checkin') || t.includes('check-in') || t.includes('arrival') || t.includes('check in')) return 'Arrival / Check-in time: ' + CHECKIN + '.';
   if(t.includes('checkout') || t.includes('check-out') || t.includes('departure') || t.includes('check out')) return 'Departure / Check-out time: ' + CHECKOUT + '.';
@@ -340,7 +343,8 @@ app.post('/webhook', async (req,res)=>{
     const lower = text.toLowerCase();
     const mem = getMem(from);
     if(lower.includes('photo') || lower.includes('image') || lower.includes('pic')){
-      if(lower.includes('more')){
+      const isMore = lower.includes('more');
+      if(isMore){
         if(mem.photoCount===0){
           mem.photoCount=1;
           for(const p of SECOND_PHOTOS){ try{ await sendImage(from,p); }catch(e){ console.log('SEND IMAGE FAIL ' + p); } }
@@ -352,21 +356,23 @@ app.post('/webhook', async (req,res)=>{
           return res.sendStatus(200);
         }
       } else {
+        // FIRST Photos - ALWAYS 3, reset count - even if guest asked before
         mem.photoCount=0;
         for(const p of FIRST_PHOTOS){ try{ await sendImage(from,p); }catch(e){ console.log('SEND IMAGE FAIL ' + p); } }
         await sendText(from, 'These are 3 photos - 1 Room, 1 Outdoor, 1 Pool.\n\nWant more photos? Type - more photos');
         return res.sendStatus(200);
       }
     }
-    // Wise Host: objections, safety, family, party, thinking - tactical, mature
-    const wise = getWiseObjectionAnswer(text);
-    if(wise){
-      // If guest already gave dates, attach availability + closing
-      if(mem.checkin && mem.checkout){
-        await sendText(from, wise + '\n\nYour date ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + ' - Shall I send booking form to lock it?');
-      } else {
-        await sendText(from, wise + '\n\nWhat dates are you planning? I will check availability for you.');
-      }
+    // Wise Host: YES = send booking form - guest said yes to "Shall I send form?"
+    const yesWords = ['yes','yeah','yep','sure','please','send','send form','yes please','yes send','ok send','please send','ha','yes sir','yes madam','confirm'];
+    const isYes = yesWords.some(w=> lower===w || lower.includes(w));
+    if(isYes && mem.checkin && mem.checkout){
+      const villaTxt = mem.villaType ? ' - ' + mem.villaType : '';
+      await sendText(from, 'Perfect. Here is your booking form for ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + villaTxt + ':\n' + BOOKING_FORM + '\n\nFill it to lock your date - Advance only 20%, balance at check-in. I will keep your date in mind.');
+      return res.sendStatus(200);
+    }
+    if(isYes && !mem.checkin){
+      await sendText(from, 'Great. What dates are you planning? Tell me like - 28 Nov, or tomorrow, or next weekend - I will check immediately.');
       return res.sendStatus(200);
     }
     // Wise Host: if guest says thanks / okay and we have dates, close tactically
@@ -451,6 +457,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V32 Wise Host Fixed'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V35 Live Music + Airtable'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
