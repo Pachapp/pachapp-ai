@@ -39,32 +39,198 @@ function getMem(phone){ if(!memory[phone]) memory[phone]={photoCount:0}; return 
 
 function parseDates(text){
   const lower = text.toLowerCase();
+  const istToday = todayIST();
   const months = {jan:0, january:0, feb:1, february:1, mar:2, march:2, apr:3, april:3, may:4, jun:5, june:5, jul:6, july:6, aug:7, august:7, sep:8, sept:8, september:8, oct:9, october:9, nov:10, november:10, dec:11, december:11};
+  const weekdays = {sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6};
   const dates = [];
-  const re1 = /(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})/g;
-  let m;
-  while((m=re1.exec(lower))!==null){
-    let d=parseInt(m[1],10), mo=parseInt(m[2],10)-1;
-    if(mo>=0 && mo<12 && d>=1 && d<=31){
-      let y=new Date().getFullYear();
-      let dt=new Date(y,mo,d);
-      if(dt < new Date(new Date().setHours(0,0,0,0))) dt.setFullYear(y+1);
-      dates.push(dt);
+  const addDate = (d)=>{ if(d && !dates.find(x=>x.getTime()===d.getTime())) dates.push(new Date(d.getTime())); };
+  // Normalize ordinals
+  let norm = lower.replace(/(\d{1,2})(st|nd|rd|th)\b/g, '$1');
+  norm = norm.replace(/,/g,' ');
+  // 1) Explicit range: "1 to 3 dec", "1-3 dec", "dec 1 to 3", "dec 1-3", "1 dec to 3 dec", "1/12 to 3/12"
+  let rangeRe = /(\d{1,2})\s*(?:to|\-|\u2013)\s*(\d{1,2})\s*(jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)/;
+  let rm = norm.match(rangeRe);
+  if(rm){
+    let d1=parseInt(rm[1],10), d2=parseInt(rm[2],10), mo=months[rm[3].slice(0,3)]!==undefined?months[rm[3].slice(0,3)]:months[rm[3]];
+    // handle full month name: use first 3 letters
+    let mkey = rm[3].substring(0,3); mo = months[mkey];
+    let y=istToday.getFullYear();
+    let dt1=new Date(y,mo,d1), dt2=new Date(y,mo,d2);
+    if(dt1 < istToday) dt1.setFullYear(y+1);
+    if(dt2 < istToday) dt2.setFullYear(y+1);
+    if(dt2 < dt1) dt2.setMonth(dt2.getMonth()+1);
+    addDate(dt1); addDate(dt2); return dates.sort((a,b)=>a-b);
+  }
+  // Range with month in middle: "dec 1 to dec 3" / "dec 1 - dec 3"
+  let rangeRe2 = /(jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)\s*(\d{1,2})\s*(?:to|\-)\s*(?:(jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)\s*)?(\d{1,2})/;
+  let rm2 = norm.match(rangeRe2);
+  if(rm2){
+    let mo1 = months[rm2[1].substring(0,3)];
+    let d1 = parseInt(rm2[2],10);
+    let mo2 = rm2[3] ? months[rm2[3].substring(0,3)] : mo1;
+    let d2 = parseInt(rm2[4],10);
+    let y=istToday.getFullYear();
+    let dt1=new Date(y,mo1,d1), dt2=new Date(y,mo2,d2);
+    if(dt1 < istToday) dt1.setFullYear(y+1);
+    if(dt2 < dt1) dt2.setFullYear(dt1.getFullYear());
+    if(dt2 < istToday && dt1 >= istToday) dt2.setFullYear(dt1.getFullYear());
+    addDate(dt1); addDate(dt2); return dates.sort((a,b)=>a-b);
+  }
+  // "for 2 nights / 2 days from dec 1" / "2 nights from tomorrow"
+  let nightsRe = /for\s*(\d{1,2})\s*(night|nights|day|days)/;
+  let nm = norm.match(nightsRe);
+  let nights = nm ? parseInt(nm[1],10) : null;
+  // Weekday: "next friday", "this friday", "coming friday", "friday"
+  for(let wd in weekdays){
+    if(norm.includes(wd)){
+      let target = weekdays[wd];
+      let base = new Date(istToday.getTime());
+      let cur = base.getDay();
+      let diff = (target - cur + 7) % 7;
+      if(norm.includes('next '+wd) || norm.includes('coming '+wd)){
+        diff = diff===0 ? 7 : diff+7;
+        if(diff<=7 && norm.includes('next')) diff+=0;
+        // next Friday when today is Friday should be +7, when today is Monday and next Friday = +4? Use +7 if diff==0 else diff, but for "next" we want next week's
+        if(norm.includes('next '+wd)){
+          // If diff is within this week, push to next week
+          diff = diff===0 ? 7 : diff;
+          // If today is before Friday this week, "next Friday" means Friday next week, not this Friday
+          let thisWeekDiff = (target - cur + 7)%7;
+          if(thisWeekDiff!==0) diff = thisWeekDiff + 7;
+        }
+      } else if(norm.includes('this '+wd)){
+        if(diff===0) diff=0;
+      } else {
+        if(diff===0) diff=0;
+      }
+      let dt = new Date(base.getTime()+diff*86400000);
+      addDate(dt);
+      // If nights present, add checkout
+      if(nights) addDate(new Date(dt.getTime()+nights*86400000));
+      return dates.sort((a,b)=>a-b);
     }
   }
-  const parts = lower.replace(/,/g,' ').split(/\s+/);
+  // "next weekend" / "this weekend" / "weekend" / "coming weekend"
+  if(norm.includes('weekend')){
+    let base = new Date(istToday.getTime());
+    let cur = base.getDay();
+    // Saturday = 6
+    let diffSat = (6 - cur + 7)%7;
+    if(norm.includes('next weekend') || norm.includes('coming weekend')){
+      diffSat = diffSat===0 ? 7 : diffSat+7;
+      // If today is Mon-Fri, next weekend = Sat next week, not this Sat
+      if(cur>=1 && cur<=5) diffSat = diffSat; // already +7 logic above handles
+      if(cur===0) diffSat = 6; // Sunday -> next Sat is +6
+      if(cur===6) diffSat = 7;
+    } else if(norm.includes('this weekend')){
+      if(diffSat===0) diffSat=0;
+    }
+    let sat = new Date(base.getTime()+diffSat*86400000);
+    addDate(sat);
+    addDate(new Date(sat.getTime()+86400000)); // Sun checkout = Sat+1? Actually Sat to Sun = 1 night, but for weekend stay Sat to Mon = 2 nights, use Sat to Mon
+    // For weekend, checkout = Monday
+    dates.length=0;
+    addDate(sat);
+    addDate(new Date(sat.getTime()+2*86400000));
+    return dates.sort((a,b)=>a-b);
+  }
+  // "next week" / "this week"
+  if(norm.includes('next week')){
+    let base = new Date(istToday.getTime());
+    let diffMon = (1 - base.getDay() + 7)%7;
+    let nextMon = new Date(base.getTime()+(diffMon+7)*86400000);
+    if(diffMon===0) nextMon = new Date(base.getTime()+7*86400000);
+    addDate(nextMon); return dates.sort((a,b)=>a-b);
+  }
+  // "next month" / "next dec" / "in december"
+  if(norm.includes('next month')){
+    let y=istToday.getFullYear(), mo=istToday.getMonth()+1;
+    if(mo>11){ mo=0; y++; }
+    addDate(new Date(y,mo,1)); return dates.sort((a,b)=>a-b);
+  }
+  // Relative: tomorrow / day after tomorrow / today / tonight
+  if(norm.includes('day after tomorrow')){
+    addDate(new Date(istToday.getTime()+2*86400000));
+    if(nights) addDate(new Date(istToday.getTime()+2*86400000+nights*86400000));
+    return dates.sort((a,b)=>a-b);
+  }
+  if(norm.includes('tomorrow')){
+    let tmr = new Date(istToday.getTime()+86400000);
+    addDate(tmr);
+    if(nights) addDate(new Date(tmr.getTime()+nights*86400000));
+    // Continue to also parse other explicit dates if present, don't return yet if other date exists
+    // If only tomorrow, return
+    let hasOtherDate = /(\d{1,2}\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))|((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*\d{1,2})|(\d{1,2}\s*[\/\-\.]\s*\d{1,2})/.test(norm.replace('tomorrow',''));
+    if(!hasOtherDate) return dates.sort((a,b)=>a-b);
+  }
+  if(norm.includes('today') || norm.includes('tonight')){
+    let hasOtherDate = /(\d{1,2}\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/.test(norm.replace('today','').replace('tonight',''));
+    if(!hasOtherDate){ addDate(new Date(istToday.getTime())); return dates.sort((a,b)=>a-b); }
+  }
+  // YYYY-MM-DD
+  let ymd = norm.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(ymd){ addDate(new Date(parseInt(ymd[1],10), parseInt(ymd[2],10)-1, parseInt(ymd[3],10))); return dates.sort((a,b)=>a-b); }
+  // DD/MM, DD-MM, DD.MM
+  const re1 = /(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})(?:\s*[\/\-\.]\s*(\d{2,4}))?/g;
+  let m;
+  while((m=re1.exec(norm))!==null){
+    let d=parseInt(m[1],10), mo=parseInt(m[2],10)-1;
+    let y = m[3] ? (parseInt(m[3],10)<100 ? 2000+parseInt(m[3],10) : parseInt(m[3],10)) : istToday.getFullYear();
+    if(mo>=0 && mo<12 && d>=1 && d<=31){
+      let dt=new Date(y,mo,d);
+      if(!m[3] && dt < istToday) dt.setFullYear(y+1);
+      addDate(dt);
+    }
+  }
+  if(dates.length>0){
+    // If nights + one date, add checkout
+    if(nights && dates.length===1) addDate(new Date(dates[0].getTime()+nights*86400000));
+    return dates.sort((a,b)=>a-b);
+  }
+  // Month + Day: "1 dec", "dec 1", "1 december", "december 1", with optional year
+  const parts = norm.replace(/,/g,' ').split(/\s+/);
   for(let i=0;i<parts.length;i++){
-    if(months[parts[i]]!==undefined){
-      let mo=months[parts[i]];
+    let key = parts[i].substring(0,3);
+    if(months[key]!==undefined && months[parts[i]]!==undefined || months[key]!==undefined && ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].includes(key)){
+      let mo = months[key];
+      if(mo===undefined) continue;
       let d=null;
+      // Check year nearby
+      let y = istToday.getFullYear();
+      // Look for year token
+      for(let j=0;j<parts.length;j++){ if(/^20\d{2}$/.test(parts[j])) y=parseInt(parts[j],10); }
       if(i>0 && /^\d{1,2}$/.test(parts[i-1])) d=parseInt(parts[i-1],10);
       else if(i+1<parts.length && /^\d{1,2}$/.test(parts[i+1])) d=parseInt(parts[i+1],10);
-      if(d){ let y=new Date().getFullYear(); let dt=new Date(y,mo,d); if(dt < new Date(new Date().setHours(0,0,0,0))) dt.setFullYear(y+1); if(!dates.find(x=>x.getTime()===dt.getTime())) dates.push(dt); }
+      if(d){ let dt=new Date(y,mo,d); if(y===istToday.getFullYear() && dt < istToday) dt.setFullYear(y+1); addDate(dt); }
+      else {
+        // Month only: "in december", "december" -> 1st of that month
+        if(parts.length===1 || norm.includes('in '+parts[i]) || norm.includes('for '+parts[i])){
+          let dt=new Date(y,mo,1); if(dt < istToday) dt.setFullYear(y+1); addDate(dt);
+        }
+      }
     }
+  }
+  if(dates.length>0){
+    if(nights && dates.length===1) addDate(new Date(dates[0].getTime()+nights*86400000));
+    return dates.sort((a,b)=>a-b);
   }
   return dates.sort((a,b)=>a-b);
 }
-function fmt(d){ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+function getVillaTypeFlexible(text){
+  const t = text.toLowerCase();
+  if(t.includes('full villa') || t.includes('entire villa') || t.includes('whole villa') || t.includes('full house') || t.includes('full property') || t.includes('full') && t.includes('villa')) return 'Full Villa';
+  if(t.includes('full villa') || t.includes('entire') || t.includes('whole villa')) return 'Full Villa';
+  if(t.includes('villa')) return 'Full Villa';
+  if(t.includes('room') || t.includes('bedroom') || t.includes('single') || t.includes('double')) return 'Rooms';
+  return '';
+}
+function isVacancyAsk(text){
+  const t = text.toLowerCase();
+  const vacancyWords = ['free','available','availability','vacancy','vacant','empty','booking','book','reserve','reservation','stay','check','have','hai','need','want','looking','room','villa','tomorrow','today','tonight','weekend','next','dec','jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','monday','tuesday','wednesday','thursday','friday','saturday','sunday','date','night','day'];
+  for(let w of vacancyWords) if(t.includes(w)) return true;
+  if(/\d/.test(t)) return true;
+  return false;
+}
 function todayIST(){ const ist = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); ist.setHours(0,0,0,0); return ist; }
 
 async function checkAvailability(checkin, checkout){
@@ -91,6 +257,43 @@ async function sendImage(to, link, caption){
   await axios.post('https://graph.facebook.com/v22.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'image', image:{link:link, caption:caption||''}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
 }
 
+function getWiseObjectionAnswer(text){
+  const t = text.toLowerCase();
+  if(t.includes('expensive') || t.includes('costly') || t.includes('cost') || t.includes('too much') || t.includes('high price') || t.includes('rate') || t.includes('price') || t.includes('tariff') || t.includes('how much') || t.includes('charge') || t.includes('discount') || t.includes('offer') || t.includes('cheap') || t.includes('less')){
+    return 'I understand - You want best value. Pachapp is a full private villa - 4 King rooms, 7 bathrooms, Private Pool with Jacuzzi, Private Kitchen, Caretaker 24 hours. Not a single room hotel. For Full Villa, Breakfast is free. Advance is only 20% to lock your date, balance at check-in. Advance is not refundable as we block the full villa for you. If you fill the booking form, host will confirm the exact rate for your dates and guests. Shall I send the form?';
+  }
+  if(t.includes('safe') || t.includes('safety') || t.includes('secure') || t.includes('cctv')){
+    return 'Yes, very safe. CCTV, Caretaker on call 24 hours, Inverter backup, First aid kit, Fire extinguisher. It is a private villa inside tea plantation view, mountain view, quiet and secure. Families with kids and elders stay comfortably.';
+  }
+  if(t.includes('family') || t.includes('kids') || t.includes('children') || t.includes('elder') || t.includes('old people') || t.includes('baby')){
+    return 'Perfect for family. Max 20 guests, 4 King rooms, 7 bathrooms - Each room attached. Pool depth 120 cm, kids allowed with adult. Private Kitchen, so you can cook for kids. Library, Games - Chess, Carrom, Badminton for family time. Would you like Full Villa for full privacy?';
+  }
+  if(t.includes('couple') || t.includes('honeymoon') || t.includes('romantic')){
+    return 'Very good for couples - Private Pool, Private Villa, Tea plantation view, Mountain view, Quiet. Pool 8 AM to 11 PM, Campfire 7 PM to 11 PM if you want. For couples, Rooms also work, Full Villa gives full privacy. What dates are you planning?';
+  }
+  if(t.includes('bachelor') || t.includes('friends') || t.includes('party') || t.includes('birthday') || t.includes('celebrat')){
+    return 'Great for friends / celebration. Party / DJ allowed, Music till 11 PM, Alcohol allowed, Smoking allowed but not in music rooms. Pool, Campfire Rs 500, Barbecue - Free self use, Rs 250 staff help, Rs 750 per 1 Kg Chicken. Parking for 6 cars. Max 20 guests. Shall I check your date?';
+  }
+  if(t.includes('think') || t.includes('later') || t.includes('discuss') || t.includes('will tell') || t.includes('call back') || t.includes('let me see')){
+    return 'Take your time, no hurry. Dates in Wayanad get booked fast on weekends. If you tell me your date, I can check and hold the idea for you. Shall I send the booking form so you can decide with family?';
+  }
+  if(t.includes('thank') || t.includes('nice') || t.includes('good') || t.includes('great') || t.includes('okay') || t.includes('ok ')){
+    // Only if guest is happy and we have dates, nudge to close
+    return null; // handled in webhook with memory
+  }
+  return null;
+}
+async function findNextAvailable(checkin, checkout){
+  // Try next 1-7 days for same duration, return first available
+  const dur = checkout.getTime() - checkin.getTime();
+  for(let i=1;i<=7;i++){
+    let nIn = new Date(checkin.getTime()+i*86400000);
+    let nOut = new Date(nIn.getTime()+dur);
+    let avail = await checkAvailability(nIn, nOut);
+    if(avail) return {checkin:nIn, checkout:nOut};
+  }
+  return null;
+}
 function getAmenitiesAnswer(text){
   const t = text.toLowerCase();
   if(t.includes('how many') && (t.includes('guest') || t.includes('people') || t.includes('person') || t.includes('max') || t.includes('capacity'))) return MAX_GUESTS + '.';
@@ -154,6 +357,22 @@ app.post('/webhook', async (req,res)=>{
         return res.sendStatus(200);
       }
     }
+    // Wise Host: objections, safety, family, party, thinking - tactical, mature
+    const wise = getWiseObjectionAnswer(text);
+    if(wise){
+      // If guest already gave dates, attach availability + closing
+      if(mem.checkin && mem.checkout){
+        await sendText(from, wise + '\n\nYour date ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + ' - Shall I send booking form to lock it?');
+      } else {
+        await sendText(from, wise + '\n\nWhat dates are you planning? I will check availability for you.');
+      }
+      return res.sendStatus(200);
+    }
+    // Wise Host: if guest says thanks / okay and we have dates, close tactically
+    if((lower.includes('thank') || lower.includes('okay') || lower.includes('ok ') || lower === 'ok' || lower.includes('nice') || lower.includes('good')) && mem.checkin && mem.checkout && mem.villaType){
+      await sendText(from, 'Happy to help. Your ' + mem.villaType + ' for ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + ' is in high demand. Shall I send the booking form to lock it? Advance is only 20%, balance at check-in.');
+      return res.sendStatus(200);
+    }
     const amen = getAmenitiesAnswer(text);
     if(amen){
       const dates = parseDates(text);
@@ -178,23 +397,28 @@ app.post('/webhook', async (req,res)=>{
       mem.checkin=cin; mem.checkout=cout;
       const avail = await checkAvailability(cin, cout);
       if(!avail){
-        await sendText(from, 'NOT AVAILABLE for ' + fmt(cin) + ' to ' + fmt(cout) + '.\n\nPlease try other dates. What dates?');
+        const nxt = await findNextAvailable(cin, cout);
+        if(nxt){
+          mem.checkin=nxt.checkin; mem.checkout=nxt.checkout;
+          await sendText(from, 'That date is already booked - I am sorry. Good news - ' + fmt(nxt.checkin) + ' to ' + fmt(nxt.checkout) + ' is AVAILABLE. Many guests take the next free date so they do not miss Wayanad. Would you like Full Villa or Rooms for ' + fmt(nxt.checkin) + '?');
+        } else {
+          await sendText(from, 'That date is already booked. Would you like to try another date? What dates work for you? I will check immediately.');
+        }
         return res.sendStatus(200);
       }
       let villa = mem.villaType || '';
-      if(lower.includes('full villa') || lower.includes('full') || lower.includes('villa')) villa='Full Villa';
-      else if(lower.includes('room')) villa='Rooms';
+      let flexVilla = getVillaTypeFlexible(text);
+      if(flexVilla) villa=flexVilla;
       if(villa) mem.villaType=villa;
       if(villa){
-        await sendText(from, 'AVAILABLE for ' + fmt(cin) + ' to ' + fmt(cout) + ' - ' + villa + '.\n\nBooking form:\n' + BOOKING_FORM + '\n\nPlease fill it to confirm.');
+        await sendText(from, 'Great news - AVAILABLE for ' + fmt(cin) + ' to ' + fmt(cout) + ' - ' + villa + '. Private Pool, 4 King rooms, Tea plantation view. This date is in demand. Booking form:\n' + BOOKING_FORM + '\n\nFill it to lock your date - Advance only 20%, balance at check-in.');
         return res.sendStatus(200);
       }
-      await sendText(from, 'AVAILABLE for ' + fmt(cin) + ' to ' + fmt(cout) + '.\n\nDo you want Full Villa or Rooms?');
+      await sendText(from, 'Great news - AVAILABLE for ' + fmt(cin) + ' to ' + fmt(cout) + '. For full privacy, most families take Full Villa - 4 King rooms, Private Pool, Free Breakfast. For smaller group, Rooms also work. Which would you prefer - Full Villa or Rooms?');
       return res.sendStatus(200);
     }
-    if(lower.includes('full villa') || lower.includes('full') || lower.includes('villa') || lower.includes('room')){
-      let villa='Rooms';
-      if(lower.includes('full') || lower.includes('villa')) villa='Full Villa';
+    if(getVillaTypeFlexible(text) || lower.includes('full')){
+      let villa = getVillaTypeFlexible(text) || 'Full Villa';
       mem.villaType=villa;
       if(mem.checkin && mem.checkout){
         await sendText(from, 'AVAILABLE for ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + ' - ' + villa + '.\n\nBooking form:\n' + BOOKING_FORM + '\n\nPlease fill it to confirm.');
@@ -212,10 +436,10 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
     if(lower.includes('hi') || lower.includes('hello') || lower.includes('hey')){
-      await sendText(from, 'Hi, Welcome to Pachapp Pool Villa, Wayanad.\n\nWhat dates are you planning?');
+      await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. I am here to help you plan a happy stay. What dates are you planning?');
       return res.sendStatus(200);
     }
-    await sendText(from, 'Welcome to Pachapp Pool Villa, Wayanad.\n\nWhat dates are you planning?');
+    await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. Tell me your dates, I will check availability for you right away.');
     return res.sendStatus(200);
   }catch(e){ console.log('WEBHOOK ERROR ' + e.message + ' DETAIL:' + JSON.stringify(e.response ? e.response.data : 'no-response')); return res.sendStatus(200); }
 });
@@ -226,6 +450,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V28'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V31 Wise Host'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
