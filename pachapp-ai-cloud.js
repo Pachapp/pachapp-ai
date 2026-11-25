@@ -3,6 +3,7 @@ const axios = require('axios');
 let Groq = null;
 try{ Groq = require('groq-sdk'); }catch(e){ console.log('GROQ SDK NOT INSTALLED'); }
 const groq = (Groq && process.env.GROQ_API_KEY) ? new Groq({apiKey: process.env.GROQ_API_KEY}) : null;
+console.log('GROQ STATUS - HAS_SDK:' + (!!Groq) + ' HAS_KEY:' + (!!process.env.GROQ_API_KEY) + ' GROQ_READY:' + (!!groq));
 const app = express();
 app.use(express.json());
 
@@ -326,10 +327,13 @@ REAL DATA ONLY - Never invent. Use only this data:
       max_tokens: 400
     });
     return comp.choices[0].message.content.trim();
-  }catch(e){ console.log('GROQ ERROR ' + e.message); return null; }
+  }catch(e){ console.log('GROQ ERROR ' + e.message + ' DETAIL:' + JSON.stringify(e.response ? e.response.data : 'no-response') + ' HAS_KEY:' + (!!process.env.GROQ_API_KEY) + ' HAS_SDK:' + (!!Groq)); return null; }
 }
 function getAmenitiesAnswer(text){
   const tl = text.toLowerCase();
+  if(tl.includes('coordinate') || tl.includes('cordinate') || tl.includes('latitude') || tl.includes('longitude') || tl.includes('lat') || tl.includes('lng') || tl.includes('gps') || tl.includes('pin') || tl.includes('google pin')){
+    return 'Exact Google coordinates / live pin - Please see our website https://www.pachapp.green for map, or ask host for live location pin. Pachapp Pool Villa is in Wayanad, Kerala - Tea plantation view, Mountain view. What dates are you planning?';
+  }
   if(tl.includes('google map') || tl.includes('map link') || tl.includes('map') || tl.includes('where is') || tl.includes('where is this') || tl.includes('location') || tl.includes('address') || tl.includes('direction') || tl.includes('how to reach') || tl.includes('how to come') || tl.includes('reach') || tl.includes('place is') || tl.includes('where are you') || tl.includes('wayanad where')){
     return 'Pachapp Pool Villa is in Wayanad, Kerala - Tea plantation view, Mountain view. Nearby places all within 2 km. For exact Google Map link and directions, please see our website: ' + 'https://www.pachapp.green' + ' - Or ask host for live location pin. What dates are you planning? I will check availability.';
   }
@@ -501,6 +505,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V38 Groq AI Agent Restored'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V39 Groq + Coordinates'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
