@@ -83,11 +83,11 @@ async function checkAvailability(checkin, checkout){
   }catch(e){ console.log('AVAIL ERROR ' + e.message); return true; }
 }
 
-async function sendText(to, body){
-  await axios.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'text', text:{body:body}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
+async function sendText(to, body){ if(!PHONE_NUMBER_ID || !WHATSAPP_TOKEN) console.log('MISSING ENV PHONE_NUMBER_ID or WHATSAPP_TOKEN');
+  await axios.post('https://graph.facebook.com/v22.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'text', text:{body:body}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
 }
 async function sendImage(to, link, caption){
-  await axios.post('https://graph.facebook.com/v19.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'image', image:{link:link, caption:caption||''}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
+  await axios.post('https://graph.facebook.com/v22.0/' + PHONE_NUMBER_ID + '/messages', {messaging_product:'whatsapp', to:to, type:'image', image:{link:link, caption:caption||''}}, {headers:{Authorization:'Bearer ' + WHATSAPP_TOKEN, 'Content-Type':'application/json'}});
 }
 
 function getAmenitiesAnswer(text){
@@ -213,7 +213,7 @@ app.post('/webhook', async (req,res)=>{
     }
     await sendText(from, 'Welcome to Pachapp Pool Villa, Wayanad.\n\nWhat dates are you planning?');
     return res.sendStatus(200);
-  }catch(e){ console.log('WEBHOOK ERROR ' + e.message); return res.sendStatus(200); }
+  }catch(e){ console.log('WEBHOOK ERROR ' + e.message + ' DETAIL:' + JSON.stringify(e.response ? e.response.data : 'no-response')); return res.sendStatus(200); }
 });
 
 app.get('/webhook', (req,res)=>{
@@ -222,6 +222,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V25'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V26'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
