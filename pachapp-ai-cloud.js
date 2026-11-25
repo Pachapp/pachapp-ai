@@ -318,6 +318,7 @@ function getAmenitiesAnswer(text){
   if(t.includes('game') || t.includes('chess') || t.includes('ludo') || t.includes('carrom') || t.includes('badminton')) return 'Games at Pachapp: ' + GAMES + '.';
   if(t.includes('barbecue') || t.includes('barbeque') || t.includes('bbq') || t.includes('grill')) return PAID_BARBECUE + ' Grill closing: 11 PM.';
   if(t.includes('campfire') || t.includes('camp fire') || t.includes('bonfire')) return PAID_CAMPFIRE + ' Campfire time: 7 PM to 11 PM.';
+  if(t.includes('karaoke') || t.includes('karoke') || t.includes('kara') || t.includes('ktv')) return 'No separate Karaoke system in the listed facilities. You have Music instruments for rent - Keyboard Rs 2000, Roland Rs 1000, Guitar Rs 1000, Tabla Rs 1000 - and Owner is a Music Composer, Live Music can be arranged on request. Please ask host if you want Karaoke setup.';
   if(t.includes('live music') || t.includes('live') || t.includes('composer') || t.includes('owner') || t.includes('singer') || t.includes('singing') || t.includes('concert') || t.includes('performance') || t.includes('show')){
     return 'Owner is a Music Composer. Live Music can be arranged on request - Please ask host for live music / performance details and charges. Instruments also available for rent: ' + MUSIC_RENT + ' Music time: 7 PM to 11 PM.';
   }
@@ -363,9 +364,9 @@ app.post('/webhook', async (req,res)=>{
         return res.sendStatus(200);
       }
     }
-    // Wise Host: YES = send booking form - guest said yes to "Shall I send form?"
-    const yesWords = ['yes','yeah','yep','sure','please','send','send form','yes please','yes send','ok send','please send','ha','yes sir','yes madam','confirm'];
-    const isYes = yesWords.some(w=> lower===w || lower.includes(w));
+    // Wise Host: YES = send booking form - STRICT exact match only, not substring 'ha' in 'have'
+    const cleanYes = lower.replace(/[?.!]/g,'').trim();
+    const isYes = ['yes','yeah','yep','sure','ok','okay','yes please','please send','send form','send','confirm','yes send','ok send','yes sir','yes madam','please'].includes(cleanYes);
     if(isYes && mem.checkin && mem.checkout){
       const villaTxt = mem.villaType ? ' - ' + mem.villaType : '';
       await sendText(from, 'Perfect. Here is your booking form for ' + fmt(mem.checkin) + ' to ' + fmt(mem.checkout) + villaTxt + ':\n' + BOOKING_FORM + '\n\nFill it to lock your date - Advance only 20%, balance at check-in. I will keep your date in mind.');
@@ -457,6 +458,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V35 Live Music + Airtable'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V36 Yes + Karaoke Fixed'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
