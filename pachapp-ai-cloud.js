@@ -321,7 +321,7 @@ REAL DATA ONLY - Never invent. Use only this data:
 - Memory: Guest dates: ${mem.checkin ? 'Checkin '+mem.checkin+' Checkout '+mem.checkout : 'No dates yet'} Villa: ${mem.villaType || 'Not known'}
 - Never say you are AI, never say you don't know, never repeat same greeting. Answer directly, then ask one question.`;
     const comp = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages: [{role:'system', content: systemPrompt}, {role:'user', content: userText}],
       temperature: 0.6,
       max_tokens: 400
@@ -488,12 +488,17 @@ app.post('/webhook', async (req,res)=>{
       await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. I am here to help you plan a happy stay. What dates are you planning?');
       return res.sendStatus(200);
     }
+    // V40: Location / Coordinates in main flow - never goes to greeting
+    if(text.toLowerCase().includes('coordinate') || text.toLowerCase().includes('cordinate') || text.toLowerCase().includes('latitude') || text.toLowerCase().includes('longitude') || text.toLowerCase().includes('gps') || text.toLowerCase().includes('pin') || text.toLowerCase().includes('google map') || text.toLowerCase().includes('map link') || text.toLowerCase().includes('where is') || text.toLowerCase().includes('where is this') || text.toLowerCase().includes('location') || text.toLowerCase().includes('address')){
+      await sendText(from, 'Pachapp Pool Villa is in Wayanad, Kerala - Tea plantation view, Mountain view. Exact Google coordinates / live pin - Please see https://www.pachapp.green for map, or ask host for live location pin. What dates are you planning?');
+      return res.sendStatus(200);
+    }
     // Smart AI Agent: Use Groq for any question rule-based didn't understand - don't repeat same greeting
     const groqAns = await askGroq(text, mem);
     if(groqAns){
       await sendText(from, groqAns);
     } else {
-      await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. Tell me your dates, I will check availability for you right away.');
+      await sendText(from, 'Got it - Can you tell me what you want to know? Dates / Photos / Amenities / Music / Location / Price? I will check for you right away.');
     }
     return res.sendStatus(200);
   }catch(e){ console.log('WEBHOOK ERROR ' + e.message + ' DETAIL:' + JSON.stringify(e.response ? e.response.data : 'no-response')); return res.sendStatus(200); }
@@ -505,6 +510,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V39 Groq + Coordinates'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V40 Groq Model Fixed'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
