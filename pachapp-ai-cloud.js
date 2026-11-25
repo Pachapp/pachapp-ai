@@ -34,7 +34,7 @@ const photoCount = new Map(); // V15: counts how many times guest asked photos: 
 // REPLACE these 3 links with YOUR OWN villa photos:
 // How to get your photo link: Open www.pachapp.green on laptop > Right-click on villa photo > Copy image address > Paste here replacing the example links below.
 // Or upload your 3 photos to GitHub repo and use https://raw.githubusercontent.com/YOURNAME/REPO/main/villa1.jpg etc.
-const GITHUB_BASE = 'https://raw.githubusercontent.com/YOURNAME/YOURREPO/main/';
+const GITHUB_BASE = 'https://raw.githubusercontent.com/Pachapp/pachapp-ai/main/';
 // V20 - PACHAPP ONLY - NO internet example photos. All links below MUST be YOUR real photos on GitHub.
 // Upload your 10 real photos to GitHub with EXACT names below, then replace YOURNAME/YOURREPO with your GitHub name/repo.
 // Until you upload, bot will NOT send fake photos - it will send website only. This guarantees 0 outside photos.
