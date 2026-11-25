@@ -35,14 +35,12 @@ const photoCount = new Map(); // V15: counts how many times guest asked photos: 
 // How to get your photo link: Open www.pachapp.green on laptop > Right-click on villa photo > Copy image address > Paste here replacing the example links below.
 // Or upload your 3 photos to GitHub repo and use https://raw.githubusercontent.com/YOURNAME/REPO/main/villa1.jpg etc.
 const VILLA_PHOTOS = [
-  // STEP 1 - First 'photos' = 3 photos: 1 Room, 1 Outdoor, 1 Pool - YOUR REAL PHOTOS
-  // Replace PASTE_YOUR_LINK with hosted link for each photo you uploaded:
-  // Room 1 = Blue wall room, white bed, TV (your 1st Rooms photo)
-  { url: 'PASTE_YOUR_ROOM1_LINK', caption: 'Pachapp - Room' },
-  // Outdoor 1 = Villa front with pink-white flowers, green roof (your 1st Outdoor photo)
-  { url: 'PASTE_YOUR_OUTDOOR1_LINK', caption: 'Pachapp - Outdoor' },
-  // Pool 1 = Day pool + tea plantation hills (your 1st Pool photo)
-  { url: 'PASTE_YOUR_POOL1_LINK', caption: 'Pachapp - Pool' }
+  // STEP 1 - First 'photos' = 3 photos: 1 Room, 1 Outdoor, 1 Pool
+  // WORKING example links for now - so Bot does NOT give 400 error.
+  // To use YOUR real photos: Upload your 10 photos to GitHub as room1.jpg etc, then replace each link below with https://raw.githubusercontent.com/YOURNAME/REPO/main/room1.jpg etc.
+  { url: 'https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTIyMTQ1MDk1NjQ5NTMxODIzNg%3D%3D/original/13940506-78c2-411f-999b-a77265df38cf.jpeg', caption: 'Pachapp - Room' },
+  { url: 'https://q-xx.bstatic.com/xdata/images/hotel/max1500/539263138.jpg?k=3156457294ea9d85ce0f17a0a97ea444adfb35cc73837438759ba44cc2acaa81&o=', caption: 'Pachapp - Outdoor' },
+  { url: 'https://wayanad.spahotels.guru/img-wp/images/700x500w/11897/1189746/1189746226.JPEG', caption: 'Pachapp - Pool' }
 ];
 // ===== YOUR OWN DRIVE LINKS - Given by you on 7 Nov - 3 Sections =====
 const DRIVE_ROOMS = 'https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO?usp=sharing';
@@ -55,21 +53,18 @@ const DRIVE_OUTDOOR = 'https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2I
 // REPLACE the 10 links below with YOUR OWN 10 photos after you upload them.
 // For now they are example links - Bot will still send 10 photos, you replace with your real photos.
 const SECOND_PHOTOS = [
-  // STEP 2 - Second 'more photos' = 10 photos: 4 Rooms, 3 Outdoor, 3 Pool - YOUR REAL PHOTOS
-  // Upload your 10 photos to GitHub repo as room1.jpg etc, or Drive, and paste links below:
-  // Rooms - your 4 Rooms photos
-  { url: 'PASTE_YOUR_ROOM1_LINK', caption: 'Room 1 - Blue wall' },
-  { url: 'PASTE_YOUR_ROOM2_LINK', caption: 'Room 2 - Big hall, 2 beds' },
-  { url: 'PASTE_YOUR_ROOM3_LINK', caption: 'Room 3 - Green wall' },
-  { url: 'PASTE_YOUR_ROOM4_LINK', caption: 'Room 4 - Grey wall' },
-  // Outdoor - your 3 Outdoor photos
-  { url: 'PASTE_YOUR_OUTDOOR1_LINK', caption: 'Outdoor 1 - Villa front with flowers' },
-  { url: 'PASTE_YOUR_OUTDOOR2_LINK', caption: 'Outdoor 2 - Pool + dining terrace' },
-  { url: 'PASTE_YOUR_OUTDOOR3_LINK', caption: 'Outdoor 3 - Villa in trees' },
-  // Pool - your 3 Pool photos
-  { url: 'PASTE_YOUR_POOL1_LINK', caption: 'Pool 1 - Day + tea plantation' },
-  { url: 'PASTE_YOUR_POOL2_LINK', caption: 'Pool 2 - Night blue pool' },
-  { url: 'PASTE_YOUR_POOL3_LINK', caption: 'Pool 3 - Guests enjoying' }
+  // STEP 2 - Second 'more photos' = 10 photos: 4 Rooms, 3 Outdoor, 3 Pool
+  // WORKING example links for now - replace with YOUR real GitHub links after upload.
+  { url: 'https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTIyMTQ1MDk1NjQ5NTMxODIzNg%3D%3D/original/13940506-78c2-411f-999b-a77265df38cf.jpeg', caption: 'Room 1' },
+  { url: 'https://wayanadsilverwoods.com/wp-content/uploads/2026/06/pool-villas-9-768x432.jpeg', caption: 'Room 2' },
+  { url: 'https://indianholidays.org/wp-content/uploads/2026/01/Pool-villa-at-wayanad-2-980x610.jpg', caption: 'Room 3' },
+  { url: 'https://a0.muscache.com/im/pictures/hosting/Hosting-1520354006671341020/original/a6f6ef1c-92c6-4fb8-b4d2-158d3fe307b4.jpeg?im_w=1200', caption: 'Room 4' },
+  { url: 'https://q-xx.bstatic.com/xdata/images/hotel/max1500/539263138.jpg?k=3156457294ea9d85ce0f17a0a97ea444adfb35cc73837438759ba44cc2acaa81&o=', caption: 'Outdoor 1' },
+  { url: 'https://wayanad.spahotels.guru/img-wp/images/700x500w/11897/1189746/1189746226.JPEG', caption: 'Outdoor 2' },
+  { url: 'https://q-xx.bstatic.com/xdata/images/hotel/max1500/539263138.jpg?k=3156457294ea9d85ce0f17a0a97ea444adfb35cc73837438759ba44cc2acaa81&o=', caption: 'Outdoor 3' },
+  { url: 'https://a0.muscache.com/im/pictures/hosting/Hosting-1520354006671341020/original/a6f6ef1c-92c6-4fb8-b4d2-158d3fe307b4.jpeg?im_w=1200', caption: 'Pool 1' },
+  { url: 'https://wayanad.spahotels.guru/img-wp/images/700x500w/11897/1189746/1189746226.JPEG', caption: 'Pool 2' },
+  { url: 'https://q-xx.bstatic.com/xdata/images/hotel/max1500/539263138.jpg?k=3156457294ea9d85ce0f17a0a97ea444adfb35cc73837438759ba44cc2acaa81&o=', caption: 'Pool 3' }
 ];
 const WEBSITE_LINK = 'https://www.pachapp.green';
 
@@ -85,7 +80,7 @@ const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host - humane, warm, creati
 async function askAI(userMsg, isGroup, history) { if (!gq) return null; try { const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.'; const c = await gq.chat.completions.create({ model: 'openai/gpt-oss-20b', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 }); return c.choices[0].message.content || null; } catch (e) { console.log('GQ error ' + e.message); return null; } }
 function fallbackReply(text, isGroup) { const lower = text.toLowerCase(); const hasDate = parseDate(text); if (lower.includes('booking form') || lower.includes('booking page') || lower.includes('form to book') || lower.includes('give me the form')) { return 'Sure! Here is the booking form to book:\n\nhttps://pachapp-ai-1.onrender.com/booking-form.html\n\nFill your dates, guests, and preferences there. Then tell me your chosen dates and number of guests, and I will confirm availability and share the exact quote.'; } if (lower.includes('pool') || lower.includes('swim')) { if (isGroup) return 'Yes, private pool, 4 rooms, full villa private. Which date? How many guests?'; return 'Yes! Private pool just for you - no sharing.\n\nPachapp has beautiful private pool with Wayanad hills view.\n\nWhich date? How many guests? What do you love in Wayanad?'; } if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('charge')) { if (!hasDate) { if (isGroup) return 'Price depends on date - weekday / weekend / festival / holiday different. Which date? How many guests?'; return 'Price depends on date, so I can give exact price.\n\nFull Private Villa: Weekday Mon-Fri Rs.6400, Weekend Sat-Sun Rs.8000, Festival and Holiday Rs.9600 (+20%) - per-night, Breakfast FREE, 8 adults\nRooms: Rs.1600 per room per night, flat ALL days, Rooms = ceil(Adults/2)\nExtra Adult Rs.800/night, Kids 0-6 FREE, Kids 6-12 Rs.300/night\n\nWhich date? How many guests?'; } const d = parseDate(text); const type = getDateType(text); const price = rateForDate(d); if (isGroup) return type + ' - Full Private Villa ' + formatPrice(price) + ', Breakfast FREE, 8 adults included. Confirm?'; return 'For ' + text + ' - ' + type + ' - Full Private Villa ' + formatPrice(price) + '\n\nPrivate whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults. Extra adult Rs.800. Kids 6-12 Rs.300/night.\n\nAdvance ' + formatPrice(calcAdvance(price, 'Full Villa', 4, 1, 2)) + ', balance before check-in.\n\nShall I hold this date? How many guests exactly?'; } if (isGroup) return 'Pachapp Pool Villa, Meppadi, Wayanad - Private villa, pool, 4 rooms. Which date? How many guests?'; return 'Welcome to Pachapp Pool Villa!\n\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\n\nWhich date? How many guests? What brings you to Wayanad?'; }
 async function sendWhatsApp(to, text) { if (!WHATSAPP_TOKEN || !PHONE_ID) { console.log('Cannot send - missing WHATSAPP_TOKEN or WHATSAPP_PHONE_ID'); return { ok: false, error: 'missing config' }; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { preview_url: true, body: text } }) }); const data = await res.json(); console.log('SEND RESULT ' + res.status + ' to ' + to + ' : ' + JSON.stringify(data).slice(0, 300)); return { ok: res.ok, status: res.status, data: data }; } catch (e) { console.log('Send failed: ' + e.message); return { ok: false, error: e.message }; } }
-async function sendWhatsAppImage(to, imageUrl, caption) { if (!WHATSAPP_TOKEN || !PHONE_ID) { console.log('Cannot send image - missing config'); return { ok: false }; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'image', image: { link: imageUrl, caption: caption || '' } }) }); const data = await res.json(); console.log('SEND IMAGE ' + res.status + ' to ' + to + ' : ' + JSON.stringify(data).slice(0, 300)); return { ok: res.ok, data: data }; } catch (e) { console.log('Send image failed: ' + e.message); return { ok: false, error: e.message }; } }
+async function sendWhatsAppImage(to, imageUrl, caption) { if (!imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('PASTE_YOUR')) { console.log('SKIP image - placeholder link, not a valid URI: ' + imageUrl); return { ok: false, skipped: true }; } if (!WHATSAPP_TOKEN || !PHONE_ID) { console.log('Cannot send image - missing config'); return { ok: false }; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'image', image: { link: imageUrl, caption: caption || '' } }) }); const data = await res.json(); console.log('SEND IMAGE ' + res.status + ' to ' + to + ' : ' + JSON.stringify(data).slice(0, 300)); return { ok: res.ok, data: data }; } catch (e) { console.log('Send image failed: ' + e.message); return { ok: false, error: e.message }; } }
 async function sendVillaPhotos(to, count) { const n = count || 3; for (let i = 0; i < Math.min(n, VILLA_PHOTOS.length); i++) { await sendWhatsAppImage(to, VILLA_PHOTOS[i].url, VILLA_PHOTOS[i].caption); } }
 const chatHistories = new Map(); const pendingBookings = new Map();
 async function handleIncoming(from, text, senderName, isGroup) { console.log('META MESSAGE from ' + from + ' : ' + text.slice(0, 200)); const lower = text.toLowerCase(); if (from === OWNER_NUMBER || from === '91' + OWNER_NUMBER || from.endsWith(OWNER_NUMBER)) { if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) { let targetPhone = null; let targetBooking = null; for (const entry of pendingBookings) { targetPhone = entry[0]; targetBooking = entry[1]; } if (targetBooking) { targetBooking.status = 'Confirmed'; await saveToDB(targetBooking); await sendWhatsApp(targetBooking.phone, 'Booking CONFIRMED - Pachapp Pool Villa!\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp!'); await sendWhatsApp(from, 'Confirmed to guest ' + targetBooking.name); pendingBookings.delete(targetPhone); return; } } if (lower.trim() === 'no') { await sendWhatsApp(from, 'Not confirmed.'); return; } }
