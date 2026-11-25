@@ -103,7 +103,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.65;cursor:pointer
 <label>Phone / WhatsApp *</label><input id="phone" class="field" placeholder="e.g. 0091 996 191 7169">
 <label>Check-in *</label><input id="checkIn" type="date" class="field">
 <label>Nights</label><div class="stepper"><button class="step-btn" id="nightsMinus">−</button><div class="step-val"><span id="nightsVal">1</span> Night(s)</div><button class="step-btn" id="nightsPlus">+</button></div>
-<label>Check-out</label><input id="checkOut" class="field checkout-red" readonly placeholder="Auto = Check-in + Nights">
+<label>Check-out</label><input id="checkOut" class="field checkout-red" readonly placeholder="Auto = Check-in + Nights"><div id="availMsg" style="margin-top:8px;text-align:center;font-size:14px;font-weight:400;min-height:20px;color:#333"></div>
 <label>Booking Type</label><div class="booking-row"><div id="optFull" class="booking-opt selected"><div class="t1">FULL VILLA <span class="check">✓</span></div><div class="t2">4 Rooms, Private</div></div><div id="optRooms" class="booking-opt unselected"><div class="t1">ROOMS <span class="check">✓</span></div><div class="t2">Separate Room(s)</div></div></div>
 <label>Rooms</label><div id="roomsPill" class="rooms-pill"><div class="lbl">ROOMS • <span id="roomsMode">FULL VILLA</span> <span class="green-tick">✓</span></div><div class="ctrl"><button class="rbtn" id="roomsMinus">−</button><div class="rval" id="roomsVal">4</div><button class="rbtn" id="roomsPlus">+</button></div></div>
 <div class="hint" id="roomsHint">Full Villa = 4 Rooms fixed.</div>
@@ -183,6 +183,33 @@ function calcFullVillaBase(checkIn, nights){
   return {base, breakdown: parts.join(' + ')};
 }
 function getAutoRooms(a){return Math.max(1,Math.min(4,Math.ceil(a/2)))}
+
+let isAvailable=true;
+async function checkAvailability(){
+  const checkIn=document.getElementById('checkIn').value;
+  const checkOut=document.getElementById('checkOut').value;
+  const msg=document.getElementById('availMsg');
+  const btn=document.getElementById('submitBtn');
+  if(!checkIn||!checkOut){ if(msg) msg.textContent=''; isAvailable=true; if(btn) btn.style.opacity='1'; return true; }
+  if(msg) msg.textContent='Checking availability...';
+  if(msg) msg.style.color='#333';
+  try{
+    const res=await fetch('/api/check-availability?checkin='+encodeURIComponent(checkIn)+'&checkout='+encodeURIComponent(checkOut));
+    const data=await res.json();
+    if(data && data.available===false){
+      isAvailable=false;
+      if(msg){ msg.textContent='NOT AVAILABLE - '+checkIn+' to '+checkOut+' already booked. Please choose other dates.'; msg.style.color='#FF3B30'; }
+      if(btn) btn.style.opacity='0.45';
+      return false;
+    } else {
+      isAvailable=true;
+      if(msg){ msg.textContent='Available - '+checkIn+' to '+checkOut; msg.style.color='#2E9A5A'; }
+      if(btn) btn.style.opacity='1';
+      return true;
+    }
+  }catch(e){ isAvailable=true; if(msg) msg.textContent=''; if(btn) btn.style.opacity='1'; return true; }
+}
+
 function calc(){
   const checkIn=document.getElementById('checkIn').value;
   let base=0,baseLabel='';
@@ -245,6 +272,7 @@ function calc(){
   document.getElementById('roomsMinus').disabled=bookingType==='Full Villa'||rooms<=1;
   document.getElementById('roomsPlus').disabled=bookingType==='Full Villa'||rooms>=4;
   if(bookingType==='Rooms') pillEl.classList.add('selected-room'); else pillEl.classList.remove('selected-room');
+  if(checkIn){ setTimeout(checkAvailability, 300); }
   return {total,advance,extraAdults,autoRooms};
 }
 function updatePayAdvanceUI(){
@@ -277,13 +305,16 @@ document.getElementById('submitBtn').onclick=async()=>{
   if(!utr){msg.textContent='Please pay advance & enter UTR.';msg.style.color='#FF3B30';return;}
   const r=calc();
   const checkOut=document.getElementById('checkOut').value||'';
+  const availOk=await checkAvailability();
+  if(!availOk){msg.textContent='NOT AVAILABLE - '+checkIn+' to '+checkOut+' already booked. Please choose other dates.';msg.style.color='#FF3B30';return;}
   const notesEl=document.getElementById('notes'); const notes=notesEl?notesEl.value.trim():'';
   const guestsStr=bookingType+' - '+adults+' Adults, '+kidsFree+' Kids 0-6, '+kidsHalf+' Kids 6-12, '+nights+' Night(s), Check-out '+checkOut+(breakfast==='Yes'?' , Breakfast Yes':' , Breakfast No')+(notes?' , Notes: '+notes:'');
   msg.textContent='Saving to Airtable...';msg.style.color='#fff';
   try{
-    const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,phone:phone,date:checkIn,guests:guestsStr,rooms:bookingType,total:r.total,advance:r.advance,status:'Pending - Waiting for Verification',utr:utr,source:'Form'})});
+    const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,phone:phone,date:checkIn,checkout:checkOut,guests:guestsStr,rooms:bookingType,total:r.total,advance:r.advance,status:'Pending - Waiting for Verification',utr:utr,source:'Form'})});
     const data=await res.json();
     if(data && data.ok){msg.textContent='Booking saved in Airtable • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#2E9A5A';}
+    else if(data && data.error && data.error.includes('already booked')){msg.textContent='NOT AVAILABLE - '+checkIn+' to '+checkOut+' already booked. Please choose other dates.';msg.style.color='#FF3B30'; checkAvailability();}
     else{msg.textContent='Booking saved in form only, Airtable failed - please send UTR on WhatsApp. • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#FF9500';}
   }catch(e){msg.textContent='Booking saved in form only, Airtable failed - please send UTR on WhatsApp. • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#FF9500';}
 };
