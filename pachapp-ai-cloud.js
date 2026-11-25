@@ -1,5 +1,8 @@
 const express = require('express');
 const axios = require('axios');
+let Groq = null;
+try{ Groq = require('groq-sdk'); }catch(e){ console.log('GROQ SDK NOT INSTALLED'); }
+const groq = (Groq && process.env.GROQ_API_KEY) ? new Groq({apiKey: process.env.GROQ_API_KEY}) : null;
 const app = express();
 app.use(express.json());
 
@@ -295,7 +298,41 @@ async function findNextAvailable(checkin, checkout){
   }
   return null;
 }
+async function askGroq(userText, mem){
+  if(!groq) return null;
+  try{
+    const systemPrompt = `You are Pachapp Pool Villa AI Host - Wise, knowledgeable, intelligent, smart, matured, tactical to close business and keep guest happy.
+You are in Wayanad, Kerala - Pachapp Pool Villa.
+REAL DATA ONLY - Never invent. Use only this data:
+- Arrival 2 PM, Departure 12 PM. Max 20 guests. 4 rooms, all king size, 7 bathrooms each attached. Bed linen, towels, toiletries provided. Extra mattress / extra person charge applies.
+- Facilities: Wi-Fi, CCTV, TV, Hot water, Filtered water, Free and Paid Breakfast Dinner, Pet friendly Rs 1000, Free parking 6 cars, Private Kitchen - stove, fridge, utensils, kettle (kettle in kitchen not room), Inverter, First aid kit, Fire extinguisher, Caretaker 24 hours, Housekeeping if asked.
+- Food: Breakfast free for Full Villa only, Dinner Rs 250, Tea/Coffee Paid.
+- Pool: Private, Depth 120 cm, Kids allowed with adult, Pool towels NOT provided, Jacuzzi in pool working, Pool 8 AM-11 PM.
+- Activities: Library (books inside villa), Art Gallery (Photography inside villa), Meeting hall inside villa 20-40 people, Swimming pool.
+- Games: Chess, Ludo, Snake and ladder, Carrom board, Badminton, Jumping rope. No football ground, No playground.
+- Paid: Barbecue free self use, Rs 250 staff assistance, Rs 750 per 1 Kg Chicken Barbecue, Grill till 11 PM. Campfire Rs 500, 7 PM-11 PM. Music rent: Keyboard Thomman 88 keys Rs 2000, Roland rhythm pad Rs 1000, Guitar Washburn electric Rs 1000, Tabla Rs 1000, Music 7 PM-11 PM. Owner is Music Composer, Live Music can be arranged on request - ask host for details. No separate Karaoke system.
+- Rules: 20% Advance mandatory, Advance NOT refundable, Balance at check-in, Show valid ID, Diseased not allowed in pool, No outdoor activities in bad weather. Smoking yes but drinks/smokes NOT allowed in music rooms. Alcohol yes. Party/DJ yes, Music till 11 PM. Early/Late check-in charge yes. Pet charge Rs 1000.
+- Nearby: All within 2 km, Tea plantation view yes, Mountain view yes.
+- Location: Pachapp Pool Villa, Wayanad, Kerala. Website https://www.pachapp.green for photos, map, directions. For exact Google Map pin, ask host.
+- Booking: Booking form https://pachapp-ai-1.onrender.com/booking-form.html - Advance only 20%, balance at check-in.
+- Photos: First ask -> 3 photos, Second more photos -> 10 photos, Third -> website only. Use only real Pachapp photos.
+- Style: One question per reply. Availability first if dates given. Be warm, mature, tactical. If date not available, suggest next free date. If guest says expensive, explain value, don't argue, offer form. If guest says yes to form, send form. If guest says thank you / okay, close tactically.
+- Memory: Guest dates: ${mem.checkin ? 'Checkin '+mem.checkin+' Checkout '+mem.checkout : 'No dates yet'} Villa: ${mem.villaType || 'Not known'}
+- Never say you are AI, never say you don't know, never repeat same greeting. Answer directly, then ask one question.`;
+    const comp = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{role:'system', content: systemPrompt}, {role:'user', content: userText}],
+      temperature: 0.6,
+      max_tokens: 400
+    });
+    return comp.choices[0].message.content.trim();
+  }catch(e){ console.log('GROQ ERROR ' + e.message); return null; }
+}
 function getAmenitiesAnswer(text){
+  const tl = text.toLowerCase();
+  if(tl.includes('google map') || tl.includes('map link') || tl.includes('map') || tl.includes('where is') || tl.includes('where is this') || tl.includes('location') || tl.includes('address') || tl.includes('direction') || tl.includes('how to reach') || tl.includes('how to come') || tl.includes('reach') || tl.includes('place is') || tl.includes('where are you') || tl.includes('wayanad where')){
+    return 'Pachapp Pool Villa is in Wayanad, Kerala - Tea plantation view, Mountain view. Nearby places all within 2 km. For exact Google Map link and directions, please see our website: ' + 'https://www.pachapp.green' + ' - Or ask host for live location pin. What dates are you planning? I will check availability.';
+  }
   const t = text.toLowerCase();
   if(t.includes('how many') && (t.includes('guest') || t.includes('people') || t.includes('person') || t.includes('max') || t.includes('capacity'))) return MAX_GUESTS + '.';
   if(t.includes('bathroom') || t.includes('toilet') || t.includes('washroom')) return 'Total 7 bathrooms. Each room has attached bathroom.';
@@ -447,7 +484,13 @@ app.post('/webhook', async (req,res)=>{
       await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. I am here to help you plan a happy stay. What dates are you planning?');
       return res.sendStatus(200);
     }
-    await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. Tell me your dates, I will check availability for you right away.');
+    // Smart AI Agent: Use Groq for any question rule-based didn't understand - don't repeat same greeting
+    const groqAns = await askGroq(text, mem);
+    if(groqAns){
+      await sendText(from, groqAns);
+    } else {
+      await sendText(from, 'Namaskaram, Welcome to Pachapp Pool Villa, Wayanad. Tell me your dates, I will check availability for you right away.');
+    }
     return res.sendStatus(200);
   }catch(e){ console.log('WEBHOOK ERROR ' + e.message + ' DETAIL:' + JSON.stringify(e.response ? e.response.data : 'no-response')); return res.sendStatus(200); }
 });
@@ -458,6 +501,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V36 Yes + Karaoke Fixed'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V38 Groq AI Agent Restored'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
