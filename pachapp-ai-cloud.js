@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = '606463179209554';
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appQrwByIT5af54K3';
 const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_ID || 'tbleQTjZjOAbPq3sd';
@@ -65,6 +65,7 @@ function parseDates(text){
   return dates.sort((a,b)=>a-b);
 }
 function fmt(d){ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+function todayIST(){ const ist = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); ist.setHours(0,0,0,0); return ist; }
 
 async function checkAvailability(checkin, checkout){
   try{
@@ -158,6 +159,7 @@ app.post('/webhook', async (req,res)=>{
       const dates = parseDates(text);
       if(dates.length>=1){
         const cin = dates[0];
+        if(cin < todayIST()){ await sendText(from, fmt(cin) + ' is already passed. Today is ' + fmt(todayIST()) + '. Please give a future date. What dates are you planning?'); return res.sendStatus(200); }
         const cout = dates[1] || new Date(cin.getTime()+86400000);
         mem.checkin=cin; mem.checkout=cout;
         const avail = await checkAvailability(cin, cout);
@@ -171,6 +173,7 @@ app.post('/webhook', async (req,res)=>{
     const dates = parseDates(text);
     if(dates.length>=1){
       const cin = dates[0];
+      if(cin < todayIST()){ await sendText(from, fmt(cin) + ' is already passed. Today is ' + fmt(todayIST()) + '. Please give a future date. What dates are you planning?'); return res.sendStatus(200); }
       const cout = dates[1] || new Date(cin.getTime()+86400000);
       mem.checkin=cin; mem.checkout=cout;
       const avail = await checkAvailability(cin, cout);
@@ -223,6 +226,6 @@ app.get('/webhook', (req,res)=>{
   return res.sendStatus(403);
 });
 
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V27'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V28'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
