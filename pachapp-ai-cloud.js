@@ -1,93 +1,267 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const PORT = process.env.PORT || 10000;
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
-const PHONE_ID = process.env.WHATSAPP_PHONE_ID || '';
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'pachapp123';
-const OWNER_NUMBER = '918943666911';
-const VILLA_NAME = 'Pachapp Pool Villa';
-const WEBSITE = 'www.pachapp.green';
-const MAPS_LINK = 'https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16';
-const NEARBY_LINK = 'https://pachapp.green/here-around/';
-console.log('ROLLBACK - Meta API only - No Baileys, No QR, No Pino');
-console.log('Has token: ' + (WHATSAPP_TOKEN ? 'yes' : 'NO'));
-console.log('Has phone id: ' + (PHONE_ID ? 'yes' : 'NO'));
-const FESTIVALS = new Set(['2026-01-01','2026-01-14','2026-01-15','2026-02-15','2026-03-04','2026-03-19','2026-03-20','2026-03-26','2026-03-31','2026-04-03','2026-04-05','2026-04-14','2026-04-19','2026-04-29','2026-05-27','2026-05-31','2026-06-26','2026-08-26','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-09-04','2026-09-14','2026-10-11','2026-10-20','2026-11-08','2026-11-09','2026-11-24','2026-12-24','2026-12-25','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31','2027-01-01','2027-01-14','2027-01-15','2027-02-06','2027-03-22','2027-03-27','2027-04-14','2027-04-18','2027-05-01','2027-05-16','2027-06-16','2027-08-15','2027-08-20','2027-08-21','2027-08-22','2027-09-24','2027-10-09','2027-10-29','2027-10-30','2027-11-13','2027-12-24','2027-12-25','2027-12-26','2027-12-27','2027-12-28','2027-12-29','2027-12-30','2027-12-31']);
-const HOLIDAYS = new Set(['2026-01-26','2026-05-01','2026-08-15','2026-10-02','2026-04-03','2026-04-14','2026-03-20','2026-05-27','2026-06-26','2026-08-26','2026-11-24','2026-12-25','2027-01-26','2027-05-01','2027-08-15','2027-10-02','2027-03-22','2027-05-16','2027-06-16','2027-11-13','2027-12-25']);
-function getDayTypeFromDate(d) { if (!d) return 'Weekday'; const s = d.toISOString().slice(0, 10); if (FESTIVALS.has(s)) return 'Festival'; if (HOLIDAYS.has(s)) return 'Holiday'; const day = d.getDay(); if (day === 6 || day === 0) return 'Weekend'; return 'Weekday'; }
-function rateForDate(d) { const t = getDayTypeFromDate(d); if (t === 'Festival' || t === 'Holiday') return 9600; if (t === 'Weekend') return 8000; return 6400; }
-function getDateType(text) { const d = parseDate(text); if (!d) return 'weekday'; return getDayTypeFromDate(d).toLowerCase(); }
-function getAutoRooms(a) { return Math.max(1, Math.min(4, Math.ceil(a / 2))); }
-function calcFullVillaBase(checkInDate, nights) { if (!checkInDate) return { base: 6400 * nights, breakdown: 'Weekday' }; let base = 0; const counts = { Weekday: 0, Weekend: 0, Holiday: 0, Festival: 0 }; for (let i = 0; i < nights; i++) { const d = new Date(checkInDate); d.setDate(d.getDate() + i); const t = getDayTypeFromDate(d); counts[t]++; base += rateForDate(d); } const parts = []; if (counts.Weekday) parts.push(counts.Weekday + ' Weekday'); if (counts.Weekend) parts.push(counts.Weekend + ' Weekend'); if (counts.Holiday) parts.push(counts.Holiday + ' Holiday'); if (counts.Festival) parts.push(counts.Festival + ' Festival'); return { base: base, breakdown: parts.join(' + ') }; }
-function calcAdvance(total, bookingType, rooms, nights, adults) { if (bookingType !== 'Full Villa' && rooms === 1 && nights === 1 && adults <= 2) return 1600; if (total <= 10000) return 2000; return Math.round(total * 0.20); }
-function formatPrice(n) { return 'Rs.' + n.toLocaleString('en-IN'); }
-function parseDate(text) { if (!text) return null; text = text.toLowerCase().trim(); const months = { jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11 }; let m; m = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])); m = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); if (m) { let y = parseInt(m[3]); if (y < 100) y += 2000; return new Date(y, parseInt(m[2]) - 1, parseInt(m[1])); } m = text.match(/(\d{1,2})[\/\-](\d{1,2})\b/); if (m) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, parseInt(m[2]) - 1, parseInt(m[1])); if (d < now) d = new Date(y + 1, parseInt(m[2]) - 1, parseInt(m[1])); return d; } m = text.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)/); if (m && months[m[2]] !== undefined) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, months[m[2]], parseInt(m[1])); if (d < now) d = new Date(y + 1, months[m[2]], parseInt(m[1])); return d; } m = text.match(/([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/); if (m && months[m[1]] !== undefined) { const now = new Date(); let y = now.getFullYear(); let d = new Date(y, months[m[1]], parseInt(m[2])); if (d < now) d = new Date(y + 1, months[m[1]], parseInt(m[2])); return d; } if (text.includes('tomorrow')) { const d = new Date(); d.setDate(d.getDate() + 1); return d; } if (text.includes('today')) return new Date(); return null; }
+// Pachapp AI Cloud - V23 - FIXED AMENITIES - Real List Only - Never Invent
+const 【entity-express¦canonical_name=express】 = require('【entity-express¦canonical_name=express】');
+const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
+const app = 【entity-express¦canonical_name=express】();
+app.use(【entity-express¦canonical_name=express】.json());
 
-function extractAllDates(text){ if(!text) return []; const found=[]; const months={jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:4,jun:5,june:5,jul:6,july:6,aug:7,august:7,sep:8,sept:8,september:8,oct:9,october:9,nov:10,november:10,dec:11,december:11}; const seen=new Set(); function add(d){ if(!d||isNaN(d)) return; const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); if(!seen.has(k)){seen.add(k); found.push(d);} } let m; const re1=/\d{4}-\d{1,2}-\d{1,2}/g; while((m=re1.exec(text))!==null){ const p=m[0].split('-'); add(new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]))); } const re2=/\b(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{2,4})\b/g; while((m=re2.exec(text))!==null){ let y=parseInt(m[3]); if(y<100) y+=2000; add(new Date(y,parseInt(m[2])-1,parseInt(m[1]))); } const re2b=/\b(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\b/g; while((m=re2b.exec(text))!==null){ const now=new Date(); let y=now.getFullYear(); let day=parseInt(m[1]); let mon=parseInt(m[2]); if(mon<1||mon>12||day<1||day>31) continue; add(new Date(y,mon-1,day)); } const re3=/\b(\d{1,2})(?:st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|sept|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)(?:\s+(\d{4}))?\b/gi; while((m=re3.exec(text))!==null){ const now=new Date(); let y=m[3]?parseInt(m[3]):now.getFullYear(); let d=new Date(y,months[m[2].toLowerCase()],parseInt(m[1])); add(d); } const re4=/\b(january|february|march|april|may|june|july|august|september|sept|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s+(\d{4}))?\b/gi; while((m=re4.exec(text))!==null){ const now=new Date(); let y=m[3]?parseInt(m[3]):now.getFullYear(); let d=new Date(y,months[m[1].toLowerCase()],parseInt(m[2])); add(d); } found.sort((a,b)=>a-b); return found; }
-function dateToStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-async function checkAvailability(checkin, checkout){ if(!dbBase) return {available:true, conflicting:[], reason:'no-db'}; const TABLE_ID='tbleQTjZjOAbPq3sd'; let ci=(checkin||'').slice(0,10); let co=(checkout||'').slice(0,10); if(!ci) return {available:true, conflicting:[]}; if(!co||co<=ci){ const d=new Date(ci+'T12:00:00'); d.setDate(d.getDate()+1); co=d.toISOString().slice(0,10); } try{ const recs=await dbBase(TABLE_ID).select({fields:['Name','Checkin','Checkout','Status','Rooms']}).all(); const conflicting=[]; for(const r of recs){ const f=r.fields||{}; const st=String(f.Status||'').toLowerCase(); if(st.includes('cancel')||st.includes('reject')) continue; let exCi=String(f.Checkin||'').slice(0,10); if(!exCi) continue; let exCo=String(f.Checkout||'').slice(0,10); if(!exCo||exCo<=exCi){ const d=new Date(exCi+'T12:00:00'); d.setDate(d.getDate()+1); exCo=d.toISOString().slice(0,10); } if(exCi < co && exCo > ci){ conflicting.push({name:f.Name||'Guest', checkin:exCi, checkout:exCo, rooms:f.Rooms||'', status:f.Status||''}); } } return {available: conflicting.length===0, conflicting, checkin:ci, checkout:co}; }catch(e){ console.log('checkAvailability fail: '+e.message); return {available:true, conflicting:[], reason:e.message}; } }
-async function findNextAvailable(){ if(!dbBase) return null; try{ const TABLE_ID='tbleQTjZjOAbPq3sd'; const recs=await dbBase(TABLE_ID).select({fields:['Checkin','Checkout','Status']}).all(); const booked=[]; for(const r of recs){ const f=r.fields||{}; const st=String(f.Status||'').toLowerCase(); if(st.includes('cancel')||st.includes('reject')) continue; let exCi=String(f.Checkin||'').slice(0,10); if(!exCi) continue; let exCo=String(f.Checkout||'').slice(0,10); if(!exCo||exCo<=exCi){ const d=new Date(exCi+'T12:00:00'); d.setDate(d.getDate()+1); exCo=d.toISOString().slice(0,10); } booked.push({ci:exCi, co:exCo}); } const today=new Date(); today.setHours(0,0,0,0); for(let i=0;i<90;i++){ const d=new Date(today); d.setDate(d.getDate()+i); const ci=dateToStr(d); const d2=new Date(d); d2.setDate(d2.getDate()+1); const co=dateToStr(d2); let clash=false; for(const b of booked){ if(b.ci < co && b.co > ci){ clash=true; break; } } if(!clash) return {checkin:ci, checkout:co}; } return null; }catch(e){ console.log('findNextAvailable fail: '+e.message); return null; } }
-const userMemory = new Map();
-const photoCount = new Map(); // V15: counts how many times guest asked photos: 0=first, 1=second, 2+=website
-// ===== V13 PHOTOS - DIRECT IN WHATSAPP, NO LINK =====
-// REPLACE these 3 links with YOUR OWN villa photos:
-// How to get your photo link: Open www.pachapp.green on laptop > Right-click on villa photo > Copy image address > Paste here replacing the example links below.
-// Or upload your 3 photos to GitHub repo and use https://raw.githubusercontent.com/YOURNAME/REPO/main/villa1.jpg etc.
-const GITHUB_BASE = 'https://raw.githubusercontent.com/Pachapp/pachapp-ai/main/';
-// V20 - PACHAPP ONLY - NO internet example photos. All links below MUST be YOUR real photos on GitHub.
-// Upload your 10 real photos to GitHub with EXACT names below, then replace YOURNAME/YOURREPO with your GitHub name/repo.
-// Until you upload, bot will NOT send fake photos - it will send website only. This guarantees 0 outside photos.
-const VILLA_PHOTOS = [
-  { url: GITHUB_BASE + 'room1.jpg', caption: 'Pachapp - Room 1' },
-  { url: GITHUB_BASE + 'outdoor1.jpg', caption: 'Pachapp - Outside Villa' },
-  { url: GITHUB_BASE + 'pool1.jpg', caption: 'Pachapp - Pool' }
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appQrwByIT5af54K3';
+const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_ID || 'tbleQTjZjOAbPq3sd';
+
+const 【entity-GITHUB_BASE¦canonical_name=GitHub】 = 'https://raw.githubusercontent.com/Pachapp/pachapp-ai/main/';
+const BOOKING_FORM = 'https://pachapp-ai-1.onrender.com/booking-form.html';
+const WEBSITE = 'https://www.pachapp.green';
+
+const FIRST_PHOTOS = [
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'room1.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'outdoor1.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'pool1.jpg'
 ];
-// ===== YOUR OWN DRIVE LINKS - Given by you on 7 Nov - 3 Sections =====
-const DRIVE_ROOMS = 'https://drive.google.com/drive/folders/10tN84VxjXvNYiuzOx5sT2XHl46su3mgO?usp=sharing';
-const DRIVE_POOL = 'https://drive.google.com/drive/folders/1RUsjNpD0IlyPRAhcKBtXHWVTMU_LcFYh?usp=sharing';
-const DRIVE_OUTDOOR = 'https://drive.google.com/drive/folders/1K7Xy55ktCLXqZ0c2IVKkQ3UcfuVjGCfh?usp=sharing';
-// ===== V16 - YOUR REAL PHOTOS - 10 Photos - 3 STEPS =====
-// Step 1: First 'photos' = 3 photos: 1 Room, 1 Outdoor, 1 Pool (VILLA_PHOTOS - already in code)
-// Step 2: Second 'more photos' = 9 photos: 3 Rooms, 3 Outdoor, 3 Pool (SECOND_PHOTOS below)
-// Step 3: Third 'more photos' = Website link www.pachapp.green
-// REPLACE the 10 links below with YOUR OWN 10 photos after you upload them.
-// For now they are example links - Bot will still send 10 photos, you replace with your real photos.
 const SECOND_PHOTOS = [
-  // V22 - Second 'more photos' = 10 photos: 4 Rooms, 3 Pool, 3 Outdoor - 100% Pachapp, GitHub only
-  { url: GITHUB_BASE + 'room1.jpg', caption: 'Room 1' },
-  { url: GITHUB_BASE + 'room2.jpg', caption: 'Room 2' },
-  { url: GITHUB_BASE + 'room3.jpg', caption: 'Room 3' },
-  { url: GITHUB_BASE + 'room4.jpg', caption: 'Room 4' },
-  { url: GITHUB_BASE + 'pool1.jpg', caption: 'Pool 1 - Heart Pool' },
-  { url: GITHUB_BASE + 'pool2.jpg', caption: 'Pool 2 - Pool + Tea Hills' },
-  { url: GITHUB_BASE + 'pool3.jpg', caption: 'Pool 3 - Pool Day' },
-  { url: GITHUB_BASE + 'outdoor1.jpg', caption: 'Outdoor 1 - Outside Villa' },
-  { url: GITHUB_BASE + 'outdoor2.jpg', caption: 'Outdoor 2 - Villa + Garden' },
-  { url: GITHUB_BASE + 'outdoor3.jpg', caption: 'Outdoor 3 - Villa in Trees' }
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'room1.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'room2.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'room3.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'room4.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'pool1.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'pool2.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'pool3.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'outdoor1.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'outdoor2.jpg',
+  【entity-GITHUB_BASE¦canonical_name=GitHub】 + 'outdoor3.jpg'
 ];
-const WEBSITE_LINK = 'https://www.pachapp.green';
 
+// ===== FIXED REAL DATA - NEVER INVENT BEYOND THIS =====
+const CHECKIN = '2 PM';
+const CHECKOUT = '12 PM';
 
+const FACILITIES = 'Wi-Fi, CCTV, TV, Hot water, Filtered water, Free and Paid Breakfast / Dinner, Pet friendly, Free parking';
+const ACTIVITIES = 'Library, Art Gallery, Meeting hall, Swimming pool, Pool Jacuzzi';
+const GAMES = 'Chess, Ludo, Snake and ladder, Carrom board, Badminton, Jumping rope';
 
-let dbBase = null;
-try { if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) { const AT = require('airtable'); dbBase = new AT({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID); } } catch (e) { console.log('Airtable not set: ' + e.message); }
-async function saveToDB(booking) { globalThis._lastAirtableError=''; if (!dbBase) { globalThis._lastAirtableError='dbBase is null - AIRTABLE_API_KEY or AIRTABLE_BASE_ID missing in Render'; return false; } const TABLE_ID='tbleQTjZjOAbPq3sd'; const checkoutVal=booking.checkout||booking.checkOut||booking.check_out||booking.end||booking.checkoutDate||''; const avail=await checkAvailability(booking.date, checkoutVal); if(!avail.available){ const c=avail.conflicting[0]||{}; globalThis._lastAirtableError='Dates already booked - Not Available - '+avail.checkin+' to '+avail.checkout+' already booked by '+(c.name||'another guest'); console.log('BLOCK double booking: '+globalThis._lastAirtableError); return false; } let cleanPhone=String(booking.phone||'').replace(/[^0-9+]/g,''); if (cleanPhone.length===10) cleanPhone='+91'+cleanPhone; if (cleanPhone && !cleanPhone.startsWith('+') && cleanPhone.length>10) cleanPhone='+'+cleanPhone; try { const existing = await dbBase(TABLE_ID).select({ filterByFormula: "AND({Checkin}='" + booking.date + "', {Phone}='" + booking.phone + "', {Name}='" + booking.name + "')" }).firstPage(); if (existing && existing.length > 0) return true; } catch (e) { globalThis._lastAirtableError='select: '+e.message; console.log('Airtable select fail: ' + e.message); } const baseFields={ Name: booking.name || 'Guest', Phone: cleanPhone, Checkin: booking.date || '', Checkout: checkoutVal || '', Notes: (booking.guests || '') + ' Source: ' + (booking.source || 'WA AI'), Rooms: booking.rooms || 'Full Villa', Total: booking.total || 0, Advance: booking.advance || 0, Status: booking.status || 'Pending - Waiting for Verification', UTR: booking.utr || '' }; const tries=[baseFields, { Name: baseFields.Name, Checkin: baseFields.Checkin, Checkout: baseFields.Checkout, Notes: baseFields.Notes, Rooms: baseFields.Rooms, Total: baseFields.Total, Advance: baseFields.Advance, UTR: baseFields.UTR }, { Name: baseFields.Name, Checkin: baseFields.Checkin, Checkout: baseFields.Checkout, Notes: baseFields.Notes, UTR: baseFields.UTR }]; for (let i=0;i<tries.length;i++) { try { await dbBase(TABLE_ID).create([{ fields: tries[i] }]); globalThis._lastAirtableError=''; return true; } catch (e) { console.log('Airtable create try ' + i + ' fail: ' + e.message); globalThis._lastAirtableError=e.message; } } return false; }
+const PAID_BARBECUE = 'Barbecue - Free for self use, Rs 250 for staff assistance, Rs 750 per 1 Kg of Chicken Barbecue serving.';
+const PAID_CAMPFIRE = 'Campfire - Rs 500.';
+const MUSIC_RENT = 'Music instruments on Rent - Keyboard (Thomman 88 keys): Rs 2000, Roland rhythm pad: Rs 1000, Guitar (Washburn electric): Rs 1000, Tabla: Rs 1000.';
 
-let gq = null;
-try { const GroqLib = require('groq-sdk'); if (process.env.GROQ_API_KEY) gq = new GroqLib.Groq({ apiKey: process.env.GROQ_API_KEY }); } catch (e) { console.log('Groq not set'); }
-const SYSTEM_PROMPT = 'You are Pachapp Pool Villa AI Host - humane, warm, creative, not a bot. Villa: Pachapp Pool Villa, Lucky Hill, Ooty Road, Meppadi, Wayanad, Kerala, Website www.pachapp.green, Maps https://maps.app.goo.gl/i3ZFz9F2SRTQs6C16. Booking Form: https://pachapp-ai-1.onrender.com/booking-form.html - give this exact link only when guest asks for booking form, never invent another link like pachapp.green/booking. Owners Uday Hue, Reshma Uday, Sarwaswa Uday. Host is creative person, original compositions, talk literature, cinema, AI, philosophy, history. Inspire about Wayanad ONLY if guest asks about tours, never to start booking. RULES: 1. Answer REAL answer FIRST. Then ask ONLY ONE question: dates OR guests OR rooms. NEVER ask 2-3 questions in one message. NEVER ask about Wayanad interests, trekking, wildlife, festivals, what excites you, what part of Wayanad, special interests, special plans, in booking messages. Booking needs only: dates, adults/children, Full Villa or Rooms, name/phone. 1A. TOUR HELP - ONLY ONCE AFTER BOOKING: Ask about Wayanad tour help ONLY ONCE, AFTER booking is confirmed or form is sent, as: Would you like help with Wayanad tour plans? Never ask it again if guest already answered, ignored, or said no. Never ask interest questions before booking. 1B. NEVER REPEAT: If guest already told adults, dates, rooms, or interest, NEVER ask it again. Check chat history first. 1C. NEVER INVENT DATES OR AVAILABILITY: NEVER say next available slot, 15 Oct 2024, or any date unless code gave it. NEVER say I am not sure about availability. NEVER say Checking Airtable unless code checked. If guest says any date / any day / when free, ask for their dates - do not invent a date. 1D. MEMORY: Guest dates and rooms are in system message. Use those dates, NEVER ask dates again if system already gave them. If dates + Full Villa/Rooms are known, send booking form link immediately, do not ask dates again. 1E. BOOKING FORM - SEND WHEN: Send form link https://pachapp-ai-1.onrender.com/booking-form.html as soon as dates + Full Villa/Rooms are known, even if adults not yet known. Form will collect name, phone, adults, advance, UTR. Do not keep asking dates/price in chat after form is sent. 1F. PHOTOS: NEVER send photo links. Code sends photos directly. If guest asks for photos, say Here are photos, code will send them. 2. NEVER give price without date. NEVER say let me check Indian Calendar, personal/group, routine, internal pricing. 3. Reply in guest language, original script Malayalam, Hindi, Tamil, Telugu, Kannada, English. If not understandable, say only Please ask in ENGLISH. 4. For GROUP AGENTS: short crispy 1-2 line replies only, close in 3-4 messages, NEVER private reply in group. 5. For DIRECT guests: elaborated humane, photos/videos between answers. PRICING - SAME AS BOOKING FORM, NEVER DIFFERENT: FULL VILLA PRIVATE: Weekday Mon-Fri Rs.6400, Weekend Sat-Sun Rs.8000, Festival and Holiday Rs.9600 (+20% over Weekend), per-night - Fri 6400 + Sat 8000 + Sun 8000 = 22400 for 3 nights. Includes 4 rooms, 8 adults, Breakfast FREE. ROOMS: Rs.1600 per room per night, flat ALL days, Rooms = ceil(Adults/2) capped 1-4, Manual allowed, if fewer rooms than needed Extra charged. Extra adult Rs.800/night. Kids 0-6 FREE. Kids 6-12 Rs.300/night. Breakfast: Full Villa FREE, Rooms Rs.100 per head/night (Adults + Kids 6-12). ADVANCE: 1 Room 1 Night Adults up to 2 = Rs.1600, Total up to Rs.10000 = Rs.2000, Else 20%, Balance before check-in, UPI/cash. Payment screenshot + UTR, owner verifies, AI confirms ONLY after owner Yes. BOOKING: A-Table master, skip duplicate by date+phone+name, guests never see A-Table, only confirmation + QR. No Air-bnb automation. Booking +91 8943666911';
-async function askAI(userMsg, isGroup, history) { if (!gq) return null; try { const modeNote = isGroup ? 'MODE: GROUP AGENT - 1-2 lines only, crispy.' : 'MODE: DIRECT GUEST - Elaborated humane, inspiring.'; const c = await gq.chat.completions.create({ model: 'openai/gpt-oss-20b', messages: [{ role: 'system', content: SYSTEM_PROMPT + '\n' + modeNote }, ...(history || []).slice(-8), { role: 'user', content: userMsg }], temperature: 0.7, max_tokens: isGroup ? 120 : 600 }); return c.choices[0].message.content || null; } catch (e) { console.log('GQ error ' + e.message); return null; } }
-function fallbackReply(text, isGroup) { const lower = text.toLowerCase(); const hasDate = parseDate(text); if (lower.includes('booking form') || lower.includes('booking page') || lower.includes('form to book') || lower.includes('give me the form')) { return 'Sure! Here is the booking form to book:\n\nhttps://pachapp-ai-1.onrender.com/booking-form.html\n\nFill your dates, guests, and preferences there. Then tell me your chosen dates and number of guests, and I will confirm availability and share the exact quote.'; } if (lower.includes('pool') || lower.includes('swim')) { if (isGroup) return 'Yes, private pool, 4 rooms, full villa private. Which date? How many guests?'; return 'Yes! Private pool just for you - no sharing.\n\nPachapp has beautiful private pool with Wayanad hills view.\n\nWhich date? How many guests? What do you love in Wayanad?'; } if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('charge')) { if (!hasDate) { if (isGroup) return 'Price depends on date - weekday / weekend / festival / holiday different. Which date? How many guests?'; return 'Price depends on date, so I can give exact price.\n\nFull Private Villa: Weekday Mon-Fri Rs.6400, Weekend Sat-Sun Rs.8000, Festival and Holiday Rs.9600 (+20%) - per-night, Breakfast FREE, 8 adults\nRooms: Rs.1600 per room per night, flat ALL days, Rooms = ceil(Adults/2)\nExtra Adult Rs.800/night, Kids 0-6 FREE, Kids 6-12 Rs.300/night\n\nWhich date? How many guests?'; } const d = parseDate(text); const type = getDateType(text); const price = rateForDate(d); if (isGroup) return type + ' - Full Private Villa ' + formatPrice(price) + ', Breakfast FREE, 8 adults included. Confirm?'; return 'For ' + text + ' - ' + type + ' - Full Private Villa ' + formatPrice(price) + '\n\nPrivate whole villa, 4 rooms, private pool, Breakfast FREE, includes 8 adults. Extra adult Rs.800. Kids 6-12 Rs.300/night.\n\nAdvance ' + formatPrice(calcAdvance(price, 'Full Villa', 4, 1, 2)) + ', balance before check-in.\n\nShall I hold this date? How many guests exactly?'; } if (isGroup) return 'Pachapp Pool Villa, Meppadi, Wayanad - Private villa, pool, 4 rooms. Which date? How many guests?'; return 'Welcome to Pachapp Pool Villa!\n\nLucky Hill, Meppadi, Wayanad - private villa, private pool, 4 rooms, hills view.\n\nWhich date? How many guests? What brings you to Wayanad?'; }
-async function sendWhatsApp(to, text) { if (!WHATSAPP_TOKEN || !PHONE_ID) { console.log('Cannot send - missing WHATSAPP_TOKEN or WHATSAPP_PHONE_ID'); return { ok: false, error: 'missing config' }; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { preview_url: true, body: text } }) }); const data = await res.json(); console.log('SEND RESULT ' + res.status + ' to ' + to + ' : ' + JSON.stringify(data).slice(0, 300)); return { ok: res.ok, status: res.status, data: data }; } catch (e) { console.log('Send failed: ' + e.message); return { ok: false, error: e.message }; } }
-async function sendWhatsAppImage(to, imageUrl, caption) { if (!imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('PASTE_YOUR')) { console.log('SKIP image - placeholder link, not a valid URI: ' + imageUrl); return { ok: false, skipped: true }; } if (!WHATSAPP_TOKEN || !PHONE_ID) { console.log('Cannot send image - missing config'); return { ok: false }; } try { const res = await fetch('https://graph.facebook.com/v21.0/' + PHONE_ID + '/messages', { method: 'POST', headers: { 'Authorization': 'Bearer ' + WHATSAPP_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'image', image: { link: imageUrl, caption: caption || '' } }) }); const data = await res.json(); console.log('SEND IMAGE ' + res.status + ' to ' + to + ' : ' + JSON.stringify(data).slice(0, 300)); return { ok: res.ok, data: data }; } catch (e) { console.log('Send image failed: ' + e.message); return { ok: false, error: e.message }; } }
-async function sendVillaPhotos(to, count) { const n = count || 3; for (let i = 0; i < Math.min(n, VILLA_PHOTOS.length); i++) { try{ await sendWhatsAppImage(to, VILLA_PHOTOS[i].url, VILLA_PHOTOS[i].caption); }catch(e){ console.log('Villa photo fail: '+e.message); } await new Promise(r=>setTimeout(r, 600)); } }
-const chatHistories = new Map(); const pendingBookings = new Map();
-async function handleIncoming(from, text, senderName, isGroup) { console.log('META MESSAGE from ' + from + ' : ' + text.slice(0, 200)); const lower = text.toLowerCase(); if (from === OWNER_NUMBER || from === '91' + OWNER_NUMBER || from.endsWith(OWNER_NUMBER)) { if (lower.trim() === 'yes' || lower.includes('confirm') || lower.includes('verified')) { let targetPhone = null; let targetBooking = null; for (const entry of pendingBookings) { targetPhone = entry[0]; targetBooking = entry[1]; } if (targetBooking) { targetBooking.status = 'Confirmed'; await saveToDB(targetBooking); await sendWhatsApp(targetBooking.phone, 'Booking CONFIRMED - Pachapp Pool Villa!\n\nDate: ' + targetBooking.date + '\nGuests: ' + targetBooking.guests + '\nTotal: ' + formatPrice(targetBooking.total) + '\nAdvance: ' + formatPrice(targetBooking.advance) + ' received\nBalance before check-in.\n\nMaps: ' + MAPS_LINK + '\nNearby: ' + NEARBY_LINK + '\n\nWelcome to Pachapp!'); await sendWhatsApp(from, 'Confirmed to guest ' + targetBooking.name); pendingBookings.delete(targetPhone); return; } } if (lower.trim() === 'no') { await sendWhatsApp(from, 'Not confirmed.'); return; } }
- const hasUTR = lower.match(/utr|transaction|ref/i) || lower.match(/\b\d{10,18}\b/); if (hasUTR && (lower.includes('paid') || lower.includes('payment') || lower.includes('advance') || lower.includes('utr'))) { const utrMatch = text.match(/\b\d{10,18}\b/); const utr = utrMatch ? utrMatch[0] : 'Screenshot received'; const prev = pendingBookings.get(from); const pending = { name: senderName, phone: from, date: prev ? prev.date : 'To confirm', guests: prev ? prev.guests : '', total: prev ? prev.total : 0, advance: prev ? prev.advance : 0, utr: utr, status: 'Pending' }; pendingBookings.set(from, pending); await sendWhatsApp(OWNER_NUMBER, 'PAYMENT VERIFICATION NEEDED\nGuest: ' + senderName + ' (' + from + ')\nDate: ' + pending.date + '\nUTR: ' + utr + '\nAdvance: ' + formatPrice(pending.advance) + '\n\nReply YES to confirm, NO to reject.'); await sendWhatsApp(from, 'Payment screenshot + UTR ' + utr + ' received.\n\nOwner will verify and I will confirm your booking in a moment.'); return; }
- const FORM_LINK = 'https://pachapp-ai-1.onrender.com/booking-form.html'; if (lower.includes('booking form') || lower.includes('booking link') || lower.includes('form link') || lower.includes('form to book') || lower.includes('give me the form') || lower.includes('send form') || lower.includes('booking page') || lower.includes('book now') || lower.includes('i want to book') || lower.includes('want to book') || lower.includes('how to book') || lower.includes('booking') && lower.includes('link') || lower.includes('form')) { const formReply = 'Here is the booking form to book:\n\n' + FORM_LINK + '\n\nTap the link - it will open the Pachapp Booking Form in Chrome. Fill your dates, guests and preferences there. Then tell me your dates and guests, I will confirm availability and exact quote.'; await sendWhatsApp(from, formReply); return; }
- const _dates=extractAllDates(text); let _mem=userMemory.get(from)||{}; if(lower.includes('photo')||lower.includes('photos')||lower.includes('pics')||lower.includes('pictures')||lower.includes('images')||lower.includes('show villa')||lower.includes('show photos')||lower.includes('show me')||lower.includes('villa photo')||lower.includes('more photos')||lower.includes('show more')){ const _isMore = lower.includes('more') || lower.includes('show more'); const _realPhotosReady = !GITHUB_BASE.includes('YOURNAME'); if(!_realPhotosReady){ await sendWhatsApp(from, 'Real Pachapp photos are on our website only - no outside photos: '+WEBSITE_LINK+'\n\nAll photos there are 100% Pachapp - Rooms, Outdoor, Pool.\n\nWhich dates do you want? Full Villa or Rooms?'); return; } let _pc = photoCount.get(from) || 0; if(!_isMore){ await sendWhatsApp(from, 'Here are Pachapp photos - 3 photos: 1 Room, 1 Outdoor, 1 Pool - 100% Pachapp:'); await sendVillaPhotos(from, 3); photoCount.set(from, 1); await sendWhatsApp(from, 'Want more photos? Type - more photos'); return; } else { if(_pc === 1 || _pc === 0){ await sendWhatsApp(from, 'Here are more Pachapp photos - 10 photos: 4 Rooms, 3 Pool, 3 Outdoor - 100% Pachapp:'); for(let i=0;i<SECOND_PHOTOS.length;i++){ try{ const _r = await sendWhatsAppImage(from, SECOND_PHOTOS[i].url, SECOND_PHOTOS[i].caption); console.log('PHOTO '+(i+1)+'/10 result: '+JSON.stringify(_r).slice(0,200)); }catch(e){ console.log('PHOTO '+(i+1)+' fail: '+e.message); } await new Promise(r=>setTimeout(r, 600)); } photoCount.set(from, 2); await sendWhatsApp(from, 'Want all photos + videos? Type - more photos'); return; } else { await sendWhatsApp(from, 'All Pachapp photos + videos on website: '+WEBSITE_LINK+'\n\n100% Pachapp photos there.\n\nWhich dates do you want? Full Villa or Rooms?'); photoCount.set(from, 0); return; } } } if(_dates.length>0){ const _ci=dateToStr(_dates[0]); let _co=''; if(_dates.length>1){ _co=dateToStr(_dates[1]); } else { const _d=new Date(_dates[0]); _d.setDate(_d.getDate()+1); _co=dateToStr(_d); } _mem.checkin=_ci; _mem.checkout=_co; userMemory.set(from,_mem); const _avail=await checkAvailability(_ci,_co); if(!_avail.available){ await sendWhatsApp(from, 'Sorry, Pachapp is NOT AVAILABLE for '+_ci+' to '+_co+' - already booked. Please choose other dates. Tell me another date?'); return; } else { await sendWhatsApp(from, 'Yes, Pachapp is AVAILABLE for '+_ci+' to '+_co+'. How many adults and children will be staying? Full Villa or Rooms?'); await sendVillaPhotos(from, 1); return; } } if(lower.includes('full villa')||lower==='full'||(lower.includes('full')&&lower.length<20)){ _mem.rooms='Full Villa'; userMemory.set(from,_mem); if(_mem.checkin){ await sendWhatsApp(from, 'Perfect, Full Villa for '+_mem.checkin+' to '+_mem.checkout+'. Here is booking form to lock it: https://pachapp-ai-1.onrender.com/booking-form.html - Fill name, phone, adults, advance, UTR and send screenshot. I will confirm after owner verifies.'); return; } } if(lower.includes('1 room')||lower.includes('2 rooms')||lower.includes('3 rooms')||lower.includes('4 rooms')||lower.includes('rooms')){ if(_mem.checkin){ await sendWhatsApp(from, 'Got it, Rooms for '+_mem.checkin+' to '+_mem.checkout+'. Here is booking form to lock it: https://pachapp-ai-1.onrender.com/booking-form.html - Fill name, phone, adults, advance, UTR and send screenshot.'); return; } } const _isAnyDateQuery=lower.includes('any date')||lower.includes('any day')||lower.includes('any time')||lower.includes('any slot')||lower.includes('when free')||lower.includes('when available')||lower.includes('when is')||lower.includes('is free')||lower.includes('is available')||(lower.includes('available')&&!lower.includes('nov')&&!lower.includes('dec')&&!lower.includes('jan')); if(_isAnyDateQuery){ const _next=await findNextAvailable(); if(_next){ _mem.checkin=_next.checkin; _mem.checkout=_next.checkout; userMemory.set(from,_mem); await sendWhatsApp(from, 'Yes, next AVAILABLE is '+_next.checkin+' to '+_next.checkout+'. Would you like to book that? How many adults and children will be staying? Full Villa or Rooms?'); } else { await sendWhatsApp(from, 'Please tell me which dates you want - I will check Airtable for those dates. Which dates?'); } return; } if(_mem.checkin){ const _hist=chatHistories.get(from)||[]; _hist.push({role:'system', content:'MEMORY - Guest already said dates: '+_mem.checkin+' to '+_mem.checkout+(_mem.rooms?(', rooms: '+_mem.rooms):'')+'. NEVER ask dates again. Use these dates. If guest says Full Villa/Rooms, send booking form link immediately.'}); }
- if (!chatHistories.has(from)) chatHistories.set(from, []); const history = chatHistories.get(from); history.push({ role: 'user', content: text }); let reply = await askAI(text, isGroup, history); if (!reply) { console.log('AI null, using fallback'); reply = fallbackReply(text, isGroup); } else { console.log('AI replied: ' + reply.slice(0, 80)); } if (reply && reply.includes('pachapp.green/booking')) { reply = reply.split('pachapp.green/booking').join('pachapp-ai-1.onrender.com/booking-form.html').split('https://www.pachapp.green/booking').join('https://pachapp-ai-1.onrender.com/booking-form.html').split('http://www.pachapp.green/booking').join('https://pachapp-ai-1.onrender.com/booking-form.html'); } if (reply && reply.includes('www.pachapp.green/booking')) { reply = reply.split('www.pachapp.green/booking').join('pachapp-ai-1.onrender.com/booking-form.html'); } history.push({ role: 'assistant', content: reply }); if (history.length > 16) chatHistories.set(from, history.slice(-16)); const parsedDate = parseDate(text); if (parsedDate) { const calc = calcFullVillaBase(parsedDate, 1); pendingBookings.set(from, { name: senderName, phone: from, date: parsedDate.toISOString().slice(0, 10), guests: text, total: calc.base, advance: calcAdvance(calc.base, 'Full Villa', 4, 1, 2), status: 'Enquiry' }); } await sendWhatsApp(from, reply); if (!isGroup && (lower.includes('photo') || lower.includes('video') || lower.includes('pics'))) { await sendWhatsApp(from, 'Here are Pachapp photos:'); await sendVillaPhotos(from, 3); } }
-function serveStaticFile(res, fileName, contentType) { try { const filePath = path.join(__dirname, fileName); const data = fs.readFileSync(filePath); res.writeHead(200, { 'Content-Type': contentType }); res.end(data); return true; } catch (e) { console.log('Static file not found: ' + fileName + ' - ' + e.message); return false; } }
-const server = http.createServer(async (req, res) => { const urlPath = (req.url || '/').split('?')[0]; if (urlPath === '/api/bookings' && req.method === 'POST') { let body = ''; req.on('data', chunk => { body += chunk; }); req.on('end', async () => { try { const b = JSON.parse(body || '{}'); const booking = { name: b.name || b.guestName || 'Guest', phone: b.phone || '', date: b.date || b.checkIn || b.checkin || '', checkout: b.checkout || b.checkOut || b.check_out || b.end || '', guests: b.guests || '', rooms: b.rooms || b.bookingType || 'Full Villa', total: b.total || 0, advance: b.advance || 0, status: b.status || 'Pending - Waiting for Verification', utr: b.utr || '', source: b.source || 'Form' }; const ok = await saveToDB(booking); res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ ok: ok, error: ok ? '' : (globalThis._lastAirtableError || 'saveToDB returned false') })); } catch (e) { console.log('Form booking save fail: ' + e.message); res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ ok: false, error: e.message })); } }); return; } if (urlPath === '/api/bookings' && req.method === 'OPTIONS') { res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }); res.end(''); return; } if (urlPath === '/api/check-availability' && req.method === 'GET') { try { const url = new URL(req.url, 'http://localhost'); const ci=url.searchParams.get('checkin')||url.searchParams.get('checkIn')||url.searchParams.get('date')||''; const co=url.searchParams.get('checkout')||url.searchParams.get('checkOut')||''; const avail=await checkAvailability(ci,co); res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify(avail)); } catch(e){ res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({available:true, conflicting:[], error:e.message})); } return; } if (urlPath === '/api/check-availability' && req.method === 'OPTIONS') { res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }); res.end(''); return; } if (urlPath === '/api/diag' && req.method === 'GET') { res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ hasDbBase: !!dbBase, hasKey: !!process.env.AIRTABLE_API_KEY, hasBaseId: !!process.env.AIRTABLE_BASE_ID, baseIdStart: (process.env.AIRTABLE_BASE_ID||'').slice(0,5), keyStart: (process.env.AIRTABLE_API_KEY||'').slice(0,5), lastError: globalThis._lastAirtableError || '' })); return; } if (urlPath === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', villa: VILLA_NAME, method: 'Meta API only', has_token: !!WHATSAPP_TOKEN, has_phone_id: !!PHONE_ID })); return; } if (urlPath === '/booking-form.html' || urlPath === '/booking-form' || urlPath === '/booking') { if (serveStaticFile(res, 'booking-form.html', 'text/html')) return; res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Booking form file not found in GitHub - check booking-form.html is in repo'); return; } if (urlPath === '/Pachapp_1.png' || urlPath === '/Pachapp_1.PNG') { if (serveStaticFile(res, 'Pachapp_1.png', 'image/png')) return; res.writeHead(404); res.end('Logo not found'); return; } if (urlPath === '/qr.png' || urlPath === '/qr.PNG') { if (serveStaticFile(res, 'qr.png', 'image/png')) return; res.writeHead(404); res.end('QR not found'); return; } if (urlPath.endsWith('.png')) { if (serveStaticFile(res, urlPath.slice(1), 'image/png')) return; } if (urlPath.endsWith('.jpg') || urlPath.endsWith('.jpeg')) { if (serveStaticFile(res, urlPath.slice(1), 'image/jpeg')) return; } if (urlPath.endsWith('.css')) { if (serveStaticFile(res, urlPath.slice(1), 'text/css')) return; } if (urlPath.endsWith('.js') && urlPath !== '/booking-form.html') { if (serveStaticFile(res, urlPath.slice(1), 'application/javascript')) return; } if (urlPath.startsWith('/webhook') && req.method === 'GET') { const url = new URL(req.url, 'http://localhost'); const mode = url.searchParams.get('hub.mode'); const token = url.searchParams.get('hub.verify_token'); const challenge = url.searchParams.get('hub.challenge'); if (mode === 'subscribe' && token === VERIFY_TOKEN) { console.log('Webhook verified'); res.writeHead(200); res.end(challenge); } else { res.writeHead(403); res.end('Forbidden'); } return; } if (urlPath.startsWith('/webhook') && req.method === 'POST') { let body = ''; req.on('data', chunk => { body += chunk; }); req.on('end', async () => { try { const data = JSON.parse(body || '{}'); if (data.object === 'whatsapp_business_account') { for (const entry of data.entry || []) { for (const change of entry.changes || []) { const value = change.value || {}; for (const msg of value.messages || []) { const from = msg.from; const senderName = (value.contacts && value.contacts[0] && value.contacts[0].profile && value.contacts[0].profile.name) || 'Guest'; let text = ''; if (msg.type === 'text' && msg.text) text = msg.text.body || ''; else if (msg.type === 'image' && msg.image) text = (msg.image.caption || '') + ' [image] paid'; else if (msg.type === 'video' && msg.video) text = (msg.video.caption || '') + ' [video] paid'; else text = ''; if (text) { await handleIncoming(from, text, senderName, false); } } } } } } catch (e) { console.log('Webhook error: ' + e.message); } res.writeHead(200); res.end('EVENT_RECEIVED'); }); return; } if (urlPath === '/') { res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('Pachapp AI - Meta API only - Running'); return; } res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('Pachapp AI - Meta API only - Running'); });
-server.listen(PORT, () => console.log('Meta API server on ' + PORT + ' - webhook /webhook - form /booking-form.html'));
+const TIMINGS = 'Starting time - Pool: 8 AM, Campfire: 7 PM, Music: 7 PM. Closing time - Pool: 11 PM, Music: 11 PM, Campfire: 11 PM, Grill: 11 PM. Swimming pool - please always enquire with the staff in charge.';
+
+const PIN_POINTS = '20% Advance mandatory. Advance is not refundable. Balance payments at check-in time. Please show your valid ID at arrival. Diseased are not allowed in the pool. No Outdoor Activities in bad weather.';
+
+const AMENITIES_SUMMARY = `Pachapp Pool Villa - Wayanad\n\nArrival: ${CHECKIN}\nDeparture: ${CHECKOUT}\n\nFacilities: ${FACILITIES}\n\nActivities: ${ACTIVITIES}\n\nGames: ${GAMES}\n\nPaid Activities: ${PAID_BARBECUE} ${PAID_CAMPFIRE}\n\n${MUSIC_RENT}\n\nTimings: ${TIMINGS}\n\nImportant: ${PIN_POINTS}`;
+
+// ===== MEMORY =====
+const memory = {}; // phone -> { checkin, checkout, villaType, photoCount, tourAsked }
+
+function getMem(phone){ if(!memory[phone]) memory[phone]={photoCount:0,tourAsked:false}; return memory[phone]; }
+
+// ===== DATE PARSING - Fix 25/11, 25-11, 25 nov, dec 31, no 2027 jump =====
+function parseDates(text){
+  const lower = text.toLowerCase();
+  const months = {jan:0, january:0, feb:1, february:1, mar:2, march:2, apr:3, april:3, may:4, jun:5, june:5, jul:6, july:6, aug:7, august:7, sep:8, sept:8, september:8, oct:9, october:9, nov:10, november:10, dec:11, december:11};
+  const dates = [];
+  // 25/11, 25-11, 25.11, 25 11
+  let m;
+  const re1 = /(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})(?:\s*[\/\-\.]\s*(\d{2,4}))?/g;
+  while((m=re1.exec(lower))!==null){
+    let d=parseInt(m[1]), mo=parseInt(m[2])-1;
+    if(mo>=0 && mo<12 && d>=1 && d<=31){
+      let y = new Date().getFullYear();
+      if(m[3]){ y=parseInt(m[3]); if(y<100) y+=2000; }
+      let dt=new Date(y,mo,d);
+      if(dt < new Date(new Date().setHours(0,0,0,0)) && !m[3]) dt.setFullYear(y+1);
+      dates.push(dt);
+    }
+  }
+  // 25 nov, 25 november, nov 25, dec 31
+  const re2 = /(\d{1,2})\s*(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)| (jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)\s*(\d{1,2})/g;
+  // simpler: split words
+  const parts = lower.replace(/,/g,' ').split(/\s+/);
+  for(let i=0;i<parts.length;i++){
+    if(months[parts[i]]!==undefined){
+      let mo=months[parts[i]];
+      let d=null;
+      if(i>0 && /^\d{1,2}$/.test(parts[i-1])) d=parseInt(parts[i-1]);
+      else if(i+1<parts.length && /^\d{1,2}$/.test(parts[i+1])) d=parseInt(parts[i+1]);
+      if(d){ let y=new Date().getFullYear(); let dt=new Date(y,mo,d); if(dt < new Date(new Date().setHours(0,0,0,0))) dt.setFullYear(y+1); if(!dates.find(x=>x.getTime()===dt.getTime())) dates.push(dt); }
+    }
+  }
+  return dates.sort((a,b)=>a-b);
+}
+
+function fmt(d){ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+
+// ===== AIRTABLE AVAILABILITY =====
+async function checkAvailability(checkin, checkout){
+  try{
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`;
+    const res = await axios.get(url, {headers:{Authorization:`Bearer ${AIRTABLE_API_KEY}`}, params:{pageSize:100}});
+    const records = res.data.records || [];
+    for(const r of records){
+      const f = r.fields || {};
+      const exIn = f.Checkin || f['Check-in'] || f.CheckIn || f.Date;
+      const exOut = f.Checkout || f['Check-out'] || f.CheckOut;
+      if(!exIn || !exOut) continue;
+      const eIn = new Date(exIn), eOut = new Date(exOut);
+      if(checkin < eOut && checkout > eIn) return false; // overlap = NOT AVAILABLE
+    }
+    return true;
+  }catch(e){ console.log('AVAIL ERROR', e.message); return true; }
+}
+
+// ===== WHATSAPP SEND =====
+async function sendText(to, body){
+  await axios.post(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`, {
+    messaging_product:'whatsapp', to, type:'text', text:{body}
+  }, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+}
+async function sendImage(to, link, caption){
+  await axios.post(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`, {
+    messaging_product:'whatsapp', to, type:'image', image:{link, caption: caption||''}
+  }, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+}
+
+// ===== AMENITIES ANSWER BY ENQUIRY - ONLY REAL LIST =====
+function getAmenitiesAnswer(text){
+  const t = text.toLowerCase();
+  if(t.includes('game') || t.includes('chess') || t.includes('ludo') || t.includes('carrom') || t.includes('badminton')) return `Games at Pachapp: ${GAMES}.`;
+  if(t.includes('barbecue') || t.includes('barbeque') || t.includes('bbq') || t.includes('grill')) return `${PAID_BARBECUE} Grill closing: 11 PM.`;
+  if(t.includes('campfire') || t.includes('camp fire') || t.includes('bonfire')) return `${PAID_CAMPFIRE} Campfire time: 7 PM to 11 PM.`;
+  if(t.includes('music') || t.includes('keyboard') || t.includes('guitar') || t.includes('tabla') || t.includes('instrument') || t.includes('roland')) return `${MUSIC_RENT} Music time: 7 PM to 11 PM.`;
+  if(t.includes('timing') || t.includes('time') || t.includes('open') || t.includes('close') || t.includes('start')) return `${TIMINGS}`;
+  if(t.includes('checkin') || t.includes('check-in') || t.includes('arrival') || t.includes('check in')) return `Arrival / Check-in time: ${CHECKIN}.`;
+  if(t.includes('checkout') || t.includes('check-out') || t.includes('departure') || t.includes('check out')) return `Departure / Check-out time: ${CHECKOUT}.`;
+  if(t.includes('advance') || t.includes('payment') || t.includes('refund') || t.includes('id') || t.includes('rule') || t.includes('pin') || t.includes('cancel')) return `Important: ${PIN_POINTS}`;
+  if(t.includes('breakfast') || t.includes('dinner') || t.includes('food')) return `Food: Free and Paid Breakfast / Dinner available.`;
+  if(t.includes('pet')) return `Pet friendly - Pets allowed.`;
+  if(t.includes('parking')) return `Free parking available.`;
+  if(t.includes('wifi') || t.includes('wi-fi') || t.includes('internet')) return `Wi-Fi available.`;
+  if(t.includes('pool') && (t.includes('jacuzzi') || t.includes('swim'))) return `Swimming pool + Pool Jacuzzi available. Pool: 8 AM to 11 PM. Please always enquire with the staff in charge.`;
+  if(t.includes('library') || t.includes('art gallery') || t.includes('meeting hall') || t.includes('activity') || t.includes('activities')) return `Activities: ${ACTIVITIES}.`;
+  if(t.includes('facilit') || t.includes('amenit') || t.includes('what is there') || t.includes('what do you have') || t.includes('available')) return AMENITIES_SUMMARY;
+  return null;
+}
+
+app.post('/webhook', async (req,res)=>{
+  try{
+    const entry = req.body.entry?.[0]?.changes?.[0]?.value;
+    const msg = entry?.messages?.[0];
+    if(!msg || msg.type!=='text'){ return res.sendStatus(200); }
+    const from = msg.from;
+    const text = msg.text.body.trim();
+    const lower = text.toLowerCase();
+    const mem = getMem(from);
+
+    // PHOTOS - 3 then 10 then website
+    if(lower.includes('photo') || lower.includes('image') || lower.includes('pic')){
+      if(lower.includes('more')){
+        if(mem.photoCount===0){
+          // 2nd enquiry - 10 photos
+          mem.photoCount=1;
+          for(const p of SECOND_PHOTOS){ try{ await sendImage(from,p); }catch(e){ console.log('SEND IMAGE FAIL',p,e.message);} }
+          await sendText(from, 'These are 10 photos - 4 Rooms, 3 Pool, 3 Outdoor.\n\nWant all photos + videos? Type - more photos');
+          return res.sendStatus(200);
+        } else if(mem.photoCount===1){
+          // 3rd enquiry - website only
+          mem.photoCount=2;
+          await sendText(from, `For all photos + videos, please visit our website:\n${WEBSITE}`);
+          return res.sendStatus(200);
+        } else {
+          await sendText(from, `For all photos + videos, please visit our website:\n${WEBSITE}`);
+          return res.sendStatus(200);
+        }
+      } else {
+        // 1st enquiry - 3 photos
+        mem.photoCount=0;
+        for(const p of FIRST_PHOTOS){ try{ await sendImage(from,p); }catch(e){ console.log('SEND IMAGE FAIL',p,e.message);} }
+        await sendText(from, 'These are 3 photos - 1 Room, 1 Outdoor, 1 Pool.\n\nWant more photos? Type - more photos');
+        return res.sendStatus(200);
+      }
+    }
+
+    // AMENITIES / FACILITIES / TIMINGS / RULES - Real list only, 1 question per reply
+    const amen = getAmenitiesAnswer(text);
+    if(amen){
+      // If guest also gave dates, check availability first, then amenities
+      const dates = parseDates(text);
+      if(dates.length>=1){
+        const cin = dates[0];
+        const cout = dates[1] || new Date(cin.getTime()+86400000);
+        mem.checkin=cin; mem.checkout=cout;
+        const avail = await checkAvailability(cin, cout);
+        const availLine = avail ? `AVAILABLE for ${fmt(cin)} to ${fmt(cout)}.` : `NOT AVAILABLE for ${fmt(cin)} to ${fmt(cout)}. Please try other dates.`;
+        await sendText(from, `${availLine}\n\n${amen}\n\nShall I send you the booking form?`);
+        return res.sendStatus(200);
+      }
+      await sendText(from, `${amen}\n\nWhat dates are you planning?`);
+      return res.sendStatus(200);
+    }
+
+    // DATES - Availability FIRST, always
+    const dates = parseDates(text);
+    if(dates.length>=1){
+      const cin = dates[0];
+      const cout = dates[1] || new Date(cin.getTime()+86400000);
+      mem.checkin=cin; mem.checkout=cout;
+      const avail = await checkAvailability(cin, cout);
+      if(!avail){
+        await sendText(from, `NOT AVAILABLE for ${fmt(cin)} to ${fmt(cout)}.\n\nPlease try other dates. What dates?`);
+        return res.sendStatus(200);
+      }
+      // Check villa type
+      let villa = mem.villaType || '';
+      if(lower.includes('full villa') || lower.includes('full') || lower.includes('villa')) villa='Full Villa';
+      else if(lower.includes('room')) villa='Rooms';
+      if(villa) mem.villaType=villa;
+      if(villa){
+        await sendText(from, `AVAILABLE for ${fmt(cin)} to ${fmt(cout)} - ${villa}.\n\nBooking form:\n${BOOKING_FORM}\n\nPlease fill it to confirm.`);
+        return res.sendStatus(200);
+      }
+      await sendText(from, `AVAILABLE for ${fmt(cin)} to ${fmt(cout)}.\n\nDo you want Full Villa or Rooms?`);
+      return res.sendStatus(200);
+    }
+
+    // VILLA TYPE without dates but dates in memory
+    if(lower.includes('full villa') || lower.includes('full') || lower.includes('villa') || lower.includes('room')){
+      let villa='Rooms';
+      if(lower.includes('full') || lower.includes('villa')) villa='Full Villa';
+      mem.villaType=villa;
+      if(mem.checkin && mem.checkout){
+        await sendText(from, `AVAILABLE for ${fmt(mem.checkin)} to ${fmt(mem.checkout)} - ${villa}.\n\nBooking form:\n${BOOKING_FORM}\n\nPlease fill it to confirm.`);
+        return res.sendStatus(200);
+      }
+      await sendText(from, `Okay - ${villa}.\n\nWhat dates are you planning?`);
+      return res.sendStatus(200);
+    }
+
+    // BOOKING FORM request
+    if(lower.includes('book') || lower.includes('form') || lower.includes('confirm')){
+      if(mem.checkin && mem.checkout && mem.villaType){
+        await sendText(from, `AVAILABLE for ${fmt(mem.checkin)} to ${fmt(mem.checkout)} - ${mem.villaType}.\n\nBooking form:\n${BOOKING_FORM}`);
+        return res.sendStatus(200);
+      }
+      await sendText(from, `What dates are you planning?`);
+      return res.sendStatus(200);
+    }
+
+    // GREETING / DEFAULT - 1 question only, no repeated Wayanad question
+    if(lower.includes('hi') || lower.includes('hello') || lower.includes('hey')){
+      await sendText(from, `Hi, Welcome to Pachapp Pool Villa, Wayanad.\n\nWhat dates are you planning?`);
+      return res.sendStatus(200);
+    }
+
+    await sendText(from, `Welcome to Pachapp Pool Villa, Wayanad.\n\nWhat dates are you planning?`);
+    return res.sendStatus(200);
+
+  }catch(e){ console.log('WEBHOOK ERROR', e.message); return res.sendStatus(200); }
+});
+
+app.get('/webhook', (req,res)=>{
+  const VERIFY = process.env.VERIFY_TOKEN || 'pachapp123';
+  if(req.query['hub.verify_token']===VERIFY) return res.send(req.query['hub.challenge']);
+  return res.sendStatus(403);
+});
+
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V23'));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, ()=> console.log('Live on '+PORT));
