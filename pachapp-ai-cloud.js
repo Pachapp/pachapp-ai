@@ -1,9 +1,8 @@
 const express = require('express');
 const axios = require('axios');
-let Groq = null;
-try{ Groq = require('groq-sdk'); }catch(e){ console.log('GROQ SDK NOT INSTALLED'); }
-const groq = (Groq && process.env.GROQ_API_KEY) ? new Groq({apiKey: process.env.GROQ_API_KEY}) : null;
-console.log('GROQ STATUS - HAS_SDK:' + (!!Groq) + ' HAS_KEY:' + (!!process.env.GROQ_API_KEY) + ' GROQ_READY:' + (!!groq));
+// V44 Gork via axios - NO gorq-sdk needed
+const groqReady = !!process.env.GROQ_API_KEY;
+console.log('GROQ READY:' + groqReady);
 
 const app = express();
 app.use(express.json());
@@ -52,7 +51,7 @@ async function sendImage(to, link, caption){ await axios.post('https://graph.fac
 
 // BEAUTIFUL HUMAN HOST - Grok is the brain. No keyword spaghetti. Grok understands meaning like a human.
 async function askGrokHuman(userText, mem, availInfo){
-  if(!groq) return null;
+  if(!groqReady) return null;
   const systemPrompt = `You are Uday, the warm, wise, mature human host of Pachapp Pool Villa, Wayanad, Kerala. You talk like a beautiful human, not a robot. You never repeat the same greeting. You remember what guest said. You answer directly, then ask only ONE question.
 
 YOUR REAL DATA - Never invent anything else. If guest asks something not in this data, say you will check with host, do not make up:
@@ -84,13 +83,14 @@ HOW YOU TALK LIKE A BEAUTIFUL HUMAN:
 - Conversation history: ${mem.history.slice(-6).map(h=>h.role+': '+h.text).join(' | ')}
 `;
   try{
-    const comp = await groq.chat.completions.create({
+    const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
       model: 'llama-3.1-8b-instant',
       messages: [{role:'system', content: systemPrompt}, {role:'user', content: userText}],
       temperature: 0.7,
       max_tokens: 350
-    });
-    return comp.choices[0].message.content.trim();
+   
+                }, {headers: {Authorization: 'Bearer ' + process.env.GROQ_API_KEY}});
+      return resp.data.choices[0].message.content.trim();
   }catch(e){ console.log('GROQ ERROR ' + e.message); return null; }
 }
 
@@ -163,6 +163,6 @@ app.get('/webhook', (req,res)=>{
   if(req.query['hub.verify_token']===VERIFY) return res.send(req.query['hub.challenge']);
   return res.sendStatus(403);
 });
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V43 FINAL Grok Human'));
+app.get('/', (req,res)=> res.send('Pachapp AI Live - V44 Grok via Axios'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
