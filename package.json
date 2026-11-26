@@ -1,18 +1,13 @@
 {
   "name": "pachapp-ai",
   "version": "1.0.0",
-  "description": "Pachapp Pool Villa WhatsApp AI Bot",
+  "description": "Pachapp Pool Villa WhatsApp Bot",
   "main": "pachapp-ai-cloud.js",
   "scripts": {
     "start": "node pachapp-ai-cloud.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "axios": "^1.6.0",
-    "groq-sdk": "^0.9.0",
-    "airtable": "^0.12.2"
-  },
-  "engines": {
-    "node": "20.x"
+    "express": "^4.18.2"
   }
 }
