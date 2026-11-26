@@ -6,6 +6,7 @@ console.log('GROQ READY:' + groqReady);
 
 const app = express();
 app.use(express.json());
+app.use(express.static(__dirname));
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = '606463179209554';
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
