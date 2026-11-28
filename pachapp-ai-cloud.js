@@ -171,8 +171,8 @@ app.post('/api/bookings', async (req,res)=>{
     const baseId = process.env.AIRTABLE_BASE_ID;
     const table = process.env.AIRTABLE_TABLE || process.env.AIRTABLE_TABLE_NAME || 'Bookings';
     if(!token || !baseId){ return res.json({ok:false, error:'Airtable not configured'}); }
-   const fields = {Name: b.name, Phone: b.phone, Checkin: b.date, Checkout: b.checkout, Nights: b.nights, Stay: b.stay, Adults: b.adults, Kids06: b.kids06, Kids612: b.kids612, Breakfast: b.breakfast, Notes: b.notes, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr};    return res.json({ok:true, id: r.data.id});
-    const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + table, {records:[{fields:fields}]}, {headers:{Authorization:'Bearer '+token, 'Content-Type':'application/json'}});  }catch(e){ console.log('AIRTABLE ERROR ' + JSON.stringify(e.response ? e.response.data : e.message)); return res.json({ok:false, error: e.message}); }
-});
+   const fields = {Name: b.name, Phone: b.phone, Checkin: b.date, Checkout: b.checkout, Nights: b.nights, Stay: b.stay, Adults: b.adults, Kids06: b.kids06, Kids612: b.kids612, Breakfast: b.breakfast, Notes: b.notes, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr};
+const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + table, {records:[{fields:fields}]}, {headers:{Authorization:'Bearer '+token, 'Content-Type':'application/json'}});
+return res.json({ok:true, id: r.data.id});});
 app.get('/', (req,res)=> res.send('Pachapp AI Live - V44 Grok via Axios'));const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
