@@ -171,8 +171,7 @@ app.post('/api/bookings', async (req,res)=>{
     const baseId = process.env.AIRTABLE_BASE_ID;
     const table = process.env.AIRTABLE_TABLE || process.env.AIRTABLE_TABLE_NAME || 'Bookings';
     if(!token || !baseId){ return res.json({ok:false, error:'Airtable not configured'}); }
-    const fields = {Name: b.name, Phone: b.phone, Date: b.date, Checkout: b.checkout, Guests: b.guests, Rooms: b.rooms, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr, Source: b.source || 'Form'};
-    const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + encodeURIComponent(table), {fields: fields}, {headers: {Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}});
+    const fields = {Name: b.name, Phone: b.phone, Checkin: b.date, Checkout: b.checkout, Rooms: b.rooms, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr};    const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + encodeURIComponent(table), {fields: fields}, {headers: {Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}});
     return res.json({ok:true, id: r.data.id});
   }catch(e){ console.log('AIRTABLE ERROR ' + e.message); return res.json({ok:false, error: e.message}); }
 });app.get('/', (req,res)=> res.send('Pachapp AI Live - V44 Grok via Axios'));
