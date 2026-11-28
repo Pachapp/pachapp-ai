@@ -171,7 +171,8 @@ app.post('/api/bookings', async (req,res)=>{
     const baseId = process.env.AIRTABLE_BASE_ID;
     const table = process.env.AIRTABLE_TABLE || process.env.AIRTABLE_TABLE_NAME || 'Bookings';
     if(!token || !baseId){ return res.json({ok:false, error:'Airtable not configured'}); }
-   const fields = {Name: b.name, Phone: b.phone, Checkin: b.date, Checkout: b.checkout, Nights: b.nights, Stay: b.stay, Adults: b.adults, Kids06: b.kids06, Kids612: b.kids612, Breakfast: b.breakfast, Notes: b.notes, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr};
+   const roomsCount = (b.stay && String(b.stay).toLowerCase().includes('full villa')) ? 4 : (parseInt(b.stay) || 0);
+    const fields = {Name: b.name, Phone: b.phone, Checkin: b.date, Checkout: b.checkout, Nights: b.nights, Stay: b.stay,  Rooms: roomsCount, Adults: b.adults, Kids06: b.kids06, Kids612: b.kids612, Breakfast: b.breakfast, Notes: b.notes, Total: b.total, Advance: b.advance, Status: b.status || 'Pending - Waiting for Verification', UTR: b.utr};
 const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + table, {records:[{fields:fields}]}, {headers:{Authorization:'Bearer '+token, 'Content-Type':'application/json'}});
 return res.json({ok:true, id: r.data.id});
   }catch(e){ console.log('AIRTABLE ERROR ' + JSON.stringify(e.response ? e.response.data : e.message)); return res.json({ok:false, error: e.message}); }
