@@ -311,8 +311,7 @@ document.getElementById('submitBtn').onclick=async()=>{
   const guestsStr=bookingType+' - '+adults+' Adults, '+kidsFree+' Kids 0-6, '+kidsHalf+' Kids 6-12, '+nights+' Night(s), Check-out '+checkOut+(breakfast==='Yes'?' , Breakfast Yes':' , Breakfast No')+(notes?' , Notes: '+notes:'');
   msg.textContent='Saving to Airtable...';msg.style.color='#fff';
   try{
-    const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,phone:phone,date:checkIn,checkout:checkOut,guests:guestsStr,rooms:bookingType,total:r.total,advance:r.advance,status:'Pending - Waiting for Verification',utr:utr,source:'Form'})});
-    const data=await res.json();
+    const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,phone:phone,date:checkIn,checkout:checkOut,guests:guestsStr,rooms:bookingType,total:r.total,advance:r.advance,status:'Pending - Waiting for Verification',utr:utr,source:'Form',nights:nights,stay:bookingType,adults:adults,kids06:kidsFree,kids612:kidsHalf,breakfast:breakfast,notes:notes})});    const data=await res.json();
     if(data && data.ok){msg.textContent='Booking saved in Airtable • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#2E9A5A';}
     else if(data && data.error && data.error.includes('already booked')){msg.textContent='NOT AVAILABLE - '+checkIn+' to '+checkOut+' already booked. Please choose other dates.';msg.style.color='#FF3B30'; checkAvailability();}
     else{msg.textContent='Booking saved in form only, Airtable failed - please send UTR on WhatsApp. • Total '+fmt(r.total)+' • Advance '+fmt(r.advance)+' • UTR '+utr;msg.style.color='#FF9500';}
