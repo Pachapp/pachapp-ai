@@ -176,5 +176,26 @@ const r = await axios.post('https://api.airtable.com/v0/' + baseId + '/' + table
 return res.json({ok:true, id: r.data.id});
   }catch(e){ console.log('AIRTABLE ERROR ' + JSON.stringify(e.response ? e.response.data : e.message)); return res.json({ok:false, error: e.message}); }
 });
-app.get('/', (req,res)=> res.send('Pachapp AI Live - V44 Grok via Axios'));const PORT = process.env.PORT || 10000;
+app.get('/api/check-availability', async (req,res)=>{
+  try{
+    const checkin = req.query.checkin || '';
+    const checkout = req.query.checkout || '';
+    if(!checkin || !checkout){ return res.json({available:true}); }
+    const token = process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_API_KEY;
+    const baseId = process.env.AIRTABLE_BASE_ID;
+    const table = process.env.AIRTABLE_TABLE || process.env.AIRTABLE_TABLE_NAME || 'Bookings';
+    if(!token || !baseId){ return res.json({available:true}); }
+    const r = await 【entity-axios¦canonical_name=Axios】.get('https://api.airtable.com/v0/' + baseId + '/' + table, {headers:{Authorization:'Bearer '+token}, params:{pageSize:100}});
+    const records = r.data.records || [];
+    for(const rec of records){
+      const f = rec.fields || {};
+      if(!f.Checkin || !f.Checkout){ continue; }
+      if(f.Status === 'Cancelled'){ continue; }
+      const exIn = String(f.Checkin).slice(0,10);
+      const exOut = String(f.Checkout).slice(0,10);
+      if(exIn < checkout && exOut > checkin){ return res.json({available:false}); }
+    }
+    return res.json({available:true});
+  }catch(e){ return res.json({available:true}); }
+});app.get('/', (req,res)=> res.send('Pachapp AI Live - V44 Grok via Axios'));const PORT = process.env.PORT || 10000;
 app.listen(PORT, ()=> console.log('Live on ' + PORT));
