@@ -185,7 +185,7 @@ app.get('/api/check-availability', async (req,res)=>{
     const baseId = process.env.AIRTABLE_BASE_ID;
     const table = process.env.AIRTABLE_TABLE || process.env.AIRTABLE_TABLE_NAME || 'Bookings';
     if(!token || !baseId){ return res.json({available:true}); }
-    const r = await 【entity-axios¦canonical_name=Axios】.get('https://api.airtable.com/v0/' + baseId + '/' + table, {headers:{Authorization:'Bearer '+token}, params:{pageSize:100}});
+    const r = await axios .get('https://api.airtable.com/v0/' + baseId + '/' + table, {headers:{Authorization:'Bearer '+token}, params:{pageSize:100}});
     const records = r.data.records || [];
     for(const rec of records){
       const f = rec.fields || {};
